@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <!-- 加入 viewport-fit=cover 解決 iOS 底部 Safe Area 問題 -->
+    <!-- 完美鎖定 viewport，防止縮放，並適應 iPhone 瀏海與底部安全區 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -15,14 +15,22 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        body {
+        /* 核心修正：使用 100dvh 解決 iPhone Safari 底部工具列遮擋問題 */
+        html, body {
+            height: 100dvh;
+            margin: 0;
+            padding: 0;
             background-color: #0a0a0a;
             color: #ffffff;
             overflow: hidden;
-            touch-action: none;
+            touch-action: none; /* 防止 Safari 下拉更新或左右滑動回上一頁 */
             font-family: 'Helvetica Neue', Arial, sans-serif;
             -webkit-user-select: none;
             user-select: none;
+        }
+        #root {
+            height: 100%;
+            width: 100%;
         }
         .touch-btn:active {
             transform: scale(0.95);
@@ -34,10 +42,6 @@
         }
         .scrollable-grid::-webkit-scrollbar {
             display: none;
-        }
-        /* 針對 iOS 安全距離的輔助 class */
-        .safe-bottom {
-            padding-bottom: max(24px, env(safe-area-inset-bottom));
         }
     </style>
 </head>
@@ -90,7 +94,8 @@
             };
 
             return (
-                <div className="w-screen h-screen flex flex-col relative bg-neutral-900 text-white">
+                // 修正：使用 h-full (繼承 body 的 100dvh) 確保不被裁切
+                <div className="w-full h-full flex flex-col relative bg-neutral-900 text-white">
                     {view === 'home' && (
                         <div className="absolute top-0 left-0 w-24 h-24 z-50 cursor-pointer" onClick={handleSecretClick}></div>
                     )}
@@ -121,7 +126,7 @@
         };
 
         const HomeView = ({ onStart }) => (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-12 safe-bottom">
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-12 pb-[env(safe-area-inset-bottom)]">
                 <div className="animate-pulse flex items-center justify-center w-32 h-32 rounded-full bg-white/10 mb-4">
                     <i className="fa-solid fa-wand-magic-sparkles text-6xl text-cyan-400"></i>
                 </div>
@@ -165,12 +170,18 @@
             const startCamera = async (deviceId) => {
                 stopCamera();
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: 'user' },
+                    // 核心修正：強制要求直向高畫質 (ideal: 1080x1920)，解決畫面過度裁切放大的問題
+                    const constraints = {
+                        video: deviceId 
+                            ? { deviceId: { exact: deviceId }, width: { ideal: 1080 }, height: { ideal: 1920 } } 
+                            : { facingMode: 'user', width: { ideal: 1080 }, height: { ideal: 1920 } },
                         audio: false
-                    });
+                    };
+                    const stream = await navigator.mediaDevices.getUserMedia(constraints);
                     if (videoRef.current) videoRef.current.srcObject = stream;
-                } catch (err) {}
+                } catch (err) {
+                    console.error("相機啟動失敗", err);
+                }
             };
 
             const stopCamera = () => {
@@ -205,9 +216,16 @@
                 const video = videoRef.current;
                 const canvas = canvasRef.current;
                 if (!video || !canvas) return;
+                
+                // 為了避免變形的 canvas 繪製，這裡使用 video 的實際解析度
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
                 const ctx = canvas.getContext('2d');
+                
+                // 水平翻轉修正 (如果是前鏡頭，通常會有鏡像問題，可以選擇是否翻轉)
+                // ctx.translate(canvas.width, 0);
+                // ctx.scale(-1, 1);
+                
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 const base64Img = canvas.toDataURL('image/jpeg', 0.8);
                 stopCamera();
@@ -215,34 +233,49 @@
             };
 
             return (
-                <div className="flex-1 relative flex flex-col bg-black">
-                    <button onClick={() => {stopCamera(); onCancel();}} className="absolute top-8 left-6 z-20 text-white/70 hover:text-white text-4xl p-4 touch-btn">
+                <div className="flex-1 w-full relative flex flex-col bg-black overflow-hidden">
+                    {/* 返回按鈕 */}
+                    <button onClick={() => {stopCamera(); onCancel();}} className="absolute top-[env(safe-area-inset-top,20px)] left-6 z-40 text-white/70 hover:text-white text-4xl p-4 touch-btn drop-shadow-md">
                         <i className="fa-solid fa-arrow-left"></i>
                     </button>
+                    
+                    {/* 切換鏡頭按鈕 */}
                     {cameras.length > 1 && (
-                        <button onClick={switchCamera} className="absolute top-8 right-6 z-20 bg-neutral-800/80 p-4 rounded-full text-white text-2xl touch-btn shadow-lg backdrop-blur-sm">
+                        <button onClick={switchCamera} className="absolute top-[env(safe-area-inset-top,20px)] right-6 z-40 bg-neutral-800/60 p-4 rounded-full text-white text-2xl touch-btn shadow-lg backdrop-blur-md border border-white/20">
                             <i className="fa-solid fa-camera-rotate"></i>
                         </button>
                     )}
-                    <div className="flex-1 relative overflow-hidden flex items-center justify-center">
-                        <video ref={videoRef} className="absolute min-w-full min-h-full object-cover" autoPlay playsInline webkit-playsinline="true" muted></video>
-                        {countdown !== null && (
-                            <div className="absolute inset-0 flex items-center justify-center z-30 bg-black/40">
-                                <span className="text-9xl font-bold text-white drop-shadow-2xl animate-ping">{countdown}</span>
-                            </div>
-                        )}
-                    </div>
+
+                    {/* 相機預覽區塊 - 使用 absolute inset-0 確保滿版但不過度擠壓 */}
+                    <video 
+                        ref={videoRef} 
+                        className="absolute inset-0 w-full h-full object-cover" 
+                        autoPlay 
+                        playsInline 
+                        webkit-playsinline="true" 
+                        muted>
+                    </video>
+                        
+                    {/* 倒數動畫 */}
+                    {countdown !== null && (
+                        <div className="absolute inset-0 flex items-center justify-center z-30 bg-black/30 backdrop-blur-sm">
+                            <span className="text-9xl font-black text-white drop-shadow-2xl animate-ping">{countdown}</span>
+                        </div>
+                    )}
+                    
                     <canvas ref={canvasRef} className="hidden"></canvas>
-                    {/* 加入 safe-bottom 修正 iPhone 底部遮擋問題 */}
-                    <div className="absolute bottom-0 left-0 w-full flex justify-center z-20 safe-bottom bg-gradient-to-t from-black/80 to-transparent pt-10">
-                        <button onClick={takePhoto} className={`touch-btn w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-white flex items-center justify-center transition-all ${countdown !== null ? 'opacity-50 scale-90' : 'hover:bg-white/20'}`}>
-                            <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-full"></div>
+                    
+                    {/* 拍照按鈕 - 修正：不再被底部裁切，加入底部安全邊距 padding-bottom */}
+                    <div className="absolute bottom-0 left-0 right-0 flex justify-center items-end z-40 pb-[calc(env(safe-area-inset-bottom,20px)+30px)] bg-gradient-to-t from-black/80 to-transparent pt-20">
+                        <button onClick={takePhoto} className={`touch-btn w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-white flex items-center justify-center transition-all shadow-xl ${countdown !== null ? 'opacity-50 scale-90' : 'hover:bg-white/20'}`}>
+                            <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-full transition-transform active:scale-90"></div>
                         </button>
                     </div>
                 </div>
             );
         };
 
+        // 離線線稿運算引擎 (Sobel 邊緣偵測) - 保持原本為您設計的功能
         const ProcessingView = ({ sourceImage, user, onComplete, onFail }) => {
             const [statusText, setStatusText] = useState("正在將影像傳送至 AI...");
 
@@ -294,14 +327,12 @@
                 }
             };
 
-            // ✅ 升級：離線前端邊緣偵測 (Sobel Operator)，讓測試時就是線稿而不是黑白照片！
             const simulateEdgeDetection = (base64) => {
                 return new Promise((resolve) => {
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        // 縮小圖片加速計算並減少背景雜點
-                        const scale = 600 / Math.max(img.width, img.height);
+                        const scale = 800 / Math.max(img.width, img.height); // 提高解析度讓線條更細緻
                         canvas.width = Math.floor(img.width * scale);
                         canvas.height = Math.floor(img.height * scale);
                         const ctx = canvas.getContext('2d');
@@ -312,15 +343,13 @@
                         const w = imageData.width;
                         const h = imageData.height;
 
-                        // 1. 轉灰階
                         const gray = new Uint8Array(w * h);
                         for (let i = 0; i < data.length; i += 4) {
                             gray[i/4] = data[i]*0.299 + data[i+1]*0.587 + data[i+2]*0.114;
                         }
 
-                        // 2. Sobel 邊緣偵測 (抓出線條)
                         const sobelData = new Uint8ClampedArray(data.length);
-                        sobelData.fill(255); // 預設白底
+                        sobelData.fill(255); 
 
                         for (let y = 1; y < h - 1; y++) {
                             for (let x = 1; x < w - 1; x++) {
@@ -332,10 +361,10 @@
                                 let gy = -p00 - 2*p01 - p02 + p20 + 2*p21 + p22;
                                 let mag = Math.sqrt(gx*gx + gy*gy);
 
-                                // 閾值：數值越高，雜訊越少 (只留下主要輪廓)
-                                let isEdge = mag > 90;
+                                // 針對雷雕優化，降低雜訊，只抓出明顯輪廓線
+                                let isEdge = mag > 60; 
                                 let idx = (y * w + x) * 4;
-                                let val = isEdge ? 0 : 255; // 邊緣畫黑線(0)，其餘白底(255)
+                                let val = isEdge ? 0 : 255; 
                                 
                                 sobelData[idx] = val;
                                 sobelData[idx+1] = val;
@@ -353,16 +382,16 @@
 
             return (
                 <div className="flex-1 flex flex-col items-center justify-center space-y-8 bg-neutral-900">
-                    <div className="w-24 h-24 border-8 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></div>
+                    <div className="w-24 h-24 border-8 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin shadow-[0_0_15px_rgba(6,182,212,0.5)]"></div>
                     <h2 className="text-3xl font-bold animate-pulse">{statusText}</h2>
-                    <p className="text-gray-400 text-center px-4">完美的作品值得等待<br/>(測試模式下套用數學邊緣偵測算法)</p>
+                    <p className="text-gray-400 text-center px-4">完美的作品值得等待<br/><span className="text-sm">(目前套用：前端數位邊緣萃取運算)</span></p>
                 </div>
             );
         };
 
         const ResultView = ({ imageUrl, ticket, onDone }) => {
             return (
-                <div className="flex-1 flex flex-col items-center justify-center p-6 bg-neutral-900 safe-bottom overflow-y-auto">
+                <div className="flex-1 flex flex-col items-center justify-center p-6 bg-neutral-900 overflow-y-auto pb-[env(safe-area-inset-bottom)]">
                     <h2 className="text-3xl md:text-4xl font-bold mt-4 mb-2">生成完畢！</h2>
                     <p className="text-sm md:text-xl text-gray-400 mb-6 text-center">請將此號碼出示給工作人員進行雷雕</p>
                     
@@ -377,7 +406,7 @@
                             </div>
                             <button 
                                 onClick={onDone}
-                                className="touch-btn w-full py-4 md:py-5 bg-white text-black rounded-full text-xl md:text-2xl font-bold shadow-lg hover:bg-gray-200"
+                                className="touch-btn w-full py-4 md:py-5 bg-white text-black rounded-full text-xl md:text-2xl font-bold shadow-[0_4px_15px_rgba(255,255,255,0.2)] hover:bg-gray-200"
                             >
                                 完成並返回首頁 <i className="fa-solid fa-check ml-2"></i>
                             </button>
@@ -416,20 +445,20 @@
             };
 
             return (
-                <div className="flex-1 flex flex-col bg-neutral-900 text-white p-6 safe-bottom">
-                    <div className="flex justify-between items-center border-b border-neutral-700 pb-4 mb-6">
+                <div className="flex-1 flex flex-col bg-neutral-900 text-white p-6 pb-[env(safe-area-inset-bottom)]">
+                    <div className="flex justify-between items-center border-b border-neutral-700 pb-4 mb-6 mt-[env(safe-area-inset-top)]">
                         <h2 className="text-2xl md:text-3xl font-bold"><i className="fa-solid fa-user-shield text-cyan-500"></i> 雷雕任務管理</h2>
-                        <button onClick={onExit} className="px-4 py-2 bg-red-600 rounded-lg font-bold">離開</button>
+                        <button onClick={onExit} className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg font-bold transition-colors">離開</button>
                     </div>
                     <div className="flex-1 scrollable-grid pr-2">
                         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
                             {items.map(item => (
                                 <div key={item.id} className="bg-neutral-800 rounded-xl p-4 flex flex-col items-center">
-                                    <div className="w-full aspect-square bg-white rounded-lg mb-4 overflow-hidden">
+                                    <div className="w-full aspect-square bg-white rounded-lg mb-4 overflow-hidden flex items-center justify-center">
                                         <img src={item.imageUrl} className="object-cover w-full h-full" />
                                     </div>
                                     <div className="text-2xl font-black text-cyan-400 mb-3">#{item.ticket}</div>
-                                    <button onClick={() => downloadImage(item.imageUrl, item.ticket)} className="w-full py-2 bg-white text-black font-bold rounded">下載圖檔</button>
+                                    <button onClick={() => downloadImage(item.imageUrl, item.ticket)} className="w-full py-2 bg-white text-black font-bold rounded hover:bg-gray-200">下載圖檔</button>
                                 </div>
                             ))}
                         </div>
