@@ -2,7 +2,6 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <!-- 完美鎖定 viewport，防止縮放，並適應 iPhone 瀏海與底部安全區 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -287,7 +286,7 @@
                     let finalImageUrl = sourceImage;
                     
                     try {
-                        const BACKEND_URL = 'https://your-app-name.onrender.com/api/generate-lineart';
+                        const BACKEND_URL = 'https://aicameraliveprint-back.onrender.com/api/generate-lineart';
                         const response = await fetch(BACKEND_URL, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
