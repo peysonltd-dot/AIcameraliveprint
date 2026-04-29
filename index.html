@@ -22,7 +22,7 @@
             background-color: #0a0a0a;
             color: #ffffff;
             overflow: hidden;
-            touch-action: none; /* 防止 Safari 下拉更新或左右滑動回上一頁 */
+            touch-action: none;
             font-family: 'Helvetica Neue', Arial, sans-serif;
             -webkit-user-select: none;
             user-select: none;
@@ -55,17 +55,31 @@
 
         const { useState, useEffect, useRef } = React;
 
+        // ==========================================
+        // 🛠️ 任務 4：在這裡填入您的 Firebase 金鑰
+        // ==========================================
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyBd1KKEZza-PNFHvBwG6FGff9LYAIYcWj0",
+            authDomain: "aicameraliveprint-back.firebaseapp.com",
+            projectId: "aicameraliveprint-back",
+            storageBucket: "aicameraliveprint-back.firebasestorage.app",
+            messagingSenderId: "920282435741",
+            appId: "1:920282435741:web:6948d971ffe64c554e0474",
+            measurementId: "G-4GLT0THRRS"
+        };
+
         let app, auth, db, storage, appId;
         
         try {
-            const firebaseConfig = typeof __firebase_config !== 'undefined' 
-                ? JSON.parse(__firebase_config) 
-                : { /* 您的 Firebase 設定 */ };
-            app = initializeApp(firebaseConfig);
+            // 如果您還沒填寫金鑰，它會自動進入「本機測試模式」
+            if (FIREBASE_CONFIG.apiKey.includes("請貼上")) {
+                throw new Error("尚未設定 Firebase");
+            }
+            app = initializeApp(FIREBASE_CONFIG);
             auth = getAuth(app);
             db = getFirestore(app);
             storage = getStorage(app);
-            appId = typeof __app_id !== 'undefined' ? __app_id : 'photo-booth-app';
+            appId = 'photo-booth-app';
         } catch (e) {
             console.warn("Firebase 未初始化，將使用本機測試模式運行前端");
         }
@@ -93,7 +107,6 @@
             };
 
             return (
-                // 修正：使用 h-full (繼承 body 的 100dvh) 確保不被裁切
                 <div className="w-full h-full flex flex-col relative bg-neutral-900 text-white">
                     {view === 'home' && (
                         <div className="absolute top-0 left-0 w-24 h-24 z-50 cursor-pointer" onClick={handleSecretClick}></div>
@@ -130,7 +143,7 @@
                     <i className="fa-solid fa-wand-magic-sparkles text-6xl text-cyan-400"></i>
                 </div>
                 <div>
-                    <h1 className="text-4xl md:text-7xl font-bold tracking-wider mb-6">AI 專屬雷雕似顏繪測試版</h1>
+                    <h1 className="text-4xl md:text-7xl font-bold tracking-wider mb-6">AI 專屬雷雕似顏繪</h1>
                     <p className="text-lg md:text-3xl text-gray-400">專屬你的極簡線條藝術</p>
                 </div>
                 <button 
@@ -169,11 +182,11 @@
             const startCamera = async (deviceId) => {
                 stopCamera();
                 try {
-                    // 核心修正：強制要求直向高畫質 (ideal: 1080x1920)，解決畫面過度裁切放大的問題
+                    // 🛠️ 任務 3：拿掉強制的高解析度限制，讓 iPhone 自動決定最佳焦距 (解決大餅臉拉太近的問題)
                     const constraints = {
                         video: deviceId 
-                            ? { deviceId: { exact: deviceId }, width: { ideal: 1080 }, height: { ideal: 1920 } } 
-                            : { facingMode: 'user', width: { ideal: 1080 }, height: { ideal: 1920 } },
+                            ? { deviceId: { exact: deviceId } } 
+                            : { facingMode: 'user' },
                         audio: false
                     };
                     const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -216,14 +229,13 @@
                 const canvas = canvasRef.current;
                 if (!video || !canvas) return;
                 
-                // 為了避免變形的 canvas 繪製，這裡使用 video 的實際解析度
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
                 const ctx = canvas.getContext('2d');
                 
-                // 水平翻轉修正 (如果是前鏡頭，通常會有鏡像問題，可以選擇是否翻轉)
-                // ctx.translate(canvas.width, 0);
-                // ctx.scale(-1, 1);
+                // 🛠️ 任務 2：讓拍下來的照片也是反轉的 (照鏡子模式)
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
                 
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 const base64Img = canvas.toDataURL('image/jpeg', 0.8);
@@ -233,29 +245,26 @@
 
             return (
                 <div className="flex-1 w-full relative flex flex-col bg-black overflow-hidden">
-                    {/* 返回按鈕 */}
                     <button onClick={() => {stopCamera(); onCancel();}} className="absolute top-[env(safe-area-inset-top,20px)] left-6 z-40 text-white/70 hover:text-white text-4xl p-4 touch-btn drop-shadow-md">
                         <i className="fa-solid fa-arrow-left"></i>
                     </button>
                     
-                    {/* 切換鏡頭按鈕 */}
                     {cameras.length > 1 && (
                         <button onClick={switchCamera} className="absolute top-[env(safe-area-inset-top,20px)] right-6 z-40 bg-neutral-800/60 p-4 rounded-full text-white text-2xl touch-btn shadow-lg backdrop-blur-md border border-white/20">
                             <i className="fa-solid fa-camera-rotate"></i>
                         </button>
                     )}
 
-                    {/* 相機預覽區塊 - 使用 absolute inset-0 確保滿版但不過度擠壓 */}
+                    {/* 🛠️ 任務 2：加入 -scale-x-100 讓畫面看起來像照鏡子 */}
                     <video 
                         ref={videoRef} 
-                        className="absolute inset-0 w-full h-full object-cover" 
+                        className="absolute inset-0 w-full h-full object-cover -scale-x-100" 
                         autoPlay 
                         playsInline 
                         webkit-playsinline="true" 
                         muted>
                     </video>
                         
-                    {/* 倒數動畫 */}
                     {countdown !== null && (
                         <div className="absolute inset-0 flex items-center justify-center z-30 bg-black/30 backdrop-blur-sm">
                             <span className="text-9xl font-black text-white drop-shadow-2xl animate-ping">{countdown}</span>
@@ -264,7 +273,6 @@
                     
                     <canvas ref={canvasRef} className="hidden"></canvas>
                     
-                    {/* 拍照按鈕 - 修正：不再被底部裁切，加入底部安全邊距 padding-bottom */}
                     <div className="absolute bottom-0 left-0 right-0 flex justify-center items-end z-40 pb-[calc(env(safe-area-inset-bottom,20px)+30px)] bg-gradient-to-t from-black/80 to-transparent pt-20">
                         <button onClick={takePhoto} className={`touch-btn w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-white flex items-center justify-center transition-all shadow-xl ${countdown !== null ? 'opacity-50 scale-90' : 'hover:bg-white/20'}`}>
                             <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-full transition-transform active:scale-90"></div>
@@ -274,7 +282,6 @@
             );
         };
 
-        // 離線線稿運算引擎 (Sobel 邊緣偵測) - 保持原本為您設計的功能
         const ProcessingView = ({ sourceImage, user, onComplete, onFail }) => {
             const [statusText, setStatusText] = useState("正在將影像傳送至 AI...");
 
@@ -286,6 +293,7 @@
                     let finalImageUrl = sourceImage;
                     
                     try {
+                        // 確保這是您正確的 Render 網址
                         const BACKEND_URL = 'https://aicameraliveprint-back.onrender.com/api/generate-lineart';
                         const response = await fetch(BACKEND_URL, {
                             method: 'POST',
@@ -303,7 +311,7 @@
 
                     setStatusText("正在產生取件號碼...");
                     let nextTicket = "001";
-                    if (db && storage && user) {
+                    if (db && storage && user && user.uid !== 'local-test-user') {
                         const collRef = collection(db, 'artifacts', appId, 'public', 'data', 'linearts');
                         const snapshot = await getDocs(collRef);
                         let maxNum = 0;
@@ -331,7 +339,7 @@
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const scale = 800 / Math.max(img.width, img.height); // 提高解析度讓線條更細緻
+                        const scale = 800 / Math.max(img.width, img.height);
                         canvas.width = Math.floor(img.width * scale);
                         canvas.height = Math.floor(img.height * scale);
                         const ctx = canvas.getContext('2d');
@@ -360,7 +368,6 @@
                                 let gy = -p00 - 2*p01 - p02 + p20 + 2*p21 + p22;
                                 let mag = Math.sqrt(gx*gx + gy*gy);
 
-                                // 針對雷雕優化，降低雜訊，只抓出明顯輪廓線
                                 let isEdge = mag > 60; 
                                 let idx = (y * w + x) * 4;
                                 let val = isEdge ? 0 : 255; 
@@ -383,7 +390,7 @@
                 <div className="flex-1 flex flex-col items-center justify-center space-y-8 bg-neutral-900">
                     <div className="w-24 h-24 border-8 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin shadow-[0_0_15px_rgba(6,182,212,0.5)]"></div>
                     <h2 className="text-3xl font-bold animate-pulse">{statusText}</h2>
-                    <p className="text-gray-400 text-center px-4">完美的作品值得等待<br/><span className="text-sm">(目前套用：前端數位邊緣萃取運算)</span></p>
+                    <p className="text-gray-400 text-center px-4">完美的作品值得等待<br/><span className="text-sm">(這需要花費大約 10~20 秒)</span></p>
                 </div>
             );
         };
@@ -419,7 +426,7 @@
             const [items, setItems] = useState([]);
             
             useEffect(() => {
-                if (!db || !user) return;
+                if (!db || !user || user.uid === 'local-test-user') return;
                 const collRef = collection(db, 'artifacts', appId, 'public', 'data', 'linearts');
                 const unsubscribe = onSnapshot(collRef, (snapshot) => {
                     let docs = [];
@@ -449,6 +456,11 @@
                         <h2 className="text-2xl md:text-3xl font-bold"><i className="fa-solid fa-user-shield text-cyan-500"></i> 雷雕任務管理</h2>
                         <button onClick={onExit} className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg font-bold transition-colors">離開</button>
                     </div>
+                    {user?.uid === 'local-test-user' && (
+                        <div className="bg-yellow-500/20 border border-yellow-500 text-yellow-500 p-4 rounded-lg mb-6 text-center">
+                            ⚠️ 目前為「本機測試模式」，請先到程式碼填寫 Firebase 金鑰才能開啟雲端儲存功能。
+                        </div>
+                    )}
                     <div className="flex-1 scrollable-grid pr-2">
                         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
                             {items.map(item => (
