@@ -225,7 +225,7 @@
 
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 95000); // 延長到 95 秒
+                const timeoutId = setTimeout(() => controller.abort(), 150000); // 延長到 95 秒
 
                 const response = await fetch(BACKEND_URL, {
                     method: 'POST',
