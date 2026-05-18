@@ -5,107 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>專屬塗鴉雷雕拍照機</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #1a1a1a;
-            color: white;
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            text-align: center;
-            overflow: hidden;
-            height: 100dvh; /* 針對 iOS 的動態高度修復 */
-        }
-        #main-view {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            width: 100%;
-        }
-        #camera-container {
-            flex: 1;
-            position: relative;
-            background-color: #000;
-            overflow: hidden;
-        }
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scaleX(-1);
-        }
-        #ui-container {
-            height: 150px;
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background-color: #222;
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 18px 40px;
-            font-size: 24px;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            transition: transform 0.1s;
-        }
+        body { margin: 0; padding: 0; background-color: #1a1a1a; color: white; font-family: 'Helvetica Neue', Arial, sans-serif; text-align: center; overflow: hidden; height: 100dvh; }
+        #main-view { display: flex; flex-direction: column; height: 100%; width: 100%; }
+        #camera-container { flex: 1; position: relative; background-color: #000; overflow: hidden; }
+        video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        #ui-container { height: 150px; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: #222; padding-bottom: env(safe-area-inset-bottom); }
+        button { background-color: #4CAF50; color: white; border: none; padding: 18px 40px; font-size: 24px; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.1s; }
         button:active { transform: scale(0.95); }
-
-        /* 🌟 載入動畫圈圈 CSS */
-        .spinner {
-            width: 80px;
-            height: 80px;
-            border: 8px solid rgba(255, 255, 255, 0.1);
-            border-top: 8px solid #4CAF50;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 30px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        #countdown-display {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 150px;
-            font-weight: bold;
-            color: white;
-            text-shadow: 0 0 20px rgba(0,0,0,0.8);
-            display: none;
-            z-index: 10;
-        }
-
-        #loading-view, #result-view {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100dvh;
-            background-color: #1a1a1a;
-            z-index: 20;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #result-image {
-            max-width: 90%;
-            max-height: 55vh;
-            border: 5px solid white;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            background-color: white;
-        }
+        
+        .spinner { width: 80px; height: 80px; border: 8px solid rgba(255, 255, 255, 0.1); border-top: 8px solid #4CAF50; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 30px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        #countdown-display { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 150px; font-weight: bold; color: white; text-shadow: 0 0 20px rgba(0,0,0,0.8); display: none; z-index: 10; }
+        #loading-view, #result-view { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background-color: #1a1a1a; z-index: 20; flex-direction: column; justify-content: center; align-items: center; }
+        #result-image { max-width: 90%; max-height: 55vh; border: 5px solid white; border-radius: 10px; margin-bottom: 20px; background-color: white; }
         .order-number { font-size: 80px; color: #00bcd4; font-weight: bold; margin: 10px 0; }
         #status-text { font-size: 22px; color: #4CAF50; font-weight: 500; height: 30px; margin: 10px 0; }
         .tips { font-size: 16px; color: #666; margin-top: 20px; padding: 0 30px; line-height: 1.4; }
@@ -113,41 +26,32 @@
     </style>
 </head>
 <body>
-
     <div id="main-view">
         <div id="camera-container">
             <video id="videoElement" autoplay playsinline></video>
             <div id="countdown-display">3</div>
         </div>
-        <div id="ui-container">
-            <button id="capture-btn">📸 點我拍照</button>
-        </div>
+        <div id="ui-container"><button id="capture-btn">📸 點我拍照</button></div>
     </div>
 
     <div id="loading-view">
         <div class="spinner"></div>
         <h2 style="margin-bottom: 5px;">✨ AI 魔法施展中 ✨</h2>
-        <div id="status-text">正在啟動算圖引擎...</div>
-        <p class="tips">
-            若遇到人潮眾多，約需等待 30~60 秒<br>
-            請保持耐心，專屬塗鴉即將誕生！
-        </p>
+        <div id="status-text">正在為您繪製專屬塗鴉...</div>
+        <p class="tips">（請保持網頁開啟，等待純白線稿誕生！）</p>
     </div>
 
     <div id="result-view">
         <p>請將此畫面出示給工作人員進行雷雕</p>
         <img id="result-image" src="" alt="AI 線稿">
         <p>您的專屬取件號碼</p>
-        <div class="order-number" id="order-number-display">027</div>
+        <div class="order-number" id="order-number-display">029</div>
         <button onclick="resetApp()" style="background-color: #666; font-size: 18px; padding: 15px 30px; margin-top: 20px;">完成並返回首頁</button>
     </div>
-
     <canvas id="canvasElement"></canvas>
 
     <script>
-        // 🌟 已連接您的專屬 Render 伺服器
         const BACKEND_URL = 'https://aicameraliveprint-back.onrender.com/api/generate-lineart';
-
         const video = document.getElementById('videoElement');
         const canvas = document.getElementById('canvasElement');
         const ctx = canvas.getContext('2d');
@@ -160,42 +64,15 @@
         const orderNumberDisplay = document.getElementById('order-number-display');
         const statusText = document.getElementById('status-text');
 
-        let currentOrderNumber = 27;
-        let loadingInterval;
-        const loadingMessages = [
-            "分析臉部輪廓中...",
-            "套用專屬可愛風格...",
-            "正在精雕細琢線條...",
-            "去除背景與雜訊中...",
-            "調整對比度以適合雷雕...",
-            "即將完成，請稍候..."
-        ];
+        let currentOrderNumber = 29;
 
         async function startCamera() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user", width: { ideal: 1080 }, height: { ideal: 1080 } } 
-                });
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 1080 }, height: { ideal: 1080 } } });
                 video.srcObject = stream;
             } catch (err) {
                 alert("無法存取相機，請確認是否已授權相機權限！");
-                console.error(err);
             }
-        }
-
-        // 啟動文字動畫
-        function startLoadingAnimation() {
-            let i = 0;
-            statusText.innerText = loadingMessages[0];
-            loadingInterval = setInterval(() => {
-                i = (i + 1) % loadingMessages.length;
-                statusText.innerText = loadingMessages[i];
-            }, 3000); // 每 3 秒換一次文字
-        }
-
-        // 停止文字動畫
-        function stopLoadingAnimation() {
-            clearInterval(loadingInterval);
         }
 
         captureBtn.addEventListener('click', () => {
@@ -219,13 +96,11 @@
             ctx.drawImage(video, x, y, size, size, 0, 0, canvas.width, canvas.height);
             const base64Image = canvas.toDataURL('image/jpeg', 0.8);
             
-            mainView.style.display = 'none'; 
-            loadingView.style.display = 'flex';
-            startLoadingAnimation(); // 🌟 開始跑馬燈文字
+            mainView.style.display = 'none'; loadingView.style.display = 'flex';
 
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 150000); // 延長到 95 秒
+                const timeoutId = setTimeout(() => controller.abort(), 150000); // 🌟 150秒超級耐心等待
 
                 const response = await fetch(BACKEND_URL, {
                     method: 'POST',
@@ -235,38 +110,50 @@
                 });
                 clearTimeout(timeoutId);
 
-                if (!response.ok) throw new Error(`Error ${response.status}`);
+                if (!response.ok) throw new Error(`HTTP 錯誤狀態碼: ${response.status}`);
 
                 const data = await response.json();
                 if (data.success && data.result) { 
                     showResult(data.result); 
                 } else { 
-                    throw new Error('Format Error'); 
+                    throw new Error('回傳資料格式不正確'); 
                 }
 
             } catch (error) {
                 console.error("❌ 連線失敗:", error);
-                stopLoadingAnimation();
-                alert("AI 伺服器忙碌中，請間隔 10 秒後再試一次！");
-                resetApp();
+                // 🚨 這裡就是關鍵！如果是新版網頁，絕對會跳出這個視窗！
+                alert("🚨 連線到 AI 伺服器失敗！\n錯誤原因：" + error.message + "\n\n將為您啟動備用濾鏡。");
+                applyFallbackFilter(base64Image);
             }
         }
 
         function showResult(imgSrc) {
-            stopLoadingAnimation();
-            loadingView.style.display = 'none'; 
-            resultView.style.display = 'flex';
+            loadingView.style.display = 'none'; resultView.style.display = 'flex';
             resultImage.src = imgSrc;
-            currentOrderNumber++; 
-            orderNumberDisplay.innerText = currentOrderNumber.toString().padStart(3, '0');
+            currentOrderNumber++; orderNumberDisplay.innerText = currentOrderNumber.toString().padStart(3, '0');
         }
 
         function resetApp() {
-            stopLoadingAnimation();
-            loadingView.style.display = 'none';
-            resultView.style.display = 'none'; 
-            mainView.style.display = 'flex'; 
-            captureBtn.style.display = 'block';
+            loadingView.style.display = 'none'; resultView.style.display = 'none'; 
+            mainView.style.display = 'flex'; captureBtn.style.display = 'block';
+        }
+
+        function applyFallbackFilter(base64Image) {
+            const img = new Image();
+            img.onload = () => {
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                for (let i = 0; i < data.length; i += 4) {
+                    const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                    const threshold = avg > 120 ? 255 : 0;
+                    data[i] = data[i + 1] = data[i + 2] = threshold;
+                }
+                ctx.putImageData(imageData, 0, 0);
+                showResult(canvas.toDataURL('image/jpeg'));
+            };
+            img.src = base64Image;
         }
 
         window.onload = startCamera;
