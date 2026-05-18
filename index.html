@@ -2,484 +2,285 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>AI 專屬雷雕似顏繪</title>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>似顏繪雷雕拍照機</title>
     <style>
-        /* 核心修正：使用 100dvh 解決 iPhone Safari 底部工具列遮擋問題 */
-        html, body {
-            height: 100dvh;
+        body {
             margin: 0;
             padding: 0;
-            background-color: #0a0a0a;
-            color: #ffffff;
-            overflow: hidden;
-            touch-action: none;
+            background-color: #1a1a1a;
+            color: white;
             font-family: 'Helvetica Neue', Arial, sans-serif;
-            -webkit-user-select: none;
-            user-select: none;
+            text-align: center;
+            overflow: hidden;
         }
-        #root {
-            height: 100%;
+        #camera-container {
+            position: relative;
+            width: 100vw;
+            height: 75vh;
+            background-color: #000;
+            overflow: hidden;
+        }
+        video {
             width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* 鏡像翻轉，像照鏡子一樣 */
         }
-        .touch-btn:active {
-            transform: scale(0.95);
+        #ui-container {
+            height: 25vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #222;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             transition: transform 0.1s;
         }
-        .scrollable-grid {
-            overflow-y: auto;
-            touch-action: pan-y;
+        button:active {
+            transform: scale(0.95);
         }
-        .scrollable-grid::-webkit-scrollbar {
+        #countdown-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 150px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 20px rgba(0,0,0,0.8);
+            display: none;
+            z-index: 10;
+        }
+        #loading-view, #result-view {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #1a1a1a;
+            z-index: 20;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        #result-image {
+            max-width: 90%;
+            max-height: 60vh;
+            border: 5px solid white;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            background-color: white; /* 確保背景是白的 */
+        }
+        .order-number {
+            font-size: 80px;
+            color: #00bcd4;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .tips {
+            font-size: 18px;
+            color: #aaa;
+            margin-top: 20px;
+        }
+        /* 隱藏的畫布，用來擷取畫面 */
+        canvas {
             display: none;
         }
     </style>
 </head>
 <body>
-    <div id="root"></div>
 
-    <script type="text/babel" data-type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+    <div id="main-view">
+        <div id="camera-container">
+            <video id="videoElement" autoplay playsinline></video>
+            <div id="countdown-display">3</div>
+        </div>
+        <div id="ui-container">
+            <button id="capture-btn">📸 點我拍照</button>
+        </div>
+    </div>
 
-        const { useState, useEffect, useRef } = React;
+    <div id="loading-view">
+        <h2>✨ AI 魔法施展中 ✨</h2>
+        <p>正在為您繪製專屬塗鴉...</p>
+        <p class="tips">（初次啟動約需等待 40~60 秒，請勿關閉網頁）</p>
+    </div>
 
+    <div id="result-view">
+        <p>請將此畫面出示給工作人員進行雷雕</p>
+        <img id="result-image" src="" alt="AI 線稿">
+        <p>您的專屬取件號碼</p>
+        <div class="order-number" id="order-number-display">025</div>
+        <button onclick="resetApp()" style="background-color: #666; font-size: 18px; padding: 15px 30px; margin-top: 20px;">完成並返回首頁</button>
+    </div>
+
+    <canvas id="canvasElement"></canvas>
+
+    <script>
         // ==========================================
-        // 🛠️ 任務 4：在這裡填入您的 Firebase 金鑰
+        // 🌟 已連接您的專屬 Render 伺服器
         // ==========================================
-        const FIREBASE_CONFIG = {
-            apiKey: "AIzaSyBd1KKEZza-PNFHvBwG6FGff9LYAIYcWj0",
-            authDomain: "aicameraliveprint-back.firebaseapp.com",
-            projectId: "aicameraliveprint-back",
-            storageBucket: "aicameraliveprint-back.firebasestorage.app",
-            messagingSenderId: "920282435741",
-            appId: "1:920282435741:web:6948d971ffe64c554e0474",
-            measurementId: "G-4GLT0THRRS"
-        };
+        const BACKEND_URL = 'https://aicameraliveprint-back.onrender.com/api/generate-lineart';
+        // ==========================================
 
-        let app, auth, db, storage, appId;
+        const video = document.getElementById('videoElement');
+        const canvas = document.getElementById('canvasElement');
+        const ctx = canvas.getContext('2d');
+        const captureBtn = document.getElementById('capture-btn');
+        const countdownDisplay = document.getElementById('countdown-display');
         
-        try {
-            // 如果您還沒填寫金鑰，它會自動進入「本機測試模式」
-            if (FIREBASE_CONFIG.apiKey.includes("請貼上")) {
-                throw new Error("尚未設定 Firebase");
+        const mainView = document.getElementById('main-view');
+        const loadingView = document.getElementById('loading-view');
+        const resultView = document.getElementById('result-view');
+        const resultImage = document.getElementById('result-image');
+        const orderNumberDisplay = document.getElementById('order-number-display');
+
+        let currentOrderNumber = 25; // 接續您剛剛的 25 號
+
+        // 啟動相機
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user", width: { ideal: 1080 }, height: { ideal: 1080 } } 
+                });
+                video.srcObject = stream;
+            } catch (err) {
+                alert("無法存取相機，請確認是否已授權相機權限！");
+                console.error(err);
             }
-            app = initializeApp(FIREBASE_CONFIG);
-            auth = getAuth(app);
-            db = getFirestore(app);
-            storage = getStorage(app);
-            appId = 'photo-booth-app';
-        } catch (e) {
-            console.warn("Firebase 未初始化，將使用本機測試模式運行前端");
         }
 
-        const App = () => {
-            const [view, setView] = useState('home');
-            const [user, setUser] = useState(null);
-            const [lineArtResult, setLineArtResult] = useState(null);
-            const [ticketNumber, setTicketNumber] = useState('');
+        // 拍照與倒數邏輯
+        captureBtn.addEventListener('click', () => {
+            captureBtn.style.display = 'none';
+            countdownDisplay.style.display = 'block';
+            let count = 3;
+            countdownDisplay.innerText = count;
 
-            useEffect(() => {
-                if (auth) {
-                    const initAuth = async () => { await signInAnonymously(auth); };
-                    initAuth();
-                    const unsubscribe = onAuthStateChanged(auth, setUser);
-                    return () => unsubscribe();
+            const timer = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdownDisplay.innerText = count;
                 } else {
-                    setUser({ uid: 'local-test-user' });
+                    clearInterval(timer);
+                    countdownDisplay.style.display = 'none';
+                    takePictureAndProcess();
                 }
-            }, []);
+            }, 1000);
+        });
 
-            const handleSecretClick = () => {
-                const pwd = prompt("請輸入管理員密碼：(測試請輸入 admin)");
-                if (pwd === "admin") setView('admin');
-            };
-
-            return (
-                <div className="w-full h-full flex flex-col relative bg-neutral-900 text-white">
-                    {view === 'home' && (
-                        <div className="absolute top-0 left-0 w-24 h-24 z-50 cursor-pointer" onClick={handleSecretClick}></div>
-                    )}
-
-                    {view === 'home' && <HomeView onStart={() => setView('camera')} />}
-                    {view === 'camera' && <CameraView 
-                        onProcessStart={(img) => { setLineArtResult(img); setView('processing'); }} 
-                        onCancel={() => setView('home')} 
-                    />}
-                    {view === 'processing' && <ProcessingView 
-                        sourceImage={lineArtResult}
-                        user={user}
-                        onComplete={(resultUrl, ticket) => { 
-                            setLineArtResult(resultUrl); 
-                            setTicketNumber(ticket);
-                            setView('result'); 
-                        }} 
-                        onFail={() => setView('home')}
-                    />}
-                    {view === 'result' && <ResultView 
-                        imageUrl={lineArtResult} 
-                        ticket={ticketNumber}
-                        onDone={() => setView('home')} 
-                    />}
-                    {view === 'admin' && <AdminView user={user} onExit={() => setView('home')} />}
-                </div>
-            );
-        };
-
-        const HomeView = ({ onStart }) => (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-12 pb-[env(safe-area-inset-bottom)]">
-                <div className="animate-pulse flex items-center justify-center w-32 h-32 rounded-full bg-white/10 mb-4">
-                    <i className="fa-solid fa-wand-magic-sparkles text-6xl text-cyan-400"></i>
-                </div>
-                <div>
-                    <h1 className="text-4xl md:text-7xl font-bold tracking-wider mb-6">AI 專屬雷雕似顏繪</h1>
-                    <p className="text-lg md:text-3xl text-gray-400">專屬你的極簡線條藝術</p>
-                </div>
-                <button 
-                    onClick={onStart}
-                    className="touch-btn mt-12 px-8 py-5 md:px-12 md:py-6 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full text-2xl md:text-3xl font-bold shadow-lg flex items-center space-x-4"
-                >
-                    <i className="fa-solid fa-camera"></i>
-                    <span>點擊畫面開始拍照</span>
-                </button>
-            </div>
-        );
-
-        const CameraView = ({ onProcessStart, onCancel }) => {
-            const videoRef = useRef(null);
-            const canvasRef = useRef(null);
-            const [cameras, setCameras] = useState([]);
-            const [currentCamIdx, setCurrentCamIdx] = useState(0);
-            const [countdown, setCountdown] = useState(null);
-
-            useEffect(() => {
-                const getDevices = async () => {
-                    try {
-                        const devices = await navigator.mediaDevices.enumerateDevices();
-                        const videoDevices = devices.filter(d => d.kind === 'videoinput');
-                        setCameras(videoDevices);
-                        if (videoDevices.length > 0) startCamera(videoDevices[0].deviceId);
-                    } catch (err) {
-                        alert("無法存取相機設備");
-                        onCancel();
-                    }
-                };
-                getDevices();
-                return () => stopCamera();
-            }, []);
-
-            const startCamera = async (deviceId) => {
-                stopCamera();
-                try {
-                    // 🛠️ 任務 3：拿掉強制的高解析度限制，讓 iPhone 自動決定最佳焦距 (解決大餅臉拉太近的問題)
-                    const constraints = {
-                        video: deviceId 
-                            ? { deviceId: { exact: deviceId } } 
-                            : { facingMode: 'user' },
-                        audio: false
-                    };
-                    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                    if (videoRef.current) videoRef.current.srcObject = stream;
-                } catch (err) {
-                    console.error("相機啟動失敗", err);
-                }
-            };
-
-            const stopCamera = () => {
-                if (videoRef.current && videoRef.current.srcObject) {
-                    videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-                }
-            };
-
-            const switchCamera = () => {
-                if (cameras.length < 2) return;
-                const nextIdx = (currentCamIdx + 1) % cameras.length;
-                setCurrentCamIdx(nextIdx);
-                startCamera(cameras[nextIdx].deviceId);
-            };
-
-            const takePhoto = () => {
-                if (countdown !== null) return;
-                let timer = 3;
-                setCountdown(timer);
-                const interval = setInterval(() => {
-                    timer -= 1;
-                    if (timer > 0) setCountdown(timer);
-                    else {
-                        clearInterval(interval);
-                        setCountdown(null);
-                        captureAndProceed();
-                    }
-                }, 1000);
-            };
-
-            const captureAndProceed = () => {
-                const video = videoRef.current;
-                const canvas = canvasRef.current;
-                if (!video || !canvas) return;
-                
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                const ctx = canvas.getContext('2d');
-                
-                // 🛠️ 任務 2：讓拍下來的照片也是反轉的 (照鏡子模式)
-                ctx.translate(canvas.width, 0);
-                ctx.scale(-1, 1);
-                
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const base64Img = canvas.toDataURL('image/jpeg', 0.8);
-                stopCamera();
-                onProcessStart(base64Img);
-            };
-
-            return (
-                <div className="flex-1 w-full relative flex flex-col bg-black overflow-hidden">
-                    <button onClick={() => {stopCamera(); onCancel();}} className="absolute top-[env(safe-area-inset-top,20px)] left-6 z-40 text-white/70 hover:text-white text-4xl p-4 touch-btn drop-shadow-md">
-                        <i className="fa-solid fa-arrow-left"></i>
-                    </button>
-                    
-                    {cameras.length > 1 && (
-                        <button onClick={switchCamera} className="absolute top-[env(safe-area-inset-top,20px)] right-6 z-40 bg-neutral-800/60 p-4 rounded-full text-white text-2xl touch-btn shadow-lg backdrop-blur-md border border-white/20">
-                            <i className="fa-solid fa-camera-rotate"></i>
-                        </button>
-                    )}
-
-                    {/* 🛠️ 任務 2：加入 -scale-x-100 讓畫面看起來像照鏡子 */}
-                    <video 
-                        ref={videoRef} 
-                        className="absolute inset-0 w-full h-full object-cover -scale-x-100" 
-                        autoPlay 
-                        playsInline 
-                        webkit-playsinline="true" 
-                        muted>
-                    </video>
-                        
-                    {countdown !== null && (
-                        <div className="absolute inset-0 flex items-center justify-center z-30 bg-black/30 backdrop-blur-sm">
-                            <span className="text-9xl font-black text-white drop-shadow-2xl animate-ping">{countdown}</span>
-                        </div>
-                    )}
-                    
-                    <canvas ref={canvasRef} className="hidden"></canvas>
-                    
-                    <div className="absolute bottom-0 left-0 right-0 flex justify-center items-end z-40 pb-[calc(env(safe-area-inset-bottom,20px)+30px)] bg-gradient-to-t from-black/80 to-transparent pt-20">
-                        <button onClick={takePhoto} className={`touch-btn w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-white flex items-center justify-center transition-all shadow-xl ${countdown !== null ? 'opacity-50 scale-90' : 'hover:bg-white/20'}`}>
-                            <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-full transition-transform active:scale-90"></div>
-                        </button>
-                    </div>
-                </div>
-            );
-        };
-
-        const ProcessingView = ({ sourceImage, user, onComplete, onFail }) => {
-            const [statusText, setStatusText] = useState("正在將影像傳送至 AI...");
-
-            useEffect(() => { processImage(); }, []);
-
-            const processImage = async () => {
-                try {
-                    setStatusText("AI 正在淬鍊您的線條...");
-                    let finalImageUrl = sourceImage;
-                    
-                    try {
-                        // 確保這是您正確的 Render 網址
-                        const BACKEND_URL = 'https://aicameraliveprint-back.onrender.com/api/generate-lineart';
-                        const response = await fetch(BACKEND_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ image: sourceImage })
-                        });
-                        if (response.ok) {
-                            const data = await response.json();
-                            finalImageUrl = data.result;
-                        } else throw new Error("Backend failed");
-                    } catch (apiErr) {
-                        console.warn("未連接雲端 API，使用前端邊緣偵測模擬線稿效果");
-                        finalImageUrl = await simulateEdgeDetection(sourceImage);
-                    }
-
-                    setStatusText("正在產生取件號碼...");
-                    let nextTicket = "001";
-                    if (db && storage && user && user.uid !== 'local-test-user') {
-                        const collRef = collection(db, 'artifacts', appId, 'public', 'data', 'linearts');
-                        const snapshot = await getDocs(collRef);
-                        let maxNum = 0;
-                        snapshot.forEach(doc => {
-                            const t = parseInt(doc.data().ticket, 10);
-                            if (!isNaN(t) && t > maxNum) maxNum = t;
-                        });
-                        nextTicket = String(maxNum + 1).padStart(3, '0');
-                        const imgRef = ref(storage, `artifacts/${appId}/images/${nextTicket}_${Date.now()}.jpg`);
-                        await uploadString(imgRef, finalImageUrl, 'data_url');
-                        finalImageUrl = await getDownloadURL(imgRef);
-                        await addDoc(collRef, { ticket: nextTicket, imageUrl: finalImageUrl, timestamp: Date.now(), status: 'pending' });
-                    } else {
-                        nextTicket = String(Math.floor(Math.random() * 999)).padStart(3, '0');
-                    }
-                    onComplete(finalImageUrl, nextTicket);
-                } catch (err) {
-                    alert("處理發生錯誤！");
-                    onFail();
-                }
-            };
-
-            const simulateEdgeDetection = (base64) => {
-                return new Promise((resolve) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const scale = 800 / Math.max(img.width, img.height);
-                        canvas.width = Math.floor(img.width * scale);
-                        canvas.height = Math.floor(img.height * scale);
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                        const data = imageData.data;
-                        const w = imageData.width;
-                        const h = imageData.height;
-
-                        const gray = new Uint8Array(w * h);
-                        for (let i = 0; i < data.length; i += 4) {
-                            gray[i/4] = data[i]*0.299 + data[i+1]*0.587 + data[i+2]*0.114;
-                        }
-
-                        const sobelData = new Uint8ClampedArray(data.length);
-                        sobelData.fill(255); 
-
-                        for (let y = 1; y < h - 1; y++) {
-                            for (let x = 1; x < w - 1; x++) {
-                                let p00 = gray[(y-1)*w + (x-1)], p01 = gray[(y-1)*w + x], p02 = gray[(y-1)*w + (x+1)];
-                                let p10 = gray[y*w + (x-1)],                              p12 = gray[y*w + (x+1)];
-                                let p20 = gray[(y+1)*w + (x-1)], p21 = gray[(y+1)*w + x], p22 = gray[(y+1)*w + (x+1)];
-
-                                let gx = -p00 + p02 - 2*p10 + 2*p12 - p20 + p22;
-                                let gy = -p00 - 2*p01 - p02 + p20 + 2*p21 + p22;
-                                let mag = Math.sqrt(gx*gx + gy*gy);
-
-                                let isEdge = mag > 60; 
-                                let idx = (y * w + x) * 4;
-                                let val = isEdge ? 0 : 255; 
-                                
-                                sobelData[idx] = val;
-                                sobelData[idx+1] = val;
-                                sobelData[idx+2] = val;
-                                sobelData[idx+3] = 255;
-                            }
-                        }
-                        imageData.data.set(sobelData);
-                        ctx.putImageData(imageData, 0, 0);
-                        resolve(canvas.toDataURL('image/jpeg', 0.8));
-                    };
-                    img.src = base64;
-                });
-            }
-
-            return (
-                <div className="flex-1 flex flex-col items-center justify-center space-y-8 bg-neutral-900">
-                    <div className="w-24 h-24 border-8 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin shadow-[0_0_15px_rgba(6,182,212,0.5)]"></div>
-                    <h2 className="text-3xl font-bold animate-pulse">{statusText}</h2>
-                    <p className="text-gray-400 text-center px-4">完美的作品值得等待<br/><span className="text-sm">(這需要花費大約 10~20 秒)</span></p>
-                </div>
-            );
-        };
-
-        const ResultView = ({ imageUrl, ticket, onDone }) => {
-            return (
-                <div className="flex-1 flex flex-col items-center justify-center p-6 bg-neutral-900 overflow-y-auto pb-[env(safe-area-inset-bottom)]">
-                    <h2 className="text-3xl md:text-4xl font-bold mt-4 mb-2">生成完畢！</h2>
-                    <p className="text-sm md:text-xl text-gray-400 mb-6 text-center">請將此號碼出示給工作人員進行雷雕</p>
-                    
-                    <div className="flex flex-col md:flex-row items-center gap-6 md:gap-12 bg-neutral-800 p-6 md:p-8 rounded-3xl shadow-2xl border border-neutral-700 w-full max-w-4xl">
-                        <div className="w-full md:w-1/2 flex justify-center">
-                            <img src={imageUrl} alt="Result" className="w-full max-w-sm rounded-lg shadow-inner bg-white" />
-                        </div>
-                        <div className="w-full md:w-1/2 flex flex-col items-center justify-center">
-                            <div className="text-gray-400 text-xl md:text-2xl mb-2">您的專屬取件號碼</div>
-                            <div className="text-7xl md:text-9xl font-black text-cyan-400 tracking-widest drop-shadow-lg mb-8">
-                                {ticket}
-                            </div>
-                            <button 
-                                onClick={onDone}
-                                className="touch-btn w-full py-4 md:py-5 bg-white text-black rounded-full text-xl md:text-2xl font-bold shadow-[0_4px_15px_rgba(255,255,255,0.2)] hover:bg-gray-200"
-                            >
-                                完成並返回首頁 <i className="fa-solid fa-check ml-2"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        const AdminView = ({ user, onExit }) => {
-            const [items, setItems] = useState([]);
+        // 擷取畫面並送出給後端
+        async function takePictureAndProcess() {
+            // 擷取正方形畫面
+            canvas.width = 1024;
+            canvas.height = 1024;
             
-            useEffect(() => {
-                if (!db || !user || user.uid === 'local-test-user') return;
-                const collRef = collection(db, 'artifacts', appId, 'public', 'data', 'linearts');
-                const unsubscribe = onSnapshot(collRef, (snapshot) => {
-                    let docs = [];
-                    snapshot.forEach(doc => docs.push({ id: doc.id, ...doc.data() }));
-                    docs.sort((a, b) => parseInt(b.ticket) - parseInt(a.ticket));
-                    setItems(docs);
+            // 處理鏡像翻轉的畫布繪製
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            
+            // 將影片繪製到畫布上 (裁切置中)
+            const size = Math.min(video.videoWidth, video.videoHeight);
+            const x = (video.videoWidth - size) / 2;
+            const y = (video.videoHeight - size) / 2;
+            ctx.drawImage(video, x, y, size, size, 0, 0, canvas.width, canvas.height);
+
+            // 轉成 Base64 格式
+            const base64Image = canvas.toDataURL('image/jpeg', 0.8);
+
+            // 切換到載入畫面
+            mainView.style.display = 'none';
+            loadingView.style.display = 'flex';
+
+            try {
+                console.log("正在呼叫後端 API...", BACKEND_URL);
+                
+                // 設定 90 秒的 Timeout (為了容忍 Render 剛開機的冷啟動時間)
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 90000);
+
+                const response = await fetch(BACKEND_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: base64Image }),
+                    signal: controller.signal
                 });
-                return () => unsubscribe();
-            }, [user]);
 
-            const downloadImage = async (url, ticket) => {
-                try {
-                    const response = await fetch(url);
-                    const blob = await response.blob();
-                    const a = document.createElement('a');
-                    a.href = window.URL.createObjectURL(blob);
-                    a.download = `LineArt_${ticket}.png`;
-                    a.click();
-                } catch (e) {
-                    alert("下載失敗，請右鍵另存圖片");
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(`伺服器回應錯誤: ${response.status}`);
                 }
+
+                const data = await response.json();
+                
+                if (data.success && data.result) {
+                    showResult(data.result);
+                } else {
+                    throw new Error('後端回傳格式錯誤');
+                }
+
+            } catch (error) {
+                console.error("❌ 連線後端失敗:", error);
+                alert("連線到 AI 伺服器失敗，或是伺服器剛醒來請重試一次！\n錯誤訊息: " + error.message);
+                
+                // 失敗時，啟動備用的前端陽春濾鏡 (防呆用)
+                applyFallbackFilter(base64Image);
+            }
+        }
+
+        // 顯示最終結果
+        function showResult(imgSrc) {
+            loadingView.style.display = 'none';
+            resultView.style.display = 'flex';
+            resultImage.src = imgSrc;
+            
+            // 號碼牌遞增
+            currentOrderNumber++;
+            orderNumberDisplay.innerText = currentOrderNumber.toString().padStart(3, '0');
+        }
+
+        // 重置機台，準備接待下一組客人
+        function resetApp() {
+            resultView.style.display = 'none';
+            mainView.style.display = 'block';
+            captureBtn.style.display = 'block';
+        }
+
+        // 備用方案：如果斷網或 Render 沒開，使用前端 Canvas 硬轉黑白
+        function applyFallbackFilter(base64Image) {
+            console.warn("啟動備用離線濾鏡...");
+            const img = new Image();
+            img.onload = () => {
+                ctx.setTransform(1, 0, 0, 1, 0, 0); // 重置翻轉
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                for (let i = 0; i < data.length; i += 4) {
+                    const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                    const threshold = avg > 120 ? 255 : 0; // 簡易二值化
+                    data[i] = data[i + 1] = data[i + 2] = threshold;
+                }
+                ctx.putImageData(imageData, 0, 0);
+                showResult(canvas.toDataURL('image/jpeg'));
             };
+            img.src = base64Image;
+        }
 
-            return (
-                <div className="flex-1 flex flex-col bg-neutral-900 text-white p-6 pb-[env(safe-area-inset-bottom)]">
-                    <div className="flex justify-between items-center border-b border-neutral-700 pb-4 mb-6 mt-[env(safe-area-inset-top)]">
-                        <h2 className="text-2xl md:text-3xl font-bold"><i className="fa-solid fa-user-shield text-cyan-500"></i> 雷雕任務管理</h2>
-                        <button onClick={onExit} className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg font-bold transition-colors">離開</button>
-                    </div>
-                    {user?.uid === 'local-test-user' && (
-                        <div className="bg-yellow-500/20 border border-yellow-500 text-yellow-500 p-4 rounded-lg mb-6 text-center">
-                            ⚠️ 目前為「本機測試模式」，請先到程式碼填寫 Firebase 金鑰才能開啟雲端儲存功能。
-                        </div>
-                    )}
-                    <div className="flex-1 scrollable-grid pr-2">
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-                            {items.map(item => (
-                                <div key={item.id} className="bg-neutral-800 rounded-xl p-4 flex flex-col items-center">
-                                    <div className="w-full aspect-square bg-white rounded-lg mb-4 overflow-hidden flex items-center justify-center">
-                                        <img src={item.imageUrl} className="object-cover w-full h-full" />
-                                    </div>
-                                    <div className="text-2xl font-black text-cyan-400 mb-3">#{item.ticket}</div>
-                                    <button onClick={() => downloadImage(item.imageUrl, item.ticket)} className="w-full py-2 bg-white text-black font-bold rounded hover:bg-gray-200">下載圖檔</button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            );
-        };
+        // 初始化啟動
+        window.onload = startCamera;
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
     </script>
 </body>
 </html>
