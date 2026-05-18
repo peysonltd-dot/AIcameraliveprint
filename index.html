@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>似顏繪雷雕拍照機</title>
+    <title>專屬塗鴉雷雕拍照機</title>
     <style>
         body {
             margin: 0;
@@ -13,11 +13,17 @@
             font-family: 'Helvetica Neue', Arial, sans-serif;
             text-align: center;
             overflow: hidden;
+            height: 100dvh; /* 針對 iOS 的動態高度修復 */
+        }
+        #main-view {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
         }
         #camera-container {
+            flex: 1;
             position: relative;
-            width: 100vw;
-            height: 75vh;
             background-color: #000;
             overflow: hidden;
         }
@@ -25,30 +31,46 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transform: scaleX(-1); /* 鏡像翻轉，像照鏡子一樣 */
+            transform: scaleX(-1);
         }
         #ui-container {
-            height: 25vh;
+            height: 150px;
+            flex-shrink: 0;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             background-color: #222;
+            padding-bottom: env(safe-area-inset-bottom);
         }
         button {
             background-color: #4CAF50;
             color: white;
             border: none;
-            padding: 20px 40px;
+            padding: 18px 40px;
             font-size: 24px;
             border-radius: 50px;
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             transition: transform 0.1s;
         }
-        button:active {
-            transform: scale(0.95);
+        button:active { transform: scale(0.95); }
+
+        /* 🌟 載入動畫圈圈 CSS */
+        .spinner {
+            width: 80px;
+            height: 80px;
+            border: 8px solid rgba(255, 255, 255, 0.1);
+            border-top: 8px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 30px;
         }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         #countdown-display {
             position: absolute;
             top: 50%;
@@ -61,42 +83,33 @@
             display: none;
             z-index: 10;
         }
+
         #loading-view, #result-view {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
-            height: 100vh;
+            height: 100dvh;
             background-color: #1a1a1a;
             z-index: 20;
             flex-direction: column;
             justify-content: center;
             align-items: center;
         }
+
         #result-image {
             max-width: 90%;
-            max-height: 60vh;
+            max-height: 55vh;
             border: 5px solid white;
             border-radius: 10px;
             margin-bottom: 20px;
-            background-color: white; /* 確保背景是白的 */
+            background-color: white;
         }
-        .order-number {
-            font-size: 80px;
-            color: #00bcd4;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-        .tips {
-            font-size: 18px;
-            color: #aaa;
-            margin-top: 20px;
-        }
-        /* 隱藏的畫布，用來擷取畫面 */
-        canvas {
-            display: none;
-        }
+        .order-number { font-size: 80px; color: #00bcd4; font-weight: bold; margin: 10px 0; }
+        #status-text { font-size: 22px; color: #4CAF50; font-weight: 500; height: 30px; margin: 10px 0; }
+        .tips { font-size: 16px; color: #666; margin-top: 20px; padding: 0 30px; line-height: 1.4; }
+        canvas { display: none; }
     </style>
 </head>
 <body>
@@ -112,43 +125,52 @@
     </div>
 
     <div id="loading-view">
-        <h2>✨ AI 魔法施展中 ✨</h2>
-        <p>正在為您繪製專屬塗鴉...</p>
-        <p class="tips">（初次啟動約需等待 40~60 秒，請勿關閉網頁）</p>
+        <div class="spinner"></div>
+        <h2 style="margin-bottom: 5px;">✨ AI 魔法施展中 ✨</h2>
+        <div id="status-text">正在啟動算圖引擎...</div>
+        <p class="tips">
+            若遇到人潮眾多，約需等待 30~60 秒<br>
+            請保持耐心，專屬塗鴉即將誕生！
+        </p>
     </div>
 
     <div id="result-view">
         <p>請將此畫面出示給工作人員進行雷雕</p>
         <img id="result-image" src="" alt="AI 線稿">
         <p>您的專屬取件號碼</p>
-        <div class="order-number" id="order-number-display">025</div>
+        <div class="order-number" id="order-number-display">027</div>
         <button onclick="resetApp()" style="background-color: #666; font-size: 18px; padding: 15px 30px; margin-top: 20px;">完成並返回首頁</button>
     </div>
 
     <canvas id="canvasElement"></canvas>
 
     <script>
-        // ==========================================
         // 🌟 已連接您的專屬 Render 伺服器
-        // ==========================================
         const BACKEND_URL = 'https://aicameraliveprint-back.onrender.com/api/generate-lineart';
-        // ==========================================
 
         const video = document.getElementById('videoElement');
         const canvas = document.getElementById('canvasElement');
         const ctx = canvas.getContext('2d');
         const captureBtn = document.getElementById('capture-btn');
         const countdownDisplay = document.getElementById('countdown-display');
-        
         const mainView = document.getElementById('main-view');
         const loadingView = document.getElementById('loading-view');
         const resultView = document.getElementById('result-view');
         const resultImage = document.getElementById('result-image');
         const orderNumberDisplay = document.getElementById('order-number-display');
+        const statusText = document.getElementById('status-text');
 
-        let currentOrderNumber = 25; // 接續您剛剛的 25 號
+        let currentOrderNumber = 27;
+        let loadingInterval;
+        const loadingMessages = [
+            "分析臉部輪廓中...",
+            "套用專屬可愛風格...",
+            "正在精雕細琢線條...",
+            "去除背景與雜訊中...",
+            "調整對比度以適合雷雕...",
+            "即將完成，請稍候..."
+        ];
 
-        // 啟動相機
         async function startCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -161,54 +183,49 @@
             }
         }
 
-        // 拍照與倒數邏輯
+        // 啟動文字動畫
+        function startLoadingAnimation() {
+            let i = 0;
+            statusText.innerText = loadingMessages[0];
+            loadingInterval = setInterval(() => {
+                i = (i + 1) % loadingMessages.length;
+                statusText.innerText = loadingMessages[i];
+            }, 3000); // 每 3 秒換一次文字
+        }
+
+        // 停止文字動畫
+        function stopLoadingAnimation() {
+            clearInterval(loadingInterval);
+        }
+
         captureBtn.addEventListener('click', () => {
             captureBtn.style.display = 'none';
             countdownDisplay.style.display = 'block';
-            let count = 3;
-            countdownDisplay.innerText = count;
-
+            let count = 3; countdownDisplay.innerText = count;
             const timer = setInterval(() => {
                 count--;
-                if (count > 0) {
-                    countdownDisplay.innerText = count;
-                } else {
-                    clearInterval(timer);
-                    countdownDisplay.style.display = 'none';
+                if (count > 0) { countdownDisplay.innerText = count; } else {
+                    clearInterval(timer); countdownDisplay.style.display = 'none';
                     takePictureAndProcess();
                 }
             }, 1000);
         });
 
-        // 擷取畫面並送出給後端
         async function takePictureAndProcess() {
-            // 擷取正方形畫面
-            canvas.width = 1024;
-            canvas.height = 1024;
-            
-            // 處理鏡像翻轉的畫布繪製
-            ctx.translate(canvas.width, 0);
-            ctx.scale(-1, 1);
-            
-            // 將影片繪製到畫布上 (裁切置中)
+            canvas.width = 1024; canvas.height = 1024;
+            ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
             const size = Math.min(video.videoWidth, video.videoHeight);
-            const x = (video.videoWidth - size) / 2;
-            const y = (video.videoHeight - size) / 2;
+            const x = (video.videoWidth - size) / 2; const y = (video.videoHeight - size) / 2;
             ctx.drawImage(video, x, y, size, size, 0, 0, canvas.width, canvas.height);
-
-            // 轉成 Base64 格式
             const base64Image = canvas.toDataURL('image/jpeg', 0.8);
-
-            // 切換到載入畫面
-            mainView.style.display = 'none';
+            
+            mainView.style.display = 'none'; 
             loadingView.style.display = 'flex';
+            startLoadingAnimation(); // 🌟 開始跑馬燈文字
 
             try {
-                console.log("正在呼叫後端 API...", BACKEND_URL);
-                
-                // 設定 90 秒的 Timeout (為了容忍 Render 剛開機的冷啟動時間)
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 90000);
+                const timeoutId = setTimeout(() => controller.abort(), 95000); // 延長到 95 秒
 
                 const response = await fetch(BACKEND_URL, {
                     method: 'POST',
@@ -216,71 +233,43 @@
                     body: JSON.stringify({ image: base64Image }),
                     signal: controller.signal
                 });
-
                 clearTimeout(timeoutId);
 
-                if (!response.ok) {
-                    throw new Error(`伺服器回應錯誤: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`Error ${response.status}`);
 
                 const data = await response.json();
-                
-                if (data.success && data.result) {
-                    showResult(data.result);
-                } else {
-                    throw new Error('後端回傳格式錯誤');
+                if (data.success && data.result) { 
+                    showResult(data.result); 
+                } else { 
+                    throw new Error('Format Error'); 
                 }
 
             } catch (error) {
-                console.error("❌ 連線後端失敗:", error);
-                alert("連線到 AI 伺服器失敗，或是伺服器剛醒來請重試一次！\n錯誤訊息: " + error.message);
-                
-                // 失敗時，啟動備用的前端陽春濾鏡 (防呆用)
-                applyFallbackFilter(base64Image);
+                console.error("❌ 連線失敗:", error);
+                stopLoadingAnimation();
+                alert("AI 伺服器忙碌中，請間隔 10 秒後再試一次！");
+                resetApp();
             }
         }
 
-        // 顯示最終結果
         function showResult(imgSrc) {
-            loadingView.style.display = 'none';
+            stopLoadingAnimation();
+            loadingView.style.display = 'none'; 
             resultView.style.display = 'flex';
             resultImage.src = imgSrc;
-            
-            // 號碼牌遞增
-            currentOrderNumber++;
+            currentOrderNumber++; 
             orderNumberDisplay.innerText = currentOrderNumber.toString().padStart(3, '0');
         }
 
-        // 重置機台，準備接待下一組客人
         function resetApp() {
-            resultView.style.display = 'none';
-            mainView.style.display = 'block';
+            stopLoadingAnimation();
+            loadingView.style.display = 'none';
+            resultView.style.display = 'none'; 
+            mainView.style.display = 'flex'; 
             captureBtn.style.display = 'block';
         }
 
-        // 備用方案：如果斷網或 Render 沒開，使用前端 Canvas 硬轉黑白
-        function applyFallbackFilter(base64Image) {
-            console.warn("啟動備用離線濾鏡...");
-            const img = new Image();
-            img.onload = () => {
-                ctx.setTransform(1, 0, 0, 1, 0, 0); // 重置翻轉
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const data = imageData.data;
-                for (let i = 0; i < data.length; i += 4) {
-                    const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                    const threshold = avg > 120 ? 255 : 0; // 簡易二值化
-                    data[i] = data[i + 1] = data[i + 2] = threshold;
-                }
-                ctx.putImageData(imageData, 0, 0);
-                showResult(canvas.toDataURL('image/jpeg'));
-            };
-            img.src = base64Image;
-        }
-
-        // 初始化啟動
         window.onload = startCamera;
-
     </script>
 </body>
 </html>
