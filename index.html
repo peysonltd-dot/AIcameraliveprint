@@ -13,7 +13,6 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
         /* 修正黑屏問題：加入 height: 100vh 作為舊版 iOS 的備援 */
@@ -248,7 +247,6 @@
             }, []);
 
             useEffect(() => { 
-                // 🌟 修正2：延遲 150 毫秒啟動運算，確保瀏覽器「先畫出 Loading 動畫」，避免直接黑屏當機
                 const timeoutId = setTimeout(() => {
                     processImage();
                 }, 150);
@@ -266,20 +264,19 @@
 
             const processImage = async () => {
                 try {
-                    let finalImageUrl = sourceImage;
-                    try {
-                        const BACKEND_URL = 'https://aicameraliveprint-back.onrender.com/api/generate-lineart'; 
-                        const response = await fetch(BACKEND_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ image: sourceImage })
-                        });
-                        if (response.ok) {
-                            const data = await response.json();
-                            finalImageUrl = data.resultUrl || data.result; 
-                        } else throw new Error("Backend Fetch Failed");
-                    } catch (apiErr) {
-                        console.warn("後端 API 異常，啟動本地防護機制...");
+                    let finalImageUrl = "";
+                    const BACKEND_URL = 'https://aicameraliveprint-back.onrender.com/api/generate-lineart'; 
+                    const response = await fetch(BACKEND_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ image: sourceImage })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        finalImageUrl = data.resultUrl || data.result; 
+                    } else {
+                        throw new Error("Backend Fetch Failed");
                     }
 
                     // 取號機制
@@ -290,7 +287,9 @@
                     
                     onComplete(finalImageUrl, nextTicket);
                 } catch (err) {
-                    onFail();
+                    console.error("後端 API 異常", err);
+                    alert("目前排隊人數較多或伺服器異常，請重新嘗試！");
+                    onFail(); // 🛑 修正：如果失敗直接回首頁，避免傳送破圖導致 QR Code 崩潰
                 }
             };
 
@@ -304,31 +303,18 @@
         };
 
         const ResultView = ({ imageUrl, ticket, onDone }) => {
-            const qrRef = useRef(null);
-            useEffect(() => {
-                if (imageUrl && qrRef.current) {
-                    qrRef.current.innerHTML = "";
-                    new QRCode(qrRef.current, { text: imageUrl, width: 130, height: 130, colorDark: "#000", colorLight: "#fff" });
-                }
-            }, [imageUrl]);
-
             return (
                 <div className="flex-1 flex flex-col items-center justify-center p-6 bg-neutral-900 overflow-y-auto pb-[env(safe-area-inset-bottom)]">
                     <h2 className="text-3xl font-bold mt-4 mb-2">專屬頭像繪製完成！</h2>
-                    <p className="text-gray-400 mb-6 text-center">掃描 QR Code 收藏，並將號碼出示給工作人員</p>
+                    <p className="text-gray-400 mb-6 text-center">請將專屬號碼出示給現場工作人員</p>
                     
                     <div className="flex flex-col items-center bg-neutral-800 p-6 rounded-3xl shadow-2xl w-full max-w-sm border border-neutral-700">
-                        <img src={imageUrl} alt="Result" className="w-full rounded-lg bg-white border-2 border-neutral-600 mb-6" />
+                        <img src={imageUrl} alt="Result" className="w-full rounded-lg bg-white border-2 border-neutral-600 mb-8" />
                         
                         <div className="text-gray-400 text-xl mb-1">您的專屬取件號碼</div>
-                        <div className="text-7xl font-black text-cyan-400 tracking-widest mb-6">{ticket}</div>
+                        <div className="text-7xl font-black text-cyan-400 tracking-widest mb-8">{ticket}</div>
                         
-                        <div className="bg-white p-3 rounded-xl flex flex-col items-center mb-6">
-                            <div ref={qrRef} className="mb-2"></div>
-                            <span className="text-xs text-black font-bold">掃描下載圖檔</span>
-                        </div>
-                        
-                        <button onClick={onDone} className="touch-btn w-full py-4 bg-white text-black rounded-full text-xl font-bold hover:bg-gray-200">
+                        <button onClick={onDone} className="touch-btn w-full py-4 bg-white text-black rounded-full text-xl font-bold hover:bg-gray-200 shadow-lg">
                             完成並返回首頁 <i className="fa-solid fa-check ml-2"></i>
                         </button>
                     </div>
