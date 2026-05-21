@@ -204,8 +204,11 @@
                     {/* 步驟 2：相機畫面 */}
                     {step === 'camera' && (
                         <div className="h-full w-full flex flex-col items-center justify-center relative">
-                            {/* 🌟 修正1：限制相機比例為 3:4，防止橫向鏡頭被過度放大 */}
-                            <div className="w-full max-w-lg aspect-[3/4] bg-gray-900 rounded-3xl overflow-hidden shadow-2xl relative border-4 border-gray-700 my-4">
+                            {/* 🌟 修正：以高度 (vh) 為基準並加上強制內聯樣式 (aspectRatio)，絕不變形 */}
+                            <div 
+                                className="h-[60vh] md:h-[65vh] max-h-[800px] bg-gray-900 rounded-3xl overflow-hidden shadow-2xl relative border-4 border-gray-700 my-4 flex-shrink-0"
+                                style={{ aspectRatio: '3/4' }}
+                            >
                                 <video 
                                     ref={videoRef} 
                                     autoPlay 
@@ -214,27 +217,30 @@
                                     className="w-full h-full object-cover mirror-video"
                                 />
                                 
-                                {/* 🌟 拍貼機必備：人臉對齊輔助虛線框 */}
+                                {/* 🌟 修正：防呆導引虛線框也同步強制比例 */}
                                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                    <div className="w-[60%] aspect-[3/4] border-4 border-dashed border-white/50 rounded-[40%] flex items-center justify-center shadow-[0_0_0_9999px_rgba(0,0,0,0.3)]">
-                                        <span className="text-white/70 text-lg font-bold bg-black/50 px-3 py-1 rounded-full mb-32">請將臉部對準虛線框</span>
+                                    <div 
+                                        className="w-[65%] border-4 border-dashed border-white/60 rounded-[40%] flex items-end justify-center shadow-[0_0_0_9999px_rgba(0,0,0,0.4)] pb-6 md:pb-8"
+                                        style={{ aspectRatio: '3/4' }}
+                                    >
+                                        <span className="text-white text-sm md:text-lg font-bold bg-black/60 px-4 py-2 rounded-full mb-2">請將臉部對準虛線框</span>
                                     </div>
                                 </div>
 
                                 {countdown > 0 && (
                                     <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20">
-                                        <span className="text-[12rem] font-bold text-white animate-ping">{countdown}</span>
+                                        <span className="text-[10rem] md:text-[12rem] font-bold text-white animate-ping">{countdown}</span>
                                     </div>
                                 )}
                             </div>
 
-                            <div className="w-full max-w-lg flex items-center justify-between px-4 mt-2">
-                                <button onClick={() => { stopCamera(); setStep('home'); }} className="bg-gray-700 text-white text-xl md:text-2xl font-bold px-8 py-5 rounded-full hover:bg-gray-600 active:scale-95">
+                            <div className="w-full max-w-sm md:max-w-md flex items-center justify-between px-4 mt-2 flex-shrink-0">
+                                <button onClick={() => { stopCamera(); setStep('home'); }} className="bg-gray-700 text-white text-lg md:text-2xl font-bold px-6 py-4 rounded-full hover:bg-gray-600 active:scale-95 transition-transform">
                                     <i className="fa-solid fa-arrow-left"></i> 返回
                                 </button>
                                 <button 
                                     onClick={takePhoto}
-                                    className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-2xl md:text-4xl font-bold px-12 py-5 rounded-full shadow-[0_0_30px_rgba(6,182,212,0.5)] active:scale-95 transition-transform"
+                                    className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-xl md:text-3xl font-bold px-10 py-4 rounded-full shadow-[0_0_30px_rgba(6,182,212,0.5)] active:scale-95 transition-transform"
                                 >
                                     <i className="fa-solid fa-camera mr-2"></i> 拍 照
                                 </button>
@@ -269,7 +275,7 @@
                             </h2>
                             <p className="text-lg md:text-xl text-gray-300 text-center">請截圖或記下號碼，前往雷雕機台取件</p>
                             
-                            {/* 🌟 修正2：強制使用正方形 (aspect-square) 並禁止擠壓 (flex-shrink-0) */}
+                            {/* 🌟 強制使用正方形 (aspect-square) 並禁止擠壓 (flex-shrink-0) */}
                             <div className="w-[85%] max-w-[350px] md:max-w-[450px] aspect-square bg-white rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(255,255,255,0.2)] border-8 border-gray-800 flex items-center justify-center flex-shrink-0">
                                 <img src={resultImage} alt="生成結果" className="w-full h-full object-contain" />
                             </div>
