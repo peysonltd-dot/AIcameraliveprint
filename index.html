@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AI 互動雷雕拍照機</title>
-    <!-- 使用 Tailwind CSS 快速排版 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- React & Babel -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -17,7 +15,7 @@
             touch-action: pan-x pan-y;
             user-select: none; 
             -webkit-user-select: none;
-            overflow: hidden; /* 防止滾動 */
+            overflow: hidden; 
         }
         /* 鏡像翻轉相機畫面，讓客人像照鏡子一樣 */
         .mirror-video {
@@ -46,7 +44,6 @@
         const API_BASE_URL = "https://aicameraliveprint-back.onrender.com";
 
         const App = () => {
-            // 系統狀態：home(首頁) -> camera(拍照) -> loading(人工處理中) -> result(結果與號碼牌)
             const [step, setStep] = useState('home');
             const [taskId, setTaskId] = useState(null);
             const [resultImage, setResultImage] = useState(null);
@@ -63,8 +60,8 @@
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({
                         video: { 
-                            facingMode: "user", // 強制使用前鏡頭 (iPhone) 或預設外接鏡頭 (AIO)
-                            width: { ideal: 1080 }, // 高畫質
+                            facingMode: "user", 
+                            width: { ideal: 1080 }, 
                             height: { ideal: 1920 }
                         },
                         audio: false
@@ -90,9 +87,8 @@
             // 2. 拍照與上傳邏輯
             // ==========================================
             const takePhoto = () => {
-                if (countdown > 0) return; // 防止重複點擊
+                if (countdown > 0) return; 
                 
-                // 3秒倒數
                 setCountdown(3);
                 let count = 3;
                 const timer = setInterval(() => {
@@ -110,10 +106,10 @@
                 const canvas = canvasRef.current;
                 const context = canvas.getContext('2d');
 
+                // 為了讓照片符合預覽框的比例，我們把寬高設為一致的比例
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
                 
-                // 因為畫面有鏡像翻轉，拍照存檔時要翻回來
                 context.translate(canvas.width, 0);
                 context.scale(-1, 1);
                 context.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -123,7 +119,6 @@
                 setStep('loading');
 
                 try {
-                    // 發送照片，拿取號碼牌 (Task ID)
                     const res = await fetch(`${API_BASE_URL}/api/upload`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -142,7 +137,7 @@
             };
 
             // ==========================================
-            // 3. 輪詢機制 (每 3 秒問一次後台畫好了沒)
+            // 3. 輪詢機制
             // ==========================================
             useEffect(() => {
                 let pollingInterval;
@@ -160,18 +155,17 @@
                         } catch (err) {
                             console.error("輪詢失敗", err);
                         }
-                    }, 3000); // 3 秒問一次
+                    }, 3000); 
                 }
                 return () => clearInterval(pollingInterval);
             }, [step, taskId]);
 
             // ==========================================
-            // 4. 自動回首頁機制 (展場必備防呆)
+            // 4. 自動回首頁機制
             // ==========================================
             useEffect(() => {
                 let timeout;
                 if (step === 'result') {
-                    // 顯示結果 30 秒後，自動清空並回到首頁迎接下一組客人
                     timeout = setTimeout(() => {
                         resetToHome();
                     }, 30000);
@@ -186,11 +180,8 @@
                 setCountdown(0);
             };
 
-            // ==========================================
-            // UI 畫面渲染
-            // ==========================================
             return (
-                <div className="h-full w-full flex flex-col items-center justify-center p-6 relative">
+                <div className="h-full w-full flex flex-col items-center justify-center p-4 relative">
                     
                     {/* 步驟 1：首頁 */}
                     {step === 'home' && (
@@ -212,8 +203,9 @@
 
                     {/* 步驟 2：相機畫面 */}
                     {step === 'camera' && (
-                        <div className="h-full w-full flex flex-col items-center relative">
-                            <div className="w-full h-[75%] bg-gray-900 rounded-3xl overflow-hidden shadow-2xl relative border-4 border-gray-700 mt-8">
+                        <div className="h-full w-full flex flex-col items-center justify-center relative">
+                            {/* 🌟 修正1：限制相機比例為 3:4，防止橫向鏡頭被過度放大 */}
+                            <div className="w-full max-w-lg aspect-[3/4] bg-gray-900 rounded-3xl overflow-hidden shadow-2xl relative border-4 border-gray-700 my-4">
                                 <video 
                                     ref={videoRef} 
                                     autoPlay 
@@ -221,19 +213,28 @@
                                     muted 
                                     className="w-full h-full object-cover mirror-video"
                                 />
+                                
+                                {/* 🌟 拍貼機必備：人臉對齊輔助虛線框 */}
+                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                    <div className="w-[60%] aspect-[3/4] border-4 border-dashed border-white/50 rounded-[40%] flex items-center justify-center shadow-[0_0_0_9999px_rgba(0,0,0,0.3)]">
+                                        <span className="text-white/70 text-lg font-bold bg-black/50 px-3 py-1 rounded-full mb-32">請將臉部對準虛線框</span>
+                                    </div>
+                                </div>
+
                                 {countdown > 0 && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-10">
-                                        <span className="text-[15rem] font-bold text-white animate-ping">{countdown}</span>
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20">
+                                        <span className="text-[12rem] font-bold text-white animate-ping">{countdown}</span>
                                     </div>
                                 )}
                             </div>
-                            <div className="flex-1 w-full flex items-center justify-center space-x-8">
-                                <button onClick={() => { stopCamera(); setStep('home'); }} className="bg-gray-700 text-white text-2xl font-bold px-8 py-6 rounded-full hover:bg-gray-600 active:scale-95">
+
+                            <div className="w-full max-w-lg flex items-center justify-between px-4 mt-2">
+                                <button onClick={() => { stopCamera(); setStep('home'); }} className="bg-gray-700 text-white text-xl md:text-2xl font-bold px-8 py-5 rounded-full hover:bg-gray-600 active:scale-95">
                                     <i className="fa-solid fa-arrow-left"></i> 返回
                                 </button>
                                 <button 
                                     onClick={takePhoto}
-                                    className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-4xl font-bold px-16 py-8 rounded-full shadow-[0_0_30px_rgba(6,182,212,0.5)] active:scale-95 transition-transform"
+                                    className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-2xl md:text-4xl font-bold px-12 py-5 rounded-full shadow-[0_0_30px_rgba(6,182,212,0.5)] active:scale-95 transition-transform"
                                 >
                                     <i className="fa-solid fa-camera mr-2"></i> 拍 照
                                 </button>
@@ -244,17 +245,17 @@
 
                     {/* 步驟 3：人工處理等待畫面 */}
                     {step === 'loading' && (
-                        <div className="text-center flex flex-col items-center justify-center h-full space-y-10">
+                        <div className="text-center flex flex-col items-center justify-center h-full space-y-8">
                             <div className="relative">
-                                <div className="w-40 h-40 border-8 border-gray-700 border-t-cyan-400 rounded-full animate-spin"></div>
-                                <i className="fa-solid fa-wand-magic-sparkles absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-4xl text-cyan-400"></i>
+                                <div className="w-32 h-32 md:w-40 md:h-40 border-8 border-gray-700 border-t-cyan-400 rounded-full animate-spin"></div>
+                                <i className="fa-solid fa-wand-magic-sparkles absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-3xl md:text-4xl text-cyan-400"></i>
                             </div>
-                            <h2 className="text-4xl md:text-5xl font-bold text-white">AI 畫師正在為您作畫...</h2>
-                            <p className="text-2xl text-gray-400">（因排隊人數較多，約需等待 1-2 分鐘）</p>
+                            <h2 className="text-3xl md:text-5xl font-bold text-white">AI 畫師正在為您作畫...</h2>
+                            <p className="text-xl md:text-2xl text-gray-400">（因排隊人數較多，約需等待 1-2 分鐘）</p>
                             {taskId && (
-                                <div className="mt-8 bg-gray-800/80 p-8 rounded-2xl border border-gray-600">
-                                    <p className="text-xl text-gray-300 mb-2">您的專屬號碼牌</p>
-                                    <p className="text-7xl font-bold text-cyan-400 tracking-widest">#{taskId}</p>
+                                <div className="mt-8 bg-gray-800/80 p-6 md:p-8 rounded-2xl border border-gray-600">
+                                    <p className="text-lg md:text-xl text-gray-300 mb-2">您的專屬號碼牌</p>
+                                    <p className="text-6xl md:text-7xl font-bold text-cyan-400 tracking-widest">#{taskId}</p>
                                 </div>
                             )}
                         </div>
@@ -262,22 +263,23 @@
 
                     {/* 步驟 4：結果與取件序號 */}
                     {step === 'result' && (
-                        <div className="h-full w-full flex flex-col items-center pt-12 space-y-8 animate-fade-in">
-                            <h2 className="text-4xl md:text-5xl font-bold text-green-400">
-                                <i className="fa-solid fa-check-circle mr-3"></i> 專屬頭像繪製完成！
+                        <div className="h-full w-full flex flex-col items-center justify-center space-y-6 animate-fade-in py-8">
+                            <h2 className="text-3xl md:text-4xl font-bold text-green-400 text-center">
+                                <i className="fa-solid fa-check-circle mr-2"></i> 專屬頭像繪製完成！
                             </h2>
-                            <p className="text-2xl text-gray-300">請截圖或記下號碼，前往雷雕機台取件</p>
+                            <p className="text-lg md:text-xl text-gray-300 text-center">請截圖或記下號碼，前往雷雕機台取件</p>
                             
-                            <div className="w-[80%] max-w-lg bg-white rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(255,255,255,0.2)] p-4 border-8 border-gray-800">
-                                <img src={resultImage} alt="生成結果" className="w-full h-auto object-contain rounded-xl" />
+                            {/* 🌟 修正2：強制使用正方形 (aspect-square) 並禁止擠壓 (flex-shrink-0) */}
+                            <div className="w-[85%] max-w-[350px] md:max-w-[450px] aspect-square bg-white rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(255,255,255,0.2)] border-8 border-gray-800 flex items-center justify-center flex-shrink-0">
+                                <img src={resultImage} alt="生成結果" className="w-full h-full object-contain" />
                             </div>
 
-                            <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-8 rounded-3xl border border-gray-600 shadow-2xl min-w-[300px] text-center">
-                                <p className="text-2xl text-gray-400 mb-4">您的取件號碼</p>
-                                <p className="text-8xl font-black text-cyan-400 tracking-tighter">#{taskId}</p>
+                            <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-12 py-4 rounded-3xl border border-gray-600 shadow-2xl flex flex-col items-center flex-shrink-0">
+                                <p className="text-xl text-gray-400 mb-2">您的取件號碼</p>
+                                <p className="text-6xl md:text-7xl font-black text-cyan-400 tracking-tighter">#{taskId}</p>
                             </div>
 
-                            <button onClick={resetToHome} className="text-xl text-gray-400 underline pt-4 active:text-white">
+                            <button onClick={resetToHome} className="text-lg text-gray-400 underline pt-2 active:text-white pb-8">
                                 完成並返回首頁 (30秒後自動跳轉)
                             </button>
                         </div>
