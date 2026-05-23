@@ -11,12 +11,14 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
     <style>
-        /* 防止展場螢幕被誤觸、禁止反白選取 */
+        /* 防止展場大螢幕被誤觸放大縮小 */
         body {
             touch-action: pan-x pan-y;
             user-select: none; 
             -webkit-user-select: none;
+            overflow: hidden; 
         }
         /* 鏡像翻轉相機畫面 */
         .mirror-video {
@@ -33,9 +35,71 @@
             background-size: 400% 400%;
             animation: gradientBG 15s ease infinite;
         }
+
+        /* =========================================
+           🌟 終極鎖定 CSS (無視手機型號，絕對不變形)
+           ========================================= */
+        
+        /* 1. 相機外框：改為 1:1 絕對正方形 */
+        .camera-container {
+            width: 85vw;
+            max-width: 450px; /* 放寬限制，讓正方形畫面更大方 */
+            aspect-ratio: 1 / 1;
+            position: relative;
+            overflow: hidden;
+            border-radius: 1.5rem;
+            border: 4px solid #374151;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            flex-shrink: 0;
+            background-color: #111827;
+        }
+
+        /* 2. 人臉導引框：永遠保持 1:1.35 的完美鵝蛋臉 */
+        .face-guide {
+            width: 50%; /* 縮小到 50%，強迫客人把手機拿遠！ */
+            aspect-ratio: 1 / 1.35; 
+            border-radius: 50%;
+            border: 4px dashed rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.55); /* 周圍加上半透明黑底遮罩 */
+            position: absolute;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* 絕對置中 */
+            pointer-events: none;
+        }
+
+        /* 3. 提示文字：獨立定位，不影響框線形狀 */
+        .face-guide-text {
+            position: absolute;
+            bottom: -45px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            background-color: rgba(0, 0, 0, 0.75);
+            padding: 8px 16px;
+            border-radius: 9999px;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            backdrop-filter: blur(4px);
+        }
+
+        /* 4. 結果圖外框：永遠保持 1:1 絕對正方形 */
+        .result-container {
+            width: 85vw;
+            max-width: 350px;
+            aspect-ratio: 1 / 1;
+            background-color: white;
+            border-radius: 1.5rem;
+            border: 8px solid #1f2937;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
     </style>
 </head>
-<!-- 🌟 使用 h-[100dvh] 完美適應 iPhone 的動態網址列 -->
 <body class="bg-black text-white min-h-[100dvh] w-screen animated-bg font-sans overflow-hidden">
     <div id="root" class="h-full w-full"></div>
 
@@ -60,8 +124,8 @@
                     const stream = await navigator.mediaDevices.getUserMedia({
                         video: { 
                             facingMode: "user", 
-                            width: { ideal: 1080 }, 
-                            height: { ideal: 1920 }
+                            width: { ideal: 1280 }, /* 請求標準橫式高畫質即可 */
+                            height: { ideal: 720 }
                         },
                         audio: false
                     });
@@ -102,12 +166,22 @@
                 const canvas = canvasRef.current;
                 const context = canvas.getContext('2d');
 
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
+                // --- 修改為 1:1 完美置中裁切邏輯 ---
+                // 找出畫面的短邊，裁切成完美的正方形
+                const size = Math.min(video.videoWidth, video.videoHeight);
+                canvas.width = size;
+                canvas.height = size;
                 
+                // 計算置中裁切的起始座標 (X, Y)
+                const startX = (video.videoWidth - size) / 2;
+                const startY = (video.videoHeight - size) / 2;
+
+                // 鏡像翻轉
                 context.translate(canvas.width, 0);
                 context.scale(-1, 1);
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // drawImage: 擷取視訊原始畫面「正中間」的正方形，畫到 Canvas 上
+                context.drawImage(video, startX, startY, size, size, 0, 0, size, size);
 
                 const imageData = canvas.toDataURL('image/jpeg', 0.8);
                 stopCamera();
@@ -170,8 +244,9 @@
             };
 
             return (
-                <div className="h-full min-h-[100dvh] w-full flex flex-col items-center justify-center p-4 relative">
+                <div className="h-full min-h-[100dvh] w-full flex flex-col items-center justify-center p-4 relative pb-10">
                     
+                    {/* 步驟 1：首頁 */}
                     {step === 'home' && (
                         <div className="text-center flex flex-col items-center justify-center h-full space-y-12 animate-fade-in">
                             <h1 className="text-4xl md:text-7xl font-extrabold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 drop-shadow-lg">
@@ -189,11 +264,12 @@
                         </div>
                     )}
 
+                    {/* 步驟 2：相機畫面 */}
                     {step === 'camera' && (
                         <div className="h-full w-full flex flex-col items-center justify-center relative">
                             
-                            {/* 🌟 1. 完美鎖死 3:4 比例，防止變形，最大寬度設為 sm (適合手機與直立機台) */}
-                            <div className="w-[90%] max-w-sm aspect-[3/4] bg-gray-900 rounded-3xl overflow-hidden shadow-2xl relative border-4 border-gray-700 my-4 flex-shrink-0">
+                            {/* 🌟 套用嚴格綁定的 CSS 類別 */}
+                            <div className="camera-container mb-6">
                                 <video 
                                     ref={videoRef} 
                                     autoPlay 
@@ -202,31 +278,27 @@
                                     className="absolute inset-0 w-full h-full object-cover mirror-video"
                                 />
                                 
-                                {/* 🌟 2. 完美人臉導引框：使用 rounded-[50%] 畫出絕對橢圓，縮小體積強迫客人退後 */}
-                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                    <div className="w-[65%] h-[75%] border-4 border-dashed border-white/60 rounded-[50%] flex flex-col items-center justify-end pb-12 shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]">
-                                        <span className="text-white text-xs md:text-sm font-bold bg-black/70 px-4 py-2 rounded-full backdrop-blur-sm">
-                                            請將臉部對準虛線框
-                                        </span>
-                                    </div>
+                                {/* 🌟 完美鵝蛋臉導引框 */}
+                                <div className="face-guide">
+                                    <div className="face-guide-text">請將臉部對準虛線框</div>
                                 </div>
 
                                 {/* 倒數計時 */}
                                 {countdown > 0 && (
                                     <div className="absolute inset-0 flex items-center justify-center z-20">
-                                        <span className="text-[10rem] md:text-[12rem] font-bold text-white drop-shadow-[0_0_20px_rgba(0,0,0,0.8)] animate-ping">{countdown}</span>
+                                        <span className="text-[12rem] md:text-[14rem] font-bold text-white drop-shadow-[0_0_30px_rgba(0,0,0,1)] animate-ping">{countdown}</span>
                                     </div>
                                 )}
                             </div>
 
                             {/* 控制按鈕 */}
-                            <div className="w-[90%] max-w-sm flex items-center justify-between px-2 mt-2 flex-shrink-0">
-                                <button onClick={() => { stopCamera(); setStep('home'); }} className="bg-gray-700 text-white text-lg md:text-2xl font-bold px-6 py-4 rounded-full hover:bg-gray-600 active:scale-95 transition-transform">
+                            <div className="w-[85vw] max-w-[380px] flex items-center justify-between flex-shrink-0">
+                                <button onClick={() => { stopCamera(); setStep('home'); }} className="bg-gray-700 text-white text-xl font-bold px-8 py-5 rounded-full hover:bg-gray-600 active:scale-95 transition-transform shadow-lg">
                                     <i className="fa-solid fa-arrow-left"></i> 返回
                                 </button>
                                 <button 
                                     onClick={takePhoto}
-                                    className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-xl md:text-3xl font-bold px-10 py-4 rounded-full shadow-[0_0_30px_rgba(6,182,212,0.5)] active:scale-95 transition-transform"
+                                    className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-2xl font-bold px-12 py-5 rounded-full shadow-[0_0_30px_rgba(6,182,212,0.6)] active:scale-95 transition-transform"
                                 >
                                     <i className="fa-solid fa-camera mr-2"></i> 拍 照
                                 </button>
@@ -235,6 +307,7 @@
                         </div>
                     )}
 
+                    {/* 步驟 3：人工處理等待畫面 */}
                     {step === 'loading' && (
                         <div className="text-center flex flex-col items-center justify-center h-full space-y-8">
                             <div className="relative">
@@ -244,7 +317,7 @@
                             <h2 className="text-3xl md:text-5xl font-bold text-white">AI 畫師正在為您作畫...</h2>
                             <p className="text-lg md:text-2xl text-gray-400">（因排隊人數較多，約需等待 1-2 分鐘）</p>
                             {taskId && (
-                                <div className="mt-6 bg-gray-800/80 p-6 md:p-8 rounded-2xl border border-gray-600">
+                                <div className="mt-6 bg-gray-800/80 p-6 md:p-8 rounded-2xl border border-gray-600 shadow-xl">
                                     <p className="text-md md:text-xl text-gray-300 mb-2">您的專屬號碼牌</p>
                                     <p className="text-6xl md:text-7xl font-bold text-cyan-400 tracking-widest">#{taskId}</p>
                                 </div>
@@ -252,6 +325,7 @@
                         </div>
                     )}
 
+                    {/* 步驟 4：結果與取件序號 */}
                     {step === 'result' && (
                         <div className="h-full w-full flex flex-col items-center justify-center space-y-6 animate-fade-in py-4">
                             <h2 className="text-2xl md:text-4xl font-bold text-green-400 text-center">
@@ -259,12 +333,12 @@
                             </h2>
                             <p className="text-md md:text-xl text-gray-300 text-center mb-2">請截圖或記下號碼，前往雷雕機台取件</p>
                             
-                            {/* 🌟 3. 確保雷雕結果圖一定是 1:1 正方形不變形 */}
-                            <div className="w-[85%] max-w-[320px] aspect-square bg-white rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(255,255,255,0.2)] border-8 border-gray-800 flex items-center justify-center flex-shrink-0">
+                            {/* 🌟 確保雷雕結果圖一定是 1:1 正方形 */}
+                            <div className="result-container shadow-[0_0_50px_rgba(255,255,255,0.2)]">
                                 <img src={resultImage} alt="生成結果" className="w-full h-full object-contain" />
                             </div>
 
-                            <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-10 py-4 rounded-3xl border border-gray-600 shadow-2xl flex flex-col items-center flex-shrink-0 mt-4">
+                            <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-12 py-5 rounded-3xl border border-gray-600 shadow-2xl flex flex-col items-center flex-shrink-0 mt-4">
                                 <p className="text-lg text-gray-400 mb-2">您的取件號碼</p>
                                 <p className="text-6xl font-black text-cyan-400 tracking-tighter">#{taskId}</p>
                             </div>
