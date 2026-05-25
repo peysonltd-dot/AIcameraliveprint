@@ -30,12 +30,13 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // 🌟 預設官方後端網址
+        // 預設官方後端網址
         const DEFAULT_API_URL = "https://aicameraliveprint-back.onrender.com";
 
         const AdminPanel = () => {
             const [allTasks, setAllTasks] = useState([]);
             const [remarks, setRemarks] = useState({}); // 暫存修改中的備註
+            const [copiedId, setCopiedId] = useState(null); // 複製提示狀態
             const [loadingId, setLoadingId] = useState(null);
             
             // 讀取快取網址，若無則使用預設值
@@ -46,7 +47,7 @@
             const [connectionError, setConnectionError] = useState("");
             const [showSettings, setShowSettings] = useState(false);
             
-            // 🌟 核心升級：向下相容模式狀態
+            // 核心升級：向下相容模式狀態
             const [legacyModeActive, setLegacyModeActive] = useState(false);
 
             // 偵測工作人員是否誤填了前台 GitHub 網址
@@ -60,7 +61,7 @@
                         let res = await fetch(`${apiUrl}/api/admin/all-tasks`);
                         let isLegacy = false;
 
-                        // 🌟 核心防禦：如果伺服器回傳了 HTML 404 頁面，或者不支援 JSON
+                        // 核心防禦：如果伺服器回傳了 HTML 404 頁面，或者不支援 JSON
                         const contentType = res.headers.get('content-type') || '';
                         if (!res.ok || contentType.includes('text/html') || !contentType.includes('application/json')) {
                             console.warn("⚠️ 偵測到後端尚未更新。自動啟動向下相容模式，連線回 /api/admin/tasks 接口...");
@@ -77,7 +78,8 @@
                             // 補齊舊版本可能缺少的欄位
                             const tasksWithStatus = (data.tasks || []).map(t => ({
                                 ...t,
-                                status: t.status || 'pending'
+                                status: t.status || 'pending',
+                                suggestedPrompt: t.suggestedPrompt || `Quirky minimalist hand-drawn doodle portrait, naive art, chibi kawaii aesthetic...` // 向下相容
                             }));
 
                             setAllTasks(tasksWithStatus);
@@ -102,20 +104,55 @@
                 };
             }, [apiUrl]);
 
-            // 分流：進行中任務與已完成任務
+            // 進行中與已處理歷史紀錄分流
             const pendingTasks = allTasks.filter(t => t.status === 'pending');
-            const completedTasks = allTasks.filter(t => t.status === 'completed');
+            // 已處理包含：已完成 (completed) 與已取消 (cancelled)
+            const completedTasks = allTasks.filter(t => t.status === 'completed' || t.status === 'cancelled');
 
             // 計算右上角看板數據
             const totalTickets = allTasks.length;
-            const completedCount = completedTasks.length;
+            const completedCount = allTasks.filter(t => t.status === 'completed').length;
             const latestTicketId = allTasks.length > 0 
                 ? allTasks[allTasks.length - 1].id 
                 : "000";
 
+            // 手動更新狀態 (製作中, 已完成, 已取消) 並同步至後端
+            const handleStatusChange = async (taskId, newStatus) => {
+                try {
+                    const res = await fetch(`${apiUrl}/api/admin/update-status/${taskId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: newStatus })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        setAllTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
+                    }
+                } catch (err) {
+                    console.error("無法同步進度狀態至伺服器:", err);
+                    setAllTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
+                }
+            };
+
+            // 🌟 核心升級：一鍵複製 Leonardo.ai 專屬智慧咒語，並提供複製成功特效
+            const handleCopyPrompt = (taskId, promptText) => {
+                const textarea = document.createElement("textarea");
+                textarea.value = promptText;
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand("copy");
+                    setCopiedId(taskId);
+                    setTimeout(() => setCopiedId(null), 2000); // 2 秒後隱藏提示
+                } catch (err) {
+                    alert("複製失敗，請手動複製！");
+                }
+                document.body.removeChild(textarea);
+            };
+
             // 處理更換 API 網址
             const handleSaveApiUrl = (newUrl) => {
-                const cleanedUrl = newUrl.trim().replace(/\/$/, ""); // 去除結尾斜線
+                const cleanedUrl = newUrl.trim().replace(/\/$/, ""); 
                 localStorage.setItem('admin_api_url', cleanedUrl);
                 setApiUrl(cleanedUrl);
                 setApiStatus('checking');
@@ -262,7 +299,7 @@
                         </div>
                     </div>
 
-                    {/* 🌟 智慧向下相容提示：當正在連線舊後端時顯示提示，但不影響功能 */}
+                    {/* 智慧向下相容提示 */}
                     {legacyModeActive && (
                         <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 text-amber-300 text-sm flex flex-col gap-2">
                             <div className="flex items-center gap-2 font-bold text-amber-400 text-base">
@@ -276,7 +313,7 @@
                         </div>
                     )}
 
-                    {/* 🌟 智慧網址防呆系統：當誤填為 Github 前台網址時，顯示顯目提示 */}
+                    {/* 智慧網址防呆系統 */}
                     {isGithubUrl && (
                         <div className="bg-amber-500/10 border-2 border-amber-500/40 rounded-2xl p-6 text-amber-300 text-sm flex flex-col gap-3 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
                             <div className="flex items-center gap-2 font-bold text-amber-400 text-base">
@@ -298,7 +335,7 @@
                         </div>
                     )}
 
-                    {/* 🌟 彈出式 API 網址設定面板 */}
+                    {/* 彈出式 API 網址設定面板 */}
                     {showSettings && (
                         <div className="bg-slate-900 p-5 rounded-3xl border-2 border-cyan-500/40 flex flex-col md:flex-row gap-4 items-end animate-fadeIn">
                             <div className="flex-grow w-full">
@@ -331,7 +368,7 @@
                         </div>
                     )}
 
-                    {/* 🌟 故障排查提示（僅在連線失敗，且不是 Github 錯誤時顯示） */}
+                    {/* 故障排查提示 */}
                     {apiStatus === 'offline' && !isGithubUrl && (
                         <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-5 text-rose-300 text-sm flex flex-col gap-2">
                             <div className="flex items-center gap-2 font-bold text-rose-400 text-base">
@@ -376,18 +413,57 @@
                                                 </div>
                                             </div>
                                             
+                                            {/* 🌟 智慧出征！自動為 Leonardo.ai 生成的特徵咒語展示與複製區 */}
+                                            <div className="bg-slate-950 p-3.5 rounded-xl border border-cyan-500/30 flex flex-col gap-2">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-xs text-cyan-400 font-bold tracking-wider flex items-center gap-1">
+                                                        <i className="fa-solid fa-wand-magic-sparkles animate-pulse"></i>
+                                                        Llama AI 推薦生圖咒語
+                                                    </span>
+                                                    {copiedId === task.id ? (
+                                                        <span className="text-[10px] text-emerald-400 font-bold"><i className="fa-solid fa-check mr-0.5"></i>已複製</span>
+                                                    ) : (
+                                                        <span className="text-[10px] text-slate-500">專為豆豆眼客製</span>
+                                                    )}
+                                                </div>
+                                                <p className="text-[11px] text-slate-300 font-mono break-words leading-relaxed select-all line-clamp-3 bg-black/40 p-2 rounded border border-slate-800">
+                                                    {task.suggestedPrompt}
+                                                </p>
+                                                <button 
+                                                    onClick={() => handleCopyPrompt(task.id, task.suggestedPrompt)}
+                                                    className="w-full bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/50 text-cyan-300 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1"
+                                                >
+                                                    <i className="fa-regular fa-copy"></i>
+                                                    一鍵複製 Leonardo 專用咒語
+                                                </button>
+                                            </div>
+
+                                            {/* 狀態與進度選擇器 */}
+                                            <div className="flex items-center justify-between bg-black/30 p-2 rounded-xl border border-slate-800">
+                                                <span className="text-xs text-slate-400 font-bold">進度管理:</span>
+                                                <select 
+                                                    value={task.status} 
+                                                    onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                                                    className="bg-slate-950 border border-slate-800 text-xs rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-cyan-500 font-semibold cursor-pointer"
+                                                >
+                                                    <option value="pending" className="text-cyan-400 bg-slate-900 font-bold">⏳ 製作中</option>
+                                                    <option value="completed" className="text-emerald-400 bg-slate-900 font-bold">✅ 已完成</option>
+                                                    <option value="cancelled" className="text-rose-400 bg-slate-900 font-bold">❌ 已取消</option>
+                                                </select>
+                                            </div>
+
                                             {/* 備註輸入區 */}
                                             <div className="flex gap-2">
                                                 <input 
                                                     type="text" 
-                                                    placeholder="新增此排隊備註 (例如：要眼鏡、背景加星星)..."
+                                                    placeholder="新增此排隊備註 (例如：背景加愛心)..."
                                                     value={remarks[task.id] !== undefined ? remarks[task.id] : (task.remark || '')}
                                                     onChange={(e) => handleRemarkChange(task.id, e.target.value)}
                                                     className="flex-grow bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
                                                 />
                                                 <button 
                                                     onClick={() => handleSaveRemark(task.id)}
-                                                    className="bg-slate-800 hover:bg-slate-750 text-cyan-400 px-3 py-2 rounded-xl text-sm transition font-bold"
+                                                    className="bg-slate-800 hover:bg-slate-700 text-cyan-400 px-3 py-2 rounded-xl text-sm transition font-bold"
                                                 >
                                                     儲存
                                                 </button>
@@ -401,7 +477,7 @@
                                                     className="w-full bg-slate-800 hover:bg-slate-750 text-white font-bold py-3 px-4 rounded-xl text-center text-sm transition flex items-center justify-center gap-2 border border-slate-700/50"
                                                 >
                                                     <i className="fa-solid fa-download text-cyan-400"></i>
-                                                    1. 下載照片 (送去生圖)
+                                                    1. 下載照片
                                                 </a>
 
                                                 <label className={`w-full text-center font-bold py-3 px-4 rounded-xl cursor-pointer text-sm transition flex items-center justify-center gap-2 ${loadingId === task.id ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-cyan-500 hover:bg-cyan-400 text-black'}`}>
@@ -423,38 +499,73 @@
                         )}
                     </div>
 
-                    {/* 區塊二：已完成歷史紀錄 */}
+                    {/* 區塊二：已完成與已取消歷史紀錄 */}
                     <div className="bg-slate-900/40 p-6 rounded-3xl border border-slate-800/60">
                         <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-pink-500">
                             <i className="fa-solid fa-circle-check"></i>
-                            已完成歷史紀錄 ({completedTasks.length} 人已完成)
+                            已處理歷史紀錄 ({completedTasks.length} 筆已處理)
                         </h2>
 
                         {completedTasks.length === 0 ? (
                             <div className="text-center py-12 text-slate-600 border-2 border-dashed border-slate-800 rounded-2xl">
-                                <p className="text-sm">尚無完成記錄，等待第一位體驗者誕生！</p>
+                                <p className="text-sm">尚無處理記錄，等待第一位體驗者誕生！</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {completedTasks.map(task => (
                                     <div key={task.id} className="bg-slate-900/50 rounded-2xl overflow-hidden border border-slate-800/85 shadow hover:border-pink-500/30 transition duration-300">
                                         <div className="bg-slate-900 text-white font-bold text-sm px-4 py-3 flex justify-between items-center border-b border-slate-800/80">
-                                            <span className="text-pink-500 font-mono">ID: #{task.id}</span>
-                                            <span className="bg-pink-500/10 text-pink-500 text-[10px] px-2.5 py-0.5 rounded-full font-bold">
-                                                <i className="fa-solid fa-circle-check mr-1"></i>已完成並送出
-                                            </span>
+                                            <span className={task.status === 'cancelled' ? "text-rose-500 font-mono" : "text-pink-500 font-mono"}>ID: #{task.id}</span>
+                                            
+                                            {/* 頂部狀態徽章 */}
+                                            {task.status === 'cancelled' ? (
+                                                <span className="bg-rose-500/10 text-rose-500 text-[10px] px-2.5 py-0.5 rounded-full font-bold">
+                                                    <i className="fa-solid fa-ban mr-1"></i>已取消離線
+                                                </span>
+                                            ) : (
+                                                <span className="bg-emerald-500/10 text-emerald-400 text-[10px] px-2.5 py-0.5 rounded-full font-bold">
+                                                    <i className="fa-solid fa-circle-check mr-1"></i>已完成
+                                                </span>
+                                            )}
                                         </div>
                                         <div className="p-4 flex flex-col gap-4">
-                                            {/* 原圖 vs 成果圖 左右對比 */}
+                                            
+                                            {/* 原圖 vs 風格化雷雕圖 完美並列呈現 */}
                                             <div className="grid grid-cols-2 gap-2">
                                                 <div>
-                                                    <p className="text-[10px] text-slate-500 mb-1">原始照片</p>
+                                                    <p className="text-[10px] text-slate-500 mb-1">原始拍照照片</p>
                                                     <img src={task.sourceImage} className="w-full h-28 object-cover rounded-lg border border-slate-850" alt="原圖" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-[10px] text-pink-500 mb-1">完成雷雕圖</p>
-                                                    <img src={task.resultImage} className="w-full h-28 object-cover rounded-lg border border-pink-500/20" alt="完成圖" />
+                                                    <p className="text-[10px] text-pink-500 mb-1">風格化雷雕圖</p>
+                                                    {task.status === 'cancelled' ? (
+                                                        <div className="w-full h-28 flex flex-col items-center justify-center rounded-lg bg-rose-950/20 border border-rose-900/30 text-rose-400">
+                                                            <i className="fa-solid fa-ban text-lg mb-1"></i>
+                                                            <span className="text-[10px] font-bold">訂單已取消</span>
+                                                        </div>
+                                                    ) : task.resultImage ? (
+                                                        <img src={task.resultImage} className="w-full h-28 object-cover rounded-lg border border-pink-500/20" alt="完成圖" />
+                                                    ) : (
+                                                        <div className="w-full h-28 flex flex-col items-center justify-center rounded-lg bg-slate-950 border border-slate-800 text-slate-500">
+                                                            <i className="fa-solid fa-image text-lg mb-1 animate-pulse"></i>
+                                                            <span className="text-[10px]">待上傳風格圖</span>
+                                                        </div>
+                                                    )}
                                                 </div>
+                                            </div>
+
+                                            {/* 行動端與平板操作：隨時可以在已處理歷史中切換進度 */}
+                                            <div className="flex items-center justify-between bg-black/20 p-2 rounded-xl border border-slate-800">
+                                                <span className="text-xs text-slate-400 font-bold">變更狀態:</span>
+                                                <select 
+                                                    value={task.status} 
+                                                    onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                                                    className="bg-slate-950 border border-slate-800 text-xs rounded-lg px-2 py-1 text-white focus:outline-none focus:border-cyan-500 font-semibold cursor-pointer"
+                                                >
+                                                    <option value="pending" className="text-cyan-400 bg-slate-900">⏳ 製作中</option>
+                                                    <option value="completed" className="text-emerald-400 bg-slate-900">✅ 已完成</option>
+                                                    <option value="cancelled" className="text-rose-400 bg-slate-900">❌ 已取消</option>
+                                                </select>
                                             </div>
 
                                             {/* 已完成備註編輯 */}
@@ -475,16 +586,18 @@
                                             </div>
 
                                             {/* 重新上傳覆蓋按鈕 */}
-                                            <label className="w-full text-center font-bold py-2 px-3 rounded-lg cursor-pointer text-xs bg-slate-800 hover:bg-slate-750 text-slate-400 transition flex items-center justify-center gap-1.5">
-                                                <i className="fa-solid fa-arrows-rotate text-pink-500"></i>
-                                                重新上傳覆蓋
-                                                <input 
-                                                    type="file" 
-                                                    accept="image/*" 
-                                                    className="hidden" 
-                                                    onChange={(e) => handleUploadResult(e, task.id)}
-                                                />
-                                            </label>
+                                            {task.status !== 'cancelled' && (
+                                                <label className="w-full text-center font-bold py-2 px-3 rounded-lg cursor-pointer text-xs bg-slate-800 hover:bg-slate-750 text-slate-400 transition flex items-center justify-center gap-1.5">
+                                                    <i className="fa-solid fa-arrows-rotate text-pink-500"></i>
+                                                    重新上傳風格圖
+                                                    <input 
+                                                        type="file" 
+                                                        accept="image/*" 
+                                                        className="hidden" 
+                                                        onChange={(e) => handleUploadResult(e, task.id)}
+                                                    />
+                                                </label>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -501,7 +614,7 @@
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<AdminPanel />); // 🌟 已修正為正確的元件名稱 AdminPanel
+        root.render(<AdminPanel />); 
     </script>
 </body>
 </html>
