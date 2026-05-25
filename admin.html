@@ -64,9 +64,7 @@
                         // 核心防禦：如果伺服器回傳了 HTML 404 頁面，或者不支援 JSON
                         const contentType = res.headers.get('content-type') || '';
                         if (!res.ok || contentType.includes('text/html') || !contentType.includes('application/json')) {
-                            console.warn("⚠️ 偵測到後端尚未更新。自動啟動向下相容模式，連線回 /api/admin/tasks 接口...");
-                            
-                            // 嘗試連線舊接口
+                            console.warn("⚠️ 偵測到後端尚未更新。自動啟動向下相容模式...");
                             res = await fetch(`${apiUrl}/api/admin/tasks`);
                             isLegacy = true;
                         }
@@ -75,11 +73,10 @@
                         const data = await res.json();
                         
                         if (data.success && isMounted) {
-                            // 補齊舊版本可能缺少的欄位
                             const tasksWithStatus = (data.tasks || []).map(t => ({
                                 ...t,
                                 status: t.status || 'pending',
-                                suggestedPrompt: t.suggestedPrompt || `Quirky minimalist hand-drawn doodle portrait, naive art, chibi kawaii aesthetic...` // 向下相容
+                                suggestedPrompt: t.suggestedPrompt || `Quirky minimalist hand-drawn doodle portrait, naive art, chibi kawaii aesthetic...`
                             }));
 
                             setAllTasks(tasksWithStatus);
@@ -106,7 +103,6 @@
 
             // 進行中與已處理歷史紀錄分流
             const pendingTasks = allTasks.filter(t => t.status === 'pending');
-            // 已處理包含：已完成 (completed) 與已取消 (cancelled)
             const completedTasks = allTasks.filter(t => t.status === 'completed' || t.status === 'cancelled');
 
             // 計算右上角看板數據
@@ -116,7 +112,7 @@
                 ? allTasks[allTasks.length - 1].id 
                 : "000";
 
-            // 手動更新狀態 (製作中, 已完成, 已取消) 並同步至後端
+            // 手動更新狀態並同步至後端
             const handleStatusChange = async (taskId, newStatus) => {
                 try {
                     const res = await fetch(`${apiUrl}/api/admin/update-status/${taskId}`, {
@@ -134,7 +130,7 @@
                 }
             };
 
-            // 🌟 核心升級：一鍵複製 Leonardo.ai 專屬智慧咒語，並提供複製成功特效
+            // 一鍵複製 Leonardo 專用高保真咒語
             const handleCopyPrompt = (taskId, promptText) => {
                 const textarea = document.createElement("textarea");
                 textarea.value = promptText;
@@ -143,7 +139,7 @@
                 try {
                     document.execCommand("copy");
                     setCopiedId(taskId);
-                    setTimeout(() => setCopiedId(null), 2000); // 2 秒後隱藏提示
+                    setTimeout(() => setCopiedId(null), 2000);
                 } catch (err) {
                     alert("複製失敗，請手動複製！");
                 }
@@ -413,7 +409,7 @@
                                                 </div>
                                             </div>
                                             
-                                            {/* 🌟 智慧出征！自動為 Leonardo.ai 生成的特徵咒語展示與複製區 */}
+                                            {/* 智慧自動推薦生圖咒語展示與複製區 */}
                                             <div className="bg-slate-950 p-3.5 rounded-xl border border-cyan-500/30 flex flex-col gap-2">
                                                 <div className="flex items-center justify-between">
                                                     <span className="text-xs text-cyan-400 font-bold tracking-wider flex items-center gap-1">
@@ -423,7 +419,7 @@
                                                     {copiedId === task.id ? (
                                                         <span className="text-[10px] text-emerald-400 font-bold"><i className="fa-solid fa-check mr-0.5"></i>已複製</span>
                                                     ) : (
-                                                        <span className="text-[10px] text-slate-500">專為豆豆眼客製</span>
+                                                        <span className="text-[10px] text-slate-500">已深度解析細節</span>
                                                     )}
                                                 </div>
                                                 <p className="text-[11px] text-slate-300 font-mono break-words leading-relaxed select-all line-clamp-3 bg-black/40 p-2 rounded border border-slate-800">
@@ -515,7 +511,7 @@
                                 {completedTasks.map(task => (
                                     <div key={task.id} className="bg-slate-900/50 rounded-2xl overflow-hidden border border-slate-800/85 shadow hover:border-pink-500/30 transition duration-300">
                                         <div className="bg-slate-900 text-white font-bold text-sm px-4 py-3 flex justify-between items-center border-b border-slate-800/80">
-                                            <span className={task.status === 'cancelled' ? "text-rose-500 font-mono" : "text-pink-500 font-mono"}>ID: #{task.id}</span>
+                                            <span className={task.status === 'cancelled' ? "text-rose-500 font-mono" : "text-pink-500 font-mono">ID: #{task.id}</span>
                                             
                                             {/* 頂部狀態徽章 */}
                                             {task.status === 'cancelled' ? (
