@@ -312,9 +312,10 @@
                 }
             };
 
+            // 🌟 修正後的媒體串流關閉函式：指向 srcObject.getTracks() 進行停止
             const stopMediaStream = () => {
                 if (videoRef.current && videoRef.current.srcObject) {
-                    videoRef.current.getTracks().forEach(t => t.stop());
+                    videoRef.current.srcObject.getTracks().forEach(t => t.stop());
                 }
             };
 
@@ -373,12 +374,12 @@
                         <div class="subtitle">2026 BEST AI AWARDS</div>
                         <div class="id-title">雷雕領取序號</div>
                         <div class="id-num">#${id}</div>
-                        \${imgUrl ? \`<img class="ticket-img" src="\${imgUrl}" />\` : ''}
+                        ${imgUrl ? `<img class="ticket-img" src="${imgUrl}" />` : ''}
                         <div class="footer-msg">
                             請憑此票券至雷雕體驗區<br/>
                             領取您的專屬雷雕紀念品！
                         </div>
-                        <div class="time">列印時間: \${new Date().toLocaleString('zh-TW')}</div>
+                        <div class="time">列印時間: ${new Date().toLocaleString('zh-TW')}</div>
                     </body>
                     </html>
                 `);
@@ -467,13 +468,12 @@
                     
                     {/* Header */}
                     <div className="text-center z-10 mt-2 flex flex-col items-center flex-shrink-0 w-full">
-                        {/* 🌟 核心升級：替換成您提供的高清原圖 LOGO，並加上霓虹發光特效 */}
+                        {/* 替換成您提供的高清原圖 LOGO，並加上霓虹發光特效 */}
                         <img 
                             src="https://img.shoplineapp.com/media/image_clips/6a14557eb36f6eb74d460308/original.png?1779717502=&owner_id=66221c5c384dbb002ec45c18" 
                             alt="2026 BEST AI AWARDS"
                             className="w-[260px] sm:w-[320px] md:w-[420px] h-auto mb-2 sm:mb-3 filter drop-shadow-[0_0_12px_rgba(0,242,255,0.7)] select-none pointer-events-none"
                             onError={(e) => {
-                                // 防錯機制：若網絡加載失敗，自動退回高品質文字佔位
                                 e.target.onerror = null;
                                 e.target.style.display = 'none';
                             }}
