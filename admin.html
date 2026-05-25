@@ -30,30 +30,60 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
+        // 🌟 預設官方後端網址
+        const DEFAULT_API_URL = "https://aicameraliveprint-back.onrender.com";
+
         const AdminPanel = () => {
             const [allTasks, setAllTasks] = useState([]);
             const [remarks, setRemarks] = useState({}); // 暫存修改中的備註
             const [loadingId, setLoadingId] = useState(null);
             
-            // 🌟 核心功能：動態 API 網址設定（預設為 Render，並支援 localStorage 記憶）
+            // 讀取快取網址，若無則使用預設值
             const [apiUrl, setApiUrl] = useState(() => {
-                return localStorage.getItem('admin_api_url') || "https://aicameraliveprint-back.onrender.com";
+                return localStorage.getItem('admin_api_url') || DEFAULT_API_URL;
             });
             const [apiStatus, setApiStatus] = useState('checking'); // 'checking', 'online', 'offline'
             const [connectionError, setConnectionError] = useState("");
             const [showSettings, setShowSettings] = useState(false);
+            
+            // 🌟 核心升級：向下相容模式狀態
+            const [legacyModeActive, setLegacyModeActive] = useState(false);
 
-            // 每 2.5 秒自動刷新一次完整名單（包含待處理與已完成）
+            // 偵測工作人員是否誤填了前台 GitHub 網址
+            const isGithubUrl = apiUrl.toLowerCase().includes("github.io");
+
+            // 每 2.5 秒自動刷新一次完整名單
             useEffect(() => {
                 let isMounted = true;
                 const fetchAllTasks = async () => {
                     try {
-                        const res = await fetch(`${apiUrl}/api/admin/all-tasks`);
+                        let res = await fetch(`${apiUrl}/api/admin/all-tasks`);
+                        let isLegacy = false;
+
+                        // 🌟 核心防禦：如果伺服器回傳了 HTML 404 頁面，或者不支援 JSON
+                        const contentType = res.headers.get('content-type') || '';
+                        if (!res.ok || contentType.includes('text/html') || !contentType.includes('application/json')) {
+                            console.warn("⚠️ 偵測到後端尚未更新。自動啟動向下相容模式，連線回 /api/admin/tasks 接口...");
+                            
+                            // 嘗試連線舊接口
+                            res = await fetch(`${apiUrl}/api/admin/tasks`);
+                            isLegacy = true;
+                        }
+
+                        if (!res.ok) throw new Error(`HTTP 錯誤! 狀態碼: ${res.status}`);
                         const data = await res.json();
+                        
                         if (data.success && isMounted) {
-                            setAllTasks(data.tasks);
+                            // 補齊舊版本可能缺少的欄位
+                            const tasksWithStatus = (data.tasks || []).map(t => ({
+                                ...t,
+                                status: t.status || 'pending'
+                            }));
+
+                            setAllTasks(tasksWithStatus);
                             setApiStatus('online');
                             setConnectionError("");
+                            setLegacyModeActive(isLegacy);
                         }
                     } catch (err) {
                         if (isMounted) {
@@ -65,7 +95,7 @@
                 };
                 
                 fetchAllTasks();
-                const interval = setInterval(fetchAllTasks, 2500);
+                const interval = setInterval(fetchAllTasks, 2.5 * 1000);
                 return () => {
                     isMounted = false;
                     clearInterval(interval);
@@ -90,6 +120,15 @@
                 setApiUrl(cleanedUrl);
                 setApiStatus('checking');
                 setShowSettings(false);
+            };
+
+            // 一鍵清除瀏覽器快取殘留，重置回預設網址
+            const handleResetToDefault = () => {
+                localStorage.removeItem('admin_api_url');
+                setApiUrl(DEFAULT_API_URL);
+                setApiStatus('checking');
+                setShowSettings(false);
+                alert("已成功清除暫存快取！系統已重置回預設後端連線網址！");
             };
 
             // 處理工作人員上傳生成好的雷雕圖
@@ -159,7 +198,7 @@
                                 <i className="fa-solid fa-bolt text-cyan-400"></i>
                                 <span className="tech-title text-3xl font-black tracking-wider">控制台</span>
                                 
-                                {/* 🌟 狀態指示燈 */}
+                                {/* 狀態指示燈 */}
                                 {apiStatus === 'online' && (
                                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 animate-pulse">
                                         <span className="w-1.5 h-1.5 mr-1.5 bg-emerald-400 rounded-full"></span>已連線
@@ -177,14 +216,20 @@
                                 )}
                             </div>
                             
-                            {/* 🌟 一鍵開啟設定 API 按鈕 */}
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs text-slate-500 font-mono">伺服器: {apiUrl}</span>
+                            {/* 設定與強制重設按鈕 */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs text-slate-500 font-mono">連線網址: {apiUrl}</span>
                                 <button 
                                     onClick={() => setShowSettings(!showSettings)} 
                                     className="text-xs text-slate-400 hover:text-cyan-400 transition bg-slate-800 px-2 py-0.5 rounded-md border border-slate-700"
                                 >
-                                    <i className="fa-solid fa-gear mr-1"></i>設定網址
+                                    <i className="fa-solid fa-gear mr-1"></i>手動修改網址
+                                </button>
+                                <button 
+                                    onClick={handleResetToDefault}
+                                    className="text-xs text-rose-400 hover:text-rose-300 transition bg-rose-950/40 px-2 py-0.5 rounded-md border border-rose-900/50"
+                                >
+                                    <i className="fa-solid fa-trash-can mr-1"></i>清除快取並重設網址
                                 </button>
                             </div>
                         </div>
@@ -216,6 +261,42 @@
                             </div>
                         </div>
                     </div>
+
+                    {/* 🌟 智慧向下相容提示：當正在連線舊後端時顯示提示，但不影響功能 */}
+                    {legacyModeActive && (
+                        <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 text-amber-300 text-sm flex flex-col gap-2">
+                            <div className="flex items-center gap-2 font-bold text-amber-400 text-base">
+                                <i className="fa-solid fa-triangle-exclamation"></i>
+                                相容模式已啟動（成功取得排隊單！）
+                            </div>
+                            <div className="text-xs text-amber-300/80 leading-relaxed">
+                                <p>系統偵測到您目前部署在 Render 的後端代碼為<b>舊版本</b>。我們已自動啟動相容機制為您載入排隊單，因此<b>目前功能一切正常且可以照常收單與下載</b>！</p>
+                                <p className="mt-1">💡 <i>提示：若要啟用「已完成區塊分流」與「備註功能」，請記得在有空時將最新的 <code>server.js</code> 部署至 Render 平台。</i></p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 🌟 智慧網址防呆系統：當誤填為 Github 前台網址時，顯示顯目提示 */}
+                    {isGithubUrl && (
+                        <div className="bg-amber-500/10 border-2 border-amber-500/40 rounded-2xl p-6 text-amber-300 text-sm flex flex-col gap-3 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
+                            <div className="flex items-center gap-2 font-bold text-amber-400 text-base">
+                                <i className="fa-solid fa-triangle-exclamation text-xl"></i>
+                                ⚠️ 偵測到網址錯誤設定！
+                            </div>
+                            <div className="text-xs text-amber-200/90 leading-relaxed space-y-2">
+                                <p>您目前輸入的是 <strong>GitHub Pages 前台靜態網址</strong>，這會導致控制台無法抓取資料。</p>
+                                <p>後台必須連線到您的 <strong>Render 後端伺服器</strong> 才能正常運作。</p>
+                            </div>
+                            <div className="flex gap-3 mt-1">
+                                <button 
+                                    onClick={handleResetToDefault}
+                                    className="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-bold transition"
+                                >
+                                    一鍵修正：恢復 Render 預設網址
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     {/* 🌟 彈出式 API 網址設定面板 */}
                     {showSettings && (
@@ -250,17 +331,17 @@
                         </div>
                     )}
 
-                    {/* 🌟 故障排查提示（僅在連線失敗時顯示） */}
-                    {apiStatus === 'offline' && (
+                    {/* 🌟 故障排查提示（僅在連線失敗，且不是 Github 錯誤時顯示） */}
+                    {apiStatus === 'offline' && !isGithubUrl && (
                         <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-5 text-rose-300 text-sm flex flex-col gap-2">
                             <div className="flex items-center gap-2 font-bold text-rose-400 text-base">
                                 <i className="fa-solid fa-circle-exclamation text-lg"></i>
-                                無法連線至後端伺服器 (錯誤代碼: {connectionError || "連線逾時"})
+                                無法連線至後端伺服器 (錯誤原因: {connectionError || "連線逾時"})
                             </div>
                             <div className="text-xs text-rose-300/80 leading-relaxed space-y-1.5 mt-1">
-                                <p>1. <b>如果是第一次開機（Render 自動睡眠）：</b> Render 免費伺服器因省電機制，在 15 分鐘無人使用時會自動關機。<strong>請靜置本網頁約 50 秒，系統正在自動嘗試喚醒它</strong>，喚醒後綠燈亮起就會自動顯示訂單。</p>
-                                <p>2. <b>檢查 API 網址：</b> 請確認控制台設定的網址與您前台拍照端部署的 API 網址完全一致。</p>
-                                <p>3. <b>現場本機部署：</b> 如果您正在使用本地測試，請點選上方「設定網址」，將 API 網址改成 <code>http://localhost:10000</code> 並按儲存。</p>
+                                <p>1. <b>如果您剛剛重新部署或重開機：</b> 伺服器正在啟動，請靜待 30 ~ 50 秒，系統會自動在背景重複嘗試連線，連上後會立刻顯示排隊單。</p>
+                                <p>2. <b>瀏覽器快取了舊網址：</b> 請點選上方紅色的 <strong className="text-rose-400">「清除快取並重設網址」</strong> 按鈕，這會徹底強制清除瀏覽器的舊紀錄並重連預設伺服器！</p>
+                                <p>3. <b>檢查網址是否拼錯：</b> 點選「手動修改網址」，檢查您的後端網址（例如 <code>-back</code> 或 <code>-backend</code> 拼寫是否正確）。</p>
                             </div>
                         </div>
                     )}
@@ -413,14 +494,14 @@
 
                     {/* Footer */}
                     <div className="w-full flex justify-end items-center opacity-40 py-4">
-                        <p className="text-xs font-mono tracking-wider text-cyan-400 font-bold">2026 AI INNOVATION CONTROL PANEL v2.5</p>
+                        <p className="text-xs font-mono tracking-wider text-cyan-400 font-bold">2026 AI INNOVATION CONTROL PANEL v2.6</p>
                     </div>
                 </div>
             );
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<AdminPanel />);
+        root.render(<App />);
     </script>
 </body>
 </html>
