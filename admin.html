@@ -22,49 +22,55 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.02);
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #00f2ff;
-            border-radius: 4px;
-        }
     </style>
 </head>
 <body class="p-4 md:p-8 min-h-screen bg-slate-950">
     <div id="root" class="max-w-7xl mx-auto"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
-
-        // ⚠️ 請確保與您的後端 API 伺服器網址一致
-        const API_BASE_URL = "https://aicameraliveprint-back.onrender.com";
+        const { useState, useEffect, useRef } = React;
 
         const AdminPanel = () => {
             const [allTasks, setAllTasks] = useState([]);
             const [remarks, setRemarks] = useState({}); // 暫存修改中的備註
             const [loadingId, setLoadingId] = useState(null);
+            
+            // 🌟 核心功能：動態 API 網址設定（預設為 Render，並支援 localStorage 記憶）
+            const [apiUrl, setApiUrl] = useState(() => {
+                return localStorage.getItem('admin_api_url') || "https://aicameraliveprint-back.onrender.com";
+            });
+            const [apiStatus, setApiStatus] = useState('checking'); // 'checking', 'online', 'offline'
+            const [connectionError, setConnectionError] = useState("");
+            const [showSettings, setShowSettings] = useState(false);
 
             // 每 2.5 秒自動刷新一次完整名單（包含待處理與已完成）
             useEffect(() => {
+                let isMounted = true;
                 const fetchAllTasks = async () => {
                     try {
-                        const res = await fetch(`${API_BASE_URL}/api/admin/all-tasks`);
+                        const res = await fetch(`${apiUrl}/api/admin/all-tasks`);
                         const data = await res.json();
-                        if (data.success) {
+                        if (data.success && isMounted) {
                             setAllTasks(data.tasks);
+                            setApiStatus('online');
+                            setConnectionError("");
                         }
                     } catch (err) {
-                        console.error("無法連線至後端伺服器，啟動模擬數據測試...");
+                        if (isMounted) {
+                            setApiStatus('offline');
+                            setConnectionError(err.message || "Network Error");
+                            console.error("無法連線至後端伺服器:", err);
+                        }
                     }
                 };
+                
                 fetchAllTasks();
                 const interval = setInterval(fetchAllTasks, 2500);
-                return () => clearInterval(interval);
-            }, []);
+                return () => {
+                    isMounted = false;
+                    clearInterval(interval);
+                };
+            }, [apiUrl]);
 
             // 分流：進行中任務與已完成任務
             const pendingTasks = allTasks.filter(t => t.status === 'pending');
@@ -77,6 +83,15 @@
                 ? allTasks[allTasks.length - 1].id 
                 : "000";
 
+            // 處理更換 API 網址
+            const handleSaveApiUrl = (newUrl) => {
+                const cleanedUrl = newUrl.trim().replace(/\/$/, ""); // 去除結尾斜線
+                localStorage.setItem('admin_api_url', cleanedUrl);
+                setApiUrl(cleanedUrl);
+                setApiStatus('checking');
+                setShowSettings(false);
+            };
+
             // 處理工作人員上傳生成好的雷雕圖
             const handleUploadResult = (e, taskId) => {
                 const file = e.target.files[0];
@@ -86,14 +101,13 @@
                 reader.onloadend = async () => {
                     setLoadingId(taskId);
                     try {
-                        const res = await fetch(`${API_BASE_URL}/api/admin/upload-result/${taskId}`, {
+                        const res = await fetch(`${apiUrl}/api/admin/upload-result/${taskId}`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ resultImage: reader.result })
                         });
                         const data = await res.json();
                         if (data.success) {
-                            // 重新整理
                             const updated = allTasks.map(t => t.id === taskId 
                                 ? { ...t, status: 'completed', resultImage: reader.result } 
                                 : t
@@ -115,14 +129,13 @@
                     : (allTasks.find(t => t.id === taskId)?.remark || '');
 
                 try {
-                    const res = await fetch(`${API_BASE_URL}/api/admin/save-remark/${taskId}`, {
+                    const res = await fetch(`${apiUrl}/api/admin/save-remark/${taskId}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ remark: currentRemark })
                     });
                     const data = await res.json();
                     if (data.success) {
-                        // 更新本地狀態
                         setAllTasks(prev => prev.map(t => t.id === taskId ? { ...t, remark: currentRemark } : t));
                         alert(`號碼 #${taskId} 備註儲存成功！`);
                     }
@@ -139,13 +152,41 @@
             return (
                 <div className="flex flex-col gap-8">
                     
-                    {/* Header: 只包含「控制台」與右側動態儀表板 */}
+                    {/* Header: 只包含「控制台」、連線狀態 與 右側動態儀表板 */}
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-slate-900/60 p-6 rounded-3xl border border-slate-800/80 backdrop-blur">
-                        <div>
-                            <h1 className="text-3xl font-black tracking-wider flex items-center gap-3">
+                        <div className="flex flex-col gap-2">
+                            <div className="flex items-center gap-3">
                                 <i className="fa-solid fa-bolt text-cyan-400"></i>
-                                <span className="tech-title">控制台</span>
-                            </h1>
+                                <span className="tech-title text-3xl font-black tracking-wider">控制台</span>
+                                
+                                {/* 🌟 狀態指示燈 */}
+                                {apiStatus === 'online' && (
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 animate-pulse">
+                                        <span className="w-1.5 h-1.5 mr-1.5 bg-emerald-400 rounded-full"></span>已連線
+                                    </span>
+                                )}
+                                {apiStatus === 'checking' && (
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                                        <span className="w-1.5 h-1.5 mr-1.5 bg-amber-400 rounded-full animate-ping"></span>正在連線/喚醒中
+                                    </span>
+                                )}
+                                {apiStatus === 'offline' && (
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/30">
+                                        <span className="w-1.5 h-1.5 mr-1.5 bg-rose-400 rounded-full"></span>連線中斷
+                                    </span>
+                                )}
+                            </div>
+                            
+                            {/* 🌟 一鍵開啟設定 API 按鈕 */}
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs text-slate-500 font-mono">伺服器: {apiUrl}</span>
+                                <button 
+                                    onClick={() => setShowSettings(!showSettings)} 
+                                    className="text-xs text-slate-400 hover:text-cyan-400 transition bg-slate-800 px-2 py-0.5 rounded-md border border-slate-700"
+                                >
+                                    <i className="fa-solid fa-gear mr-1"></i>設定網址
+                                </button>
+                            </div>
                         </div>
 
                         {/* 右上角進度儀表板 (Dashboard) */}
@@ -176,6 +217,54 @@
                         </div>
                     </div>
 
+                    {/* 🌟 彈出式 API 網址設定面板 */}
+                    {showSettings && (
+                        <div className="bg-slate-900 p-5 rounded-3xl border-2 border-cyan-500/40 flex flex-col md:flex-row gap-4 items-end animate-fadeIn">
+                            <div className="flex-grow w-full">
+                                <label className="block text-xs font-bold text-cyan-400 mb-1.5 tracking-wider"><i className="fa-solid fa-network-wired mr-1"></i>後端伺服器 API 連線網址 (API BASE URL)</label>
+                                <input 
+                                    type="text" 
+                                    defaultValue={apiUrl}
+                                    id="api-url-input"
+                                    placeholder="例如: https://aicameraliveprint-back.onrender.com"
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500 font-mono"
+                                />
+                            </div>
+                            <div className="flex gap-2 w-full md:w-auto">
+                                <button 
+                                    onClick={() => {
+                                        const val = document.getElementById('api-url-input').value;
+                                        handleSaveApiUrl(val);
+                                    }}
+                                    className="bg-cyan-500 hover:bg-cyan-400 text-black px-6 py-2.5 rounded-xl text-sm font-bold transition w-full md:w-auto"
+                                >
+                                    儲存並重連
+                                </button>
+                                <button 
+                                    onClick={() => setShowSettings(false)}
+                                    className="bg-slate-800 hover:bg-slate-750 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition w-full md:w-auto"
+                                >
+                                    取消
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 🌟 故障排查提示（僅在連線失敗時顯示） */}
+                    {apiStatus === 'offline' && (
+                        <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-5 text-rose-300 text-sm flex flex-col gap-2">
+                            <div className="flex items-center gap-2 font-bold text-rose-400 text-base">
+                                <i className="fa-solid fa-circle-exclamation text-lg"></i>
+                                無法連線至後端伺服器 (錯誤代碼: {connectionError || "連線逾時"})
+                            </div>
+                            <div className="text-xs text-rose-300/80 leading-relaxed space-y-1.5 mt-1">
+                                <p>1. <b>如果是第一次開機（Render 自動睡眠）：</b> Render 免費伺服器因省電機制，在 15 分鐘無人使用時會自動關機。<strong>請靜置本網頁約 50 秒，系統正在自動嘗試喚醒它</strong>，喚醒後綠燈亮起就會自動顯示訂單。</p>
+                                <p>2. <b>檢查 API 網址：</b> 請確認控制台設定的網址與您前台拍照端部署的 API 網址完全一致。</p>
+                                <p>3. <b>現場本機部署：</b> 如果您正在使用本地測試，請點選上方「設定網址」，將 API 網址改成 <code>http://localhost:10000</code> 並按儲存。</p>
+                            </div>
+                        </div>
+                    )}
+
                     {/* 區塊一：進行中排隊名單 */}
                     <div className="bg-slate-900/40 p-6 rounded-3xl border border-slate-800/60">
                         <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-cyan-400">
@@ -184,7 +273,7 @@
                         </h2>
 
                         {pendingTasks.length === 0 ? (
-                            <div className="text-center py-16 text-slate-500 border-2 border-dashed border-slate-800 rounded-2xl bg-black/20">
+                            <div className="text-center py-16 text-slate-500 border-2 border-dashed border-slate-800/60 rounded-2xl bg-black/20">
                                 <i className="fa-solid fa-circle-check text-4xl text-cyan-500/40 mb-3"></i>
                                 <p className="text-lg">目前無人排隊，前台靜待體驗中...</p>
                             </div>
@@ -324,7 +413,7 @@
 
                     {/* Footer */}
                     <div className="w-full flex justify-end items-center opacity-40 py-4">
-                        <p className="text-xs font-mono tracking-wider text-cyan-400 font-bold">2026 AI INNOVATION CONTROL PANEL v2.0</p>
+                        <p className="text-xs font-mono tracking-wider text-cyan-400 font-bold">2026 AI INNOVATION CONTROL PANEL v2.5</p>
                     </div>
                 </div>
             );
