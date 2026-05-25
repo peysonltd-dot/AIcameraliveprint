@@ -387,7 +387,7 @@
                                                 />
                                                 <button 
                                                     onClick={() => handleSaveRemark(task.id)}
-                                                    className="bg-slate-800 hover:bg-slate-700 text-cyan-400 px-3 py-2 rounded-xl text-sm transition font-bold"
+                                                    className="bg-slate-800 hover:bg-slate-750 text-cyan-400 px-3 py-2 rounded-xl text-sm transition font-bold"
                                                 >
                                                     儲存
                                                 </button>
@@ -501,7 +501,7 @@
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        root.render(<AdminPanel />); // 🌟 已修正為正確的元件名稱 AdminPanel
     </script>
 </body>
 </html>
