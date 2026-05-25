@@ -6,7 +6,7 @@
     <title>2026 BEST AI AWARDS | 智慧創新大賞</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Noto+Sans+TC:wght@300;500;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;900&display=swap" rel="stylesheet">
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -14,6 +14,7 @@
     <style>
         :root {
             --ai-cyan: #00f2ff;
+            --ai-pink: #ff00d0;
             --ai-dark: #020617;
         }
 
@@ -26,6 +27,7 @@
             background-color: var(--ai-dark);
         }
 
+        /* 深藍色像素方塊動態背景 */
         .cyber-bg {
             background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
             position: relative;
@@ -48,25 +50,36 @@
             filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.5));
         }
 
+        /* 🌟 仿照主視覺內頁的霓虹粉與青色發光漸層條 */
+        .glow-bar {
+            height: 3px;
+            width: 180px;
+            background: linear-gradient(90deg, transparent, var(--ai-pink), var(--ai-cyan), transparent);
+            box-shadow: 0 0 12px var(--ai-pink), 0 0 20px var(--ai-cyan);
+            border-radius: 50%;
+        }
+
+        /* 🌟 拍照視窗尺寸放大一倍 (從 max-w-[450px] 放大至 max-w-[800px]) */
         .camera-container {
-            width: 85vw;
-            max-width: 450px;
+            width: 90vw;
+            max-width: 800px;
             aspect-ratio: 1 / 1;
             position: relative;
             overflow: hidden;
-            border-radius: 1rem;
-            border: 2px solid var(--ai-cyan);
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.3), inset 0 0 20px rgba(0, 242, 255, 0.2);
+            border-radius: 1.5rem;
+            border: 3px solid var(--ai-cyan);
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.4), inset 0 0 30px rgba(0, 242, 255, 0.2);
             background-color: #000;
             z-index: 10;
         }
 
+        /* 1:1.35 鵝蛋臉導引框 (隨比例自動完美放大) */
         .face-guide {
             width: 55%;
             aspect-ratio: 1 / 1.35; 
             border-radius: 50%;
-            border: 2px solid var(--ai-cyan);
-            box-shadow: 0 0 15px var(--ai-cyan), 0 0 0 999px rgba(2, 6, 23, 0.6);
+            border: 3px solid var(--ai-cyan);
+            box-shadow: 0 0 20px var(--ai-cyan), 0 0 0 9999px rgba(2, 6, 23, 0.6);
             position: absolute;
             top: 50%;
             left: 50%;
@@ -78,10 +91,10 @@
         .scan-line {
             position: absolute;
             width: 100%;
-            height: 4px;
+            height: 5px;
             background: var(--ai-cyan);
-            box-shadow: 0 0 15px var(--ai-cyan);
-            opacity: 0.6;
+            box-shadow: 0 0 20px var(--ai-cyan);
+            opacity: 0.7;
             top: 0;
             animation: scan 2.5s linear infinite;
             z-index: 20;
@@ -93,10 +106,11 @@
             100% { top: 100%; opacity: 0; }
         }
 
+        /* Loading 雷達動畫 */
         .radar-spinner {
             position: relative;
-            width: 140px;
-            height: 140px;
+            width: 160px;
+            height: 160px;
             border-radius: 50%;
             border: 2px dashed rgba(0, 242, 255, 0.5);
             animation: spin 8s linear infinite;
@@ -104,35 +118,58 @@
         .radar-spinner::before {
             content: '';
             position: absolute;
-            top: 10px; left: 10px; right: 10px; bottom: 10px;
+            top: 12px; left: 12px; right: 12px; bottom: 12px;
             border-radius: 50%;
-            border: 3px solid transparent;
+            border: 4px solid transparent;
             border-top-color: var(--ai-cyan);
             border-bottom-color: var(--ai-cyan);
             animation: spin 2s linear infinite reverse;
         }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .text-glow-pulse {
             animation: pulse-glow 2s ease-in-out infinite;
         }
         @keyframes pulse-glow {
-            0%, 100% { opacity: 1; text-shadow: 0 0 15px var(--ai-cyan); }
-            50% { opacity: 0.5; text-shadow: 0 0 5px var(--ai-cyan); }
+            0%, 100% { opacity: 1; text-shadow: 0 0 20px var(--ai-cyan); }
+            50% { opacity: 0.6; text-shadow: 0 0 8px var(--ai-cyan); }
         }
 
         .btn-cyan {
             background: rgba(0, 242, 255, 0.1);
-            border: 1px solid var(--ai-cyan);
+            border: 2px solid var(--ai-cyan);
             color: var(--ai-cyan);
             text-transform: uppercase;
             letter-spacing: 2px;
             transition: all 0.3s;
-            box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
             z-index: 10;
         }
         .btn-cyan:active {
             background: var(--ai-cyan);
             color: #000;
-            box-shadow: 0 0 30px var(--ai-cyan);
+            box-shadow: 0 0 35px var(--ai-cyan);
+        }
+
+        /* 警告 / 返回首頁專用紅色調按鈕 */
+        .btn-red {
+            background: rgba(255, 0, 208, 0.1);
+            border: 2px solid var(--ai-pink);
+            color: var(--ai-pink);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px rgba(255, 0, 208, 0.2);
+            z-index: 10;
+        }
+        .btn-red:active {
+            background: var(--ai-pink);
+            color: #000;
+            box-shadow: 0 0 35px var(--ai-pink);
         }
     </style>
 </head>
@@ -166,19 +203,18 @@
             const canvasRef = useRef(null);
             const [countdown, setCountdown] = useState(0);
             const [textIndex, setTextIndex] = useState(0);
+            const pollingRef = useRef(null);
 
             const startCamera = async () => {
                 setStep('camera');
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+                        video: { facingMode: "user", width: { ideal: 1920 }, height: { ideal: 1080 } },
                         audio: false 
                     });
                     
                     if (videoRef.current) {
                         videoRef.current.srcObject = stream;
-                        // 🌟 iOS 終極特效藥 1：強制觸發 play()！
-                        // 這樣就能打破 iOS 預設的「暫停」狀態，消滅畫面上的暫停按鈕
                         videoRef.current.play().catch(e => console.log("Play error:", e));
                     }
                 } catch (err) {
@@ -222,8 +258,7 @@
                 
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
                 
-                if (video.srcObject) video.srcObject.getTracks().forEach(t => t.stop());
-                
+                stopMediaStream();
                 setStep('loading');
                 setTextIndex(0);
 
@@ -234,15 +269,33 @@
                         body: JSON.stringify({ image: dataUrl })
                     });
                     const data = await res.json();
-                    if (data.success) setTaskId(data.taskId);
+                    if (data.success) {
+                        setTaskId(data.taskId);
+                    }
                 } catch (err) { 
-                    console.log("API 未連線，進入模擬測試模式");
-                    setTimeout(() => { setTaskId("DEMO-002"); }, 1500);
+                    console.log("後端未回應，開啟體驗模擬序號");
+                    setTimeout(() => { 
+                        setTaskId("007"); 
+                    }, 1500);
                 }
             };
 
+            const stopMediaStream = () => {
+                if (videoRef.current && videoRef.current.srcObject) {
+                    videoRef.current.srcObject.getTracks().forEach(t => t.stop());
+                }
+            };
+
+            // 🌟 點擊「返回首頁 / 取消」的重置方法
+            const handleCancelAndGoHome = () => {
+                if (pollingRef.current) clearInterval(pollingRef.current);
+                stopMediaStream();
+                setTaskId(null);
+                setResultImage(null);
+                setStep('home');
+            };
+
             useEffect(() => {
-                let statusInterval;
                 let textInterval;
 
                 if (step === 'loading') {
@@ -251,19 +304,22 @@
                     }, 1500);
 
                     if (taskId) {
-                        statusInterval = setInterval(async () => {
+                        pollingRef.current = setInterval(async () => {
                             try {
                                 const res = await fetch(`${API_BASE_URL}/api/status/${taskId}`);
                                 const data = await res.json();
                                 if (data.status === 'completed') {
                                     setResultImage(data.resultImage);
                                     setStep('result');
+                                    clearInterval(pollingRef.current);
                                 }
                             } catch (err) {
-                                if (taskId.startsWith("DEMO")) {
+                                // 針對模擬序號（例如 007）自動在 5 秒後完成渲染
+                                if (taskId === "007") {
                                     setTimeout(() => {
                                         setResultImage(canvasRef.current.toDataURL());
                                         setStep('result');
+                                        clearInterval(pollingRef.current);
                                     }, 4000);
                                 }
                             }
@@ -271,36 +327,41 @@
                     }
                 }
                 return () => {
-                    clearInterval(statusInterval);
                     clearInterval(textInterval);
+                    if (pollingRef.current) clearInterval(pollingRef.current);
                 };
             }, [step, taskId]);
 
             return (
-                <div className="flex flex-col items-center justify-between h-[100dvh] w-full py-8 px-4">
+                <div className="flex flex-col items-center justify-between h-[100dvh] w-full py-10 px-6">
                     
-                    <div className="text-center z-10 mt-2">
-                        <div className="text-ai-cyan text-xs md:text-sm tracking-[0.3em] font-bold mb-1 opacity-80">2026 BEST AI AWARDS</div>
-                        <h1 className="kv-title text-4xl md:text-5xl font-black mb-2">智慧創新大賞</h1>
-                        <div className="h-1 w-16 bg-ai-cyan mx-auto rounded-full shadow-[0_0_10px_#00f2ff]"></div>
+                    {/* Header: 2026 BEST AI AWARDS */}
+                    <div className="text-center z-10 mt-2 flex flex-col items-center">
+                        <div className="text-ai-cyan text-sm md:text-base tracking-[0.4em] font-bold mb-1.5 opacity-90">2026 BEST AI AWARDS</div>
+                        <h1 className="kv-title text-5xl md:text-6xl font-black mb-3.5 tracking-widest">智慧創新大賞</h1>
+                        <div className="glow-bar"></div>
                     </div>
 
-                    <div className="flex-grow flex flex-col items-center justify-center w-full my-4">
+                    {/* 內容區區塊 */}
+                    <div className="flex-grow flex flex-col items-center justify-center w-full my-6">
                         
+                        {/* 狀態 1：首頁 */}
                         {step === 'home' && (
-                            <div className="text-center animate-pulse">
-                                <p className="text-ai-cyan text-lg mb-8 tracking-widest font-light">AI 虛擬肖像雷雕體驗</p>
-                                <button onClick={startCamera} className="btn-cyan text-2xl md:text-3xl font-bold px-12 py-6 rounded-full border-2">
+                            <div className="text-center flex flex-col items-center justify-center">
+                                <p className="text-ai-cyan text-2xl mb-12 tracking-[0.35em] font-light text-glow-pulse">AI 虛擬肖像雷雕體驗</p>
+                                <button 
+                                    onClick={startCamera} 
+                                    className="btn-cyan text-3xl md:text-4xl font-black px-20 py-10 rounded-full border-2 shadow-[0_0_20px_rgba(0,242,255,0.2)]"
+                                >
                                     開始體驗 START
                                 </button>
                             </div>
                         )}
 
+                        {/* 狀態 2：相機拍攝 */}
                         {step === 'camera' && (
                             <div className="flex flex-col items-center w-full">
                                 <div className="camera-container relative">
-                                    {/* 🌟 iOS 終極特效藥 2：明確寫入 autoPlay={true} playsInline={true} */}
-                                    {/* 🌟 iOS 終極特效藥 3：改用 rotateY(180deg) 進行 3D 翻轉，iPhone 絕對無法忽視 */}
                                     <video 
                                         ref={videoRef} 
                                         autoPlay={true}
@@ -309,79 +370,96 @@
                                         className="w-full h-full object-cover absolute top-0 left-0" 
                                         style={{ transform: 'rotateY(180deg)', WebkitTransform: 'rotateY(180deg)' }}
                                     />
-                                    <div className="scan-line"></div>
+                                    {countdown === 0 && <div className="scan-line"></div>}
                                     <div className="face-guide"></div>
+                                    
+                                    {/* 右上角 HUD 科技計時器 (不遮臉，不模糊) */}
                                     {countdown > 0 && (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-30 backdrop-blur-sm">
-                                            <span className="text-[150px] font-bold text-white drop-shadow-[0_0_20px_#00f2ff]">{countdown}</span>
+                                        <div className="absolute top-6 right-6 flex flex-col items-center justify-center w-24 h-24 rounded-2xl border-2 border-ai-cyan bg-[#020617]/90 shadow-[0_0_25px_rgba(0,242,255,0.5)] z-30">
+                                            <span className="text-[11px] text-ai-cyan font-bold tracking-[0.2em] opacity-80 mb-1">COUNT</span>
+                                            <span className="text-5xl font-black text-white font-mono drop-shadow-[0_0_12px_#00f2ff]">{countdown}</span>
                                         </div>
                                     )}
                                 </div>
-                                <div className="mt-8 flex gap-4 md:gap-6 justify-center w-full max-w-[450px]">
-                                    <button onClick={() => {
-                                        if (videoRef.current && videoRef.current.srcObject) {
-                                            videoRef.current.srcObject.getTracks().forEach(t => t.stop());
-                                        }
-                                        setStep('home');
-                                    }} className="btn-cyan flex-1 py-4 rounded-xl text-lg">返回</button>
-                                    <button onClick={takePhoto} className="btn-cyan flex-[2] py-4 rounded-xl text-2xl font-bold bg-ai-cyan/20">拍攝 PHOTO</button>
+                                
+                                {/* 拍照按鈕 (寬度完美與相機外框 800px 齊平) */}
+                                <div className="mt-10 flex gap-6 justify-center w-full max-w-[800px]">
+                                    <button onClick={handleCancelAndGoHome} className="btn-cyan flex-1 py-5 rounded-2xl text-xl font-bold">返回首頁</button>
+                                    <button onClick={takePhoto} className="btn-cyan flex-[2.5] py-5 rounded-2xl text-3xl font-black bg-ai-cyan/25">拍攝照片 PHOTO</button>
                                 </div>
                             </div>
                         )}
 
+                        {/* 狀態 3：AI 處理載入中 */}
                         {step === 'loading' && (
-                            <div className="flex flex-col items-center justify-start w-full h-full pt-4 md:pt-10 z-20">
+                            <div className="flex flex-col items-center justify-center w-full max-w-[800px] z-20">
                                 
-                                <div className="relative flex items-center justify-center mb-8 mt-4">
+                                {/* 動態雷達動畫 */}
+                                <div className="relative flex items-center justify-center mb-10">
                                     <div className="radar-spinner"></div>
-                                    <div className="absolute text-ai-cyan text-5xl opacity-90"><i className="fa-solid fa-microchip"></i></div>
+                                    <div className="absolute text-ai-cyan text-6xl opacity-90"><i className="fa-solid fa-microchip animate-pulse"></i></div>
                                 </div>
                                 
-                                <div className="h-24 flex flex-col items-center justify-center text-center px-4 w-full">
-                                    <h2 className="text-xl md:text-2xl font-bold text-white tracking-widest text-glow-pulse mb-3 transition-opacity duration-300">
+                                {/* 多行跳動科技文字 */}
+                                <div className="h-28 flex flex-col items-center justify-center text-center px-4 w-full mb-8">
+                                    <h2 className="text-2xl md:text-3xl font-black text-white tracking-widest text-glow-pulse mb-4">
                                         {LOADING_TEXTS_CH[textIndex]}
                                     </h2>
-                                    <p className="text-ai-cyan text-[10px] md:text-xs font-mono opacity-70 tracking-widest transition-opacity duration-300">
+                                    <p className="text-ai-cyan text-sm md:text-base font-mono opacity-80 tracking-[0.25em]">
                                         {LOADING_TEXTS_EN[textIndex]}
                                     </p>
                                 </div>
 
-                                <div className="mt-auto mb-10 w-full flex justify-center">
+                                {/* 🌟 序號卡片上移：緊隨文字下方，完美配合 43 吋螢幕中段視覺 */}
+                                <div className="w-full flex flex-col items-center gap-8">
                                     {taskId && (
-                                        <div className="relative overflow-hidden bg-black/40 p-6 md:p-8 rounded-2xl border border-ai-cyan/50 backdrop-blur-md w-64 md:w-72 text-center shadow-[0_0_25px_rgba(0,242,255,0.15)]">
+                                        <div className="relative overflow-hidden bg-black/55 p-8 rounded-3xl border-2 border-ai-cyan backdrop-blur-md w-72 md:w-80 text-center shadow-[0_0_35px_rgba(0,242,255,0.25)]">
                                             <div className="scan-line" style={{animationDuration: '4s'}}></div>
-                                            <p className="text-xs text-gray-400 mb-1 tracking-[0.2em]">PROGRESS ID</p>
-                                            <p className="text-5xl md:text-6xl font-black text-ai-cyan font-mono drop-shadow-[0_0_10px_rgba(0,242,255,0.5)]">
+                                            <p className="text-sm text-gray-400 mb-1.5 tracking-[0.3em] font-bold">PROGRESS ID</p>
+                                            <p className="text-6xl md:text-7xl font-black text-ai-cyan font-mono drop-shadow-[0_0_15px_rgba(0,242,255,0.6)]">
                                                 #{taskId}
                                             </p>
                                         </div>
                                     )}
+
+                                    {/* 🌟 新增：載入中隨時可以取消返回首頁的按鈕 */}
+                                    <button 
+                                        onClick={handleCancelAndGoHome} 
+                                        className="btn-red px-10 py-4 rounded-xl text-lg font-bold shadow-[0_0_15px_rgba(255,0,208,0.2)]"
+                                    >
+                                        取消並返回首頁 CANCEL
+                                    </button>
                                 </div>
                             </div>
                         )}
 
+                        {/* 狀態 4：顯示結果 */}
                         {step === 'result' && (
                             <div className="flex flex-col items-center w-full">
-                                <div className="camera-container p-1 bg-white/5 mb-6">
-                                    <img src={resultImage} className="w-full h-full object-cover rounded-xl" />
+                                <div className="camera-container p-2 bg-white/5 mb-8">
+                                    <img src={resultImage} className="w-full h-full object-cover rounded-2xl" />
                                 </div>
-                                <div className="bg-ai-cyan/10 border border-ai-cyan p-4 rounded-2xl text-center mb-6 w-full max-w-[450px] shadow-[0_0_20px_rgba(0,242,255,0.1)]">
-                                    <p className="text-gray-400 text-xs tracking-widest mb-1">專屬雷雕領取序號</p>
-                                    <p className="text-5xl font-black text-white font-mono">#{taskId}</p>
+                                
+                                <div className="bg-ai-cyan/15 border-2 border-ai-cyan p-6 rounded-3xl text-center mb-8 w-full max-w-[800px] shadow-[0_0_30px_rgba(0,242,255,0.15)]">
+                                    <p className="text-gray-300 text-sm tracking-[0.25em] mb-1.5 font-bold">專屬雷雕領取序號</p>
+                                    <p className="text-6xl md:text-7xl font-black text-white font-mono drop-shadow-[0_0_10px_#fff]">#{taskId}</p>
                                 </div>
-                                <button onClick={() => setStep('home')} className="btn-cyan px-10 py-4 rounded-full text-lg font-bold w-full max-w-[450px]">
+                                
+                                <button 
+                                    onClick={handleCancelAndGoHome} 
+                                    className="btn-cyan px-16 py-5 rounded-full text-2xl font-black w-full max-w-[800px]"
+                                >
                                     完成並返回首頁
                                 </button>
                             </div>
                         )}
                     </div>
 
-                    <div className="w-full flex justify-between items-end px-2 opacity-50 z-10 pb-2">
-                        <div className="text-[9px] md:text-[10px] tracking-tighter leading-relaxed">
-                            指導單位：經濟部 <br />
-                            主辦單位：經濟部產業技術司
+                    {/* Footer Logos: 移除左側指導單位文字，保持畫面右下角簡潔美感 */}
+                    <div className="w-full flex justify-end items-end px-4 opacity-60 z-10 pb-2">
+                        <div className="font-bold text-sm md:text-base font-mono text-ai-cyan tracking-[0.2em] drop-shadow-[0_0_5px_#00f2ff]">
+                            2026 AI INNOVATION
                         </div>
-                        <div className="font-bold text-[9px] md:text-xs font-mono">2026 AI INNOVATION</div>
                     </div>
 
                     <canvas ref={canvasRef} className="hidden"></canvas>
