@@ -3,104 +3,329 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚡ 雷雕拍照 - 工作人員控制台</title>
+    <title>控制台</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;900&display=swap" rel="stylesheet">
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #0b0f19;
+            color: #f8fafc;
+        }
+        .tech-title {
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(135deg, #00f2ff, #ff00d0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #00f2ff;
+            border-radius: 4px;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 p-8 font-sans">
-    <div id="root" class="max-w-6xl mx-auto"></div>
+<body class="p-4 md:p-8 min-h-screen bg-slate-950">
+    <div id="root" class="max-w-7xl mx-auto"></div>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // ⚠️ 請替換為您的 Render 網址
+        // ⚠️ 請確保與您的後端 API 伺服器網址一致
         const API_BASE_URL = "https://aicameraliveprint-back.onrender.com";
 
         const AdminPanel = () => {
-            const [tasks, setTasks] = useState([]);
-            const [loading, setLoading] = useState(false);
+            const [allTasks, setAllTasks] = useState([]);
+            const [remarks, setRemarks] = useState({}); // 暫存修改中的備註
+            const [loadingId, setLoadingId] = useState(null);
 
-            // 每 3 秒自動刷新一次排隊名單
+            // 每 2.5 秒自動刷新一次完整名單（包含待處理與已完成）
             useEffect(() => {
-                const fetchTasks = async () => {
+                const fetchAllTasks = async () => {
                     try {
-                        const res = await fetch(`${API_BASE_URL}/api/admin/tasks`);
+                        const res = await fetch(`${API_BASE_URL}/api/admin/all-tasks`);
                         const data = await res.json();
-                        if (data.success) setTasks(data.tasks);
+                        if (data.success) {
+                            setAllTasks(data.tasks);
+                        }
                     } catch (err) {
-                        console.error("無法連線至伺服器");
+                        console.error("無法連線至後端伺服器，啟動模擬數據測試...");
                     }
                 };
-                fetchTasks();
-                const interval = setInterval(fetchTasks, 3000);
+                fetchAllTasks();
+                const interval = setInterval(fetchAllTasks, 2500);
                 return () => clearInterval(interval);
             }, []);
 
-            // 處理工作人員上傳結果圖
+            // 分流：進行中任務與已完成任務
+            const pendingTasks = allTasks.filter(t => t.status === 'pending');
+            const completedTasks = allTasks.filter(t => t.status === 'completed');
+
+            // 計算右上角看板數據
+            const totalTickets = allTasks.length;
+            const completedCount = completedTasks.length;
+            const latestTicketId = allTasks.length > 0 
+                ? allTasks[allTasks.length - 1].id 
+                : "000";
+
+            // 處理工作人員上傳生成好的雷雕圖
             const handleUploadResult = (e, taskId) => {
                 const file = e.target.files[0];
                 if (!file) return;
 
                 const reader = new FileReader();
                 reader.onloadend = async () => {
-                    setLoading(true);
+                    setLoadingId(taskId);
                     try {
-                        await fetch(`${API_BASE_URL}/api/admin/upload-result/${taskId}`, {
+                        const res = await fetch(`${API_BASE_URL}/api/admin/upload-result/${taskId}`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ resultImage: reader.result })
                         });
-                        alert(`號碼 #${taskId} 上傳成功！前端已跳轉。`);
+                        const data = await res.json();
+                        if (data.success) {
+                            // 重新整理
+                            const updated = allTasks.map(t => t.id === taskId 
+                                ? { ...t, status: 'completed', resultImage: reader.result } 
+                                : t
+                            );
+                            setAllTasks(updated);
+                        }
                     } catch (err) {
-                        alert("上傳失敗，請檢查網路");
+                        alert("上傳失敗，請檢查網路連線！");
                     }
-                    setLoading(false);
+                    setLoadingId(null);
                 };
                 reader.readAsDataURL(file);
             };
 
-            return (
-                <div>
-                    <h1 className="text-3xl font-bold mb-8 text-gray-800">⚡ 工作人員接單控制台 <span className="text-sm font-normal text-gray-500 bg-white px-3 py-1 rounded-full ml-4 shadow">線上排隊人數：{tasks.length} 人</span></h1>
-                    
-                    {tasks.length === 0 ? (
-                        <div className="text-center py-20 text-gray-400 text-xl font-bold border-4 border-dashed border-gray-300 rounded-xl">
-                            目前無人排隊，請稍候...
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {tasks.map(task => (
-                                <div key={task.id} className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-                                    <div className="bg-blue-600 text-white font-bold text-xl p-3 flex justify-between items-center">
-                                        <span>排隊號碼: #{task.id}</span>
-                                        <span className="text-sm font-normal opacity-80">{task.createdAt}</span>
-                                    </div>
-                                    <div className="p-4 flex flex-col items-center">
-                                        <img src={task.sourceImage} className="w-full h-48 object-cover rounded-lg mb-4 border border-gray-200" alt="客人原圖" />
-                                        
-                                        {/* 第一步：下載 */}
-                                        <a href={task.sourceImage} download={`task_${task.id}.jpg`} className="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded mb-2 text-center transition">
-                                            1. 下載照片 (去 Leonardo 生圖)
-                                        </a>
+            // 處理保存/修改備註
+            const handleSaveRemark = async (taskId) => {
+                const currentRemark = remarks[taskId] !== undefined 
+                    ? remarks[taskId] 
+                    : (allTasks.find(t => t.id === taskId)?.remark || '');
 
-                                        {/* 第二步：上傳 */}
-                                        <label className={`w-full text-center font-bold py-3 px-4 rounded cursor-pointer transition ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-400 text-white'}`}>
-                                            {loading ? '上傳中...' : '2. 上傳完成的雷雕圖'}
-                                            <input 
-                                                type="file" 
-                                                accept="image/*" 
-                                                className="hidden" 
-                                                onChange={(e) => handleUploadResult(e, task.id)}
-                                                disabled={loading}
-                                            />
-                                        </label>
-                                    </div>
-                                </div>
-                            ))}
+                try {
+                    const res = await fetch(`${API_BASE_URL}/api/admin/save-remark/${taskId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ remark: currentRemark })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        // 更新本地狀態
+                        setAllTasks(prev => prev.map(t => t.id === taskId ? { ...t, remark: currentRemark } : t));
+                        alert(`號碼 #${taskId} 備註儲存成功！`);
+                    }
+                } catch (err) {
+                    alert("備註儲存失敗，請重試");
+                }
+            };
+
+            // 處理備註文字變更
+            const handleRemarkChange = (taskId, value) => {
+                setRemarks(prev => ({ ...prev, [taskId]: value }));
+            };
+
+            return (
+                <div className="flex flex-col gap-8">
+                    
+                    {/* Header: 只包含「控制台」與右側動態儀表板 */}
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-slate-900/60 p-6 rounded-3xl border border-slate-800/80 backdrop-blur">
+                        <div>
+                            <h1 className="text-3xl font-black tracking-wider flex items-center gap-3">
+                                <i className="fa-solid fa-bolt text-cyan-400"></i>
+                                <span className="tech-title">控制台</span>
+                            </h1>
                         </div>
-                    )}
+
+                        {/* 右上角進度儀表板 (Dashboard) */}
+                        <div className="flex gap-4 sm:gap-6 items-center bg-black/40 p-4 rounded-2xl border border-cyan-500/30 shadow-[0_0_15px_rgba(0,242,255,0.1)]">
+                            <div className="text-center px-2">
+                                <p className="text-[10px] text-cyan-400 font-mono tracking-widest font-bold">LATEST ID</p>
+                                <p className="text-3xl font-black font-mono text-white mt-1">#{latestTicketId}</p>
+                            </div>
+                            <div className="h-10 w-px bg-slate-800"></div>
+                            <div className="text-center px-2">
+                                <p className="text-[10px] text-pink-500 font-mono tracking-widest font-bold font-black">PROGRESS</p>
+                                <p className="text-3xl font-black font-mono text-white mt-1">
+                                    {completedCount} <span className="text-lg text-slate-500">/ {totalTickets}</span>
+                                </p>
+                            </div>
+                            <div className="hidden sm:block h-10 w-px bg-slate-800"></div>
+                            <div className="hidden sm:block w-24">
+                                <div className="text-[10px] text-slate-400 font-mono text-right mb-1">
+                                    {totalTickets > 0 ? Math.round((completedCount/totalTickets)*100) : 0}%
+                                </div>
+                                <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                    <div 
+                                        className="bg-gradient-to-r from-cyan-400 to-pink-500 h-full transition-all duration-500"
+                                        style={{ width: `${totalTickets > 0 ? (completedCount/totalTickets)*100 : 0}%` }}
+                                    ></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 區塊一：進行中排隊名單 */}
+                    <div className="bg-slate-900/40 p-6 rounded-3xl border border-slate-800/60">
+                        <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-cyan-400">
+                            <span className="w-2.5 h-2.5 bg-cyan-400 rounded-full animate-ping"></span>
+                            進行中排隊名單 ({pendingTasks.length} 人在排隊)
+                        </h2>
+
+                        {pendingTasks.length === 0 ? (
+                            <div className="text-center py-16 text-slate-500 border-2 border-dashed border-slate-800 rounded-2xl bg-black/20">
+                                <i className="fa-solid fa-circle-check text-4xl text-cyan-500/40 mb-3"></i>
+                                <p className="text-lg">目前無人排隊，前台靜待體驗中...</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {pendingTasks.map(task => (
+                                    <div key={task.id} className="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-xl hover:border-cyan-500/50 transition duration-300">
+                                        <div className="bg-gradient-to-r from-cyan-950 to-slate-900 text-white font-bold text-lg px-4 py-3 flex justify-between items-center border-b border-slate-800">
+                                            <span className="text-cyan-400 font-mono">ID: #{task.id}</span>
+                                            <span className="text-xs text-slate-400 font-mono font-normal"><i className="fa-regular fa-clock mr-1"></i>{task.createdAt}</span>
+                                        </div>
+                                        <div className="p-4 flex flex-col gap-4">
+                                            <div className="relative group">
+                                                <img src={task.sourceImage} className="w-full h-52 object-cover rounded-xl border border-slate-800" alt="客人原圖" />
+                                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition rounded-xl">
+                                                    <a href={task.sourceImage} download={`task_${task.id}.jpg`} className="bg-cyan-500 hover:bg-cyan-400 text-black px-4 py-2 rounded-lg font-bold text-sm">
+                                                        <i className="fa-solid fa-magnifying-glass mr-1.5"></i>放大原圖
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            
+                                            {/* 備註輸入區 */}
+                                            <div className="flex gap-2">
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="新增此排隊備註 (例如：要眼鏡、背景加星星)..."
+                                                    value={remarks[task.id] !== undefined ? remarks[task.id] : (task.remark || '')}
+                                                    onChange={(e) => handleRemarkChange(task.id, e.target.value)}
+                                                    className="flex-grow bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
+                                                />
+                                                <button 
+                                                    onClick={() => handleSaveRemark(task.id)}
+                                                    className="bg-slate-800 hover:bg-slate-700 text-cyan-400 px-3 py-2 rounded-xl text-sm transition font-bold"
+                                                >
+                                                    儲存
+                                                </button>
+                                            </div>
+
+                                            {/* 操作：下載 與 上傳 */}
+                                            <div className="flex flex-col gap-2">
+                                                <a 
+                                                    href={task.sourceImage} 
+                                                    download={`task_${task.id}.jpg`} 
+                                                    className="w-full bg-slate-800 hover:bg-slate-750 text-white font-bold py-3 px-4 rounded-xl text-center text-sm transition flex items-center justify-center gap-2 border border-slate-700/50"
+                                                >
+                                                    <i className="fa-solid fa-download text-cyan-400"></i>
+                                                    1. 下載照片 (送去生圖)
+                                                </a>
+
+                                                <label className={`w-full text-center font-bold py-3 px-4 rounded-xl cursor-pointer text-sm transition flex items-center justify-center gap-2 ${loadingId === task.id ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-cyan-500 hover:bg-cyan-400 text-black'}`}>
+                                                    <i className="fa-solid fa-upload"></i>
+                                                    {loadingId === task.id ? '雷雕圖上傳中...' : '2. 上傳完成雷雕圖'}
+                                                    <input 
+                                                        type="file" 
+                                                        accept="image/*" 
+                                                        className="hidden" 
+                                                        onChange={(e) => handleUploadResult(e, task.id)}
+                                                        disabled={loadingId === task.id}
+                                                    />
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 區塊二：已完成歷史紀錄 */}
+                    <div className="bg-slate-900/40 p-6 rounded-3xl border border-slate-800/60">
+                        <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-pink-500">
+                            <i className="fa-solid fa-circle-check"></i>
+                            已完成歷史紀錄 ({completedTasks.length} 人已完成)
+                        </h2>
+
+                        {completedTasks.length === 0 ? (
+                            <div className="text-center py-12 text-slate-600 border-2 border-dashed border-slate-800 rounded-2xl">
+                                <p className="text-sm">尚無完成記錄，等待第一位體驗者誕生！</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {completedTasks.map(task => (
+                                    <div key={task.id} className="bg-slate-900/50 rounded-2xl overflow-hidden border border-slate-800/85 shadow hover:border-pink-500/30 transition duration-300">
+                                        <div className="bg-slate-900 text-white font-bold text-sm px-4 py-3 flex justify-between items-center border-b border-slate-800/80">
+                                            <span className="text-pink-500 font-mono">ID: #{task.id}</span>
+                                            <span className="bg-pink-500/10 text-pink-500 text-[10px] px-2.5 py-0.5 rounded-full font-bold">
+                                                <i className="fa-solid fa-circle-check mr-1"></i>已完成並送出
+                                            </span>
+                                        </div>
+                                        <div className="p-4 flex flex-col gap-4">
+                                            {/* 原圖 vs 成果圖 左右對比 */}
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div>
+                                                    <p className="text-[10px] text-slate-500 mb-1">原始照片</p>
+                                                    <img src={task.sourceImage} className="w-full h-28 object-cover rounded-lg border border-slate-850" alt="原圖" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] text-pink-500 mb-1">完成雷雕圖</p>
+                                                    <img src={task.resultImage} className="w-full h-28 object-cover rounded-lg border border-pink-500/20" alt="完成圖" />
+                                                </div>
+                                            </div>
+
+                                            {/* 已完成備註編輯 */}
+                                            <div className="flex gap-2 bg-black/20 p-2.5 rounded-xl border border-slate-800">
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="修改備註或紀錄..."
+                                                    value={remarks[task.id] !== undefined ? remarks[task.id] : (task.remark || '')}
+                                                    onChange={(e) => handleRemarkChange(task.id, e.target.value)}
+                                                    className="flex-grow bg-transparent text-xs text-slate-300 focus:outline-none"
+                                                />
+                                                <button 
+                                                    onClick={() => handleSaveRemark(task.id)}
+                                                    className="text-pink-500 hover:text-pink-400 text-xs font-bold px-2"
+                                                >
+                                                    更新備註
+                                                </button>
+                                            </div>
+
+                                            {/* 重新上傳覆蓋按鈕 */}
+                                            <label className="w-full text-center font-bold py-2 px-3 rounded-lg cursor-pointer text-xs bg-slate-800 hover:bg-slate-750 text-slate-400 transition flex items-center justify-center gap-1.5">
+                                                <i className="fa-solid fa-arrows-rotate text-pink-500"></i>
+                                                重新上傳覆蓋
+                                                <input 
+                                                    type="file" 
+                                                    accept="image/*" 
+                                                    className="hidden" 
+                                                    onChange={(e) => handleUploadResult(e, task.id)}
+                                                />
+                                            </label>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="w-full flex justify-end items-center opacity-40 py-4">
+                        <p className="text-xs font-mono tracking-wider text-cyan-400 font-bold">2026 AI INNOVATION CONTROL PANEL v2.0</p>
+                    </div>
                 </div>
             );
         };
