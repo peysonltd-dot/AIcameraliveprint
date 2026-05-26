@@ -312,7 +312,7 @@
                 }
             };
 
-            // 🌟 修正後的媒體串流關閉函式：指向 srcObject.getTracks() 進行停止
+            // 修正後的媒體串流關閉函式：指向 srcObject.getTracks() 進行停止
             const stopMediaStream = () => {
                 if (videoRef.current && videoRef.current.srcObject) {
                     videoRef.current.srcObject.getTracks().forEach(t => t.stop());
@@ -483,16 +483,17 @@
                         <div className="glow-bar"></div>
                     </div>
 
-                    {/* 內容區區塊 */}
-                    <div className="flex-grow flex flex-col items-center justify-center w-full my-4">
+                    {/* 🌟 內容區區塊：對齊方式優化為 justify-start 並加上合適的上邊距，使相機框完美上移，完美適配大螢幕與 IPAD */}
+                    <div className="flex-grow flex flex-col items-center justify-start pt-4 sm:pt-10 lg:pt-14 w-full my-4">
                         
                         {/* 狀態 1：首頁 */}
                         {step === 'home' && (
-                            <div className="text-center flex flex-col items-center justify-center">
-                                <p className="text-ai-cyan text-lg sm:text-xl md:text-2xl mb-8 sm:mb-12 tracking-[0.35em] font-light text-glow-pulse">AI 虛擬肖像雷雕體驗</p>
+                            <div className="text-center flex flex-col items-center justify-center pt-8 sm:pt-16 lg:pt-24">
+                                {/* 🌟 核心修改：文案更新為「AI 虛擬肖像風格化」 */}
+                                <p className="text-ai-cyan text-lg sm:text-xl md:text-2xl mb-8 sm:mb-12 tracking-[0.35em] font-light text-glow-pulse">AI 虛擬肖像風格化</p>
                                 <button 
                                     onClick={startCamera} 
-                                    className="btn-cyan text-2xl sm:text-3xl md:text-4xl font-black px-12 sm:px-16 md:px-20 py-5 sm:py-8 md:py-10 rounded-full border-2 shadow-[0_0_20px_rgba(0,242,255,0.2)]"
+                                    className="btn-cyan text-2xl sm:text-3xl md:text-4xl font-black px-12 sm:px-16 md:px-20 py-5 sm:py-8 md:py-10 rounded-full border-2 shadow-[0_0_20px_rgba(0,242,255,0.2)] animate-pulse"
                                 >
                                     開始體驗 START
                                 </button>
@@ -532,7 +533,7 @@
 
                         {/* 狀態 3：AI 處理載入中 */}
                         {step === 'loading' && (
-                            <div className="flex flex-col items-center justify-center w-full max-w-[800px] z-20">
+                            <div className="flex flex-col items-center justify-start w-full max-w-[800px] z-20 pt-4">
                                 
                                 {/* 動態雷達 */}
                                 <div className="relative flex items-center justify-center mb-8 sm:mb-10">
