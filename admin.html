@@ -31,7 +31,7 @@
             <div class="w-3 h-3 rounded-full bg-cyan-400 animate-ping"></div>
             <h1 class="text-2xl font-black tracking-wider text-white">智慧創新大賞 <span class="text-cyan-400 font-mono text-lg">DUAL CONTROL CORE</span></h1>
         </div>
-        <button onclick="fetchAllTasks()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 shadow-[0_0_15px_rgba(0,242,255,0.3)]">
+        <button onclick="fetchAllTasks()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2 shadow-[0_0_15px_rgba(0,242,255,0.3)]">
             <i class="fa-solid fa-arrows-rotate"></i> 重新整理數據
         </button>
     </header>
@@ -103,14 +103,16 @@
 
         function updateLivePrompt(taskId) {
             const task = localTasksCache[taskId]; if (!task) return;
-            const gender = document.getElementById(`select-gender-${taskId}`).value;
-            const style = document.getElementById(`select-style-${taskId}`).value;
-            const bangs = document.getElementById(`select-bangs-${taskId}`).value;
-            const hairColor = document.getElementById(`select-hair-color-${taskId}`).value;
-            const clothingColor = document.getElementById(`select-clothing-color-${taskId}`).value;
-            const glasses = document.getElementById(`select-glasses-${taskId}`).value;
-            const necklace = document.getElementById(`select-necklace-${taskId}`).value;
-            const earrings = document.getElementById(`select-earrings-${taskId}`).value;
+            
+            // 智慧安全防錯：使用 Optional Chaining (?) 與 Fallback 預設值，完全防範 null 指標當機！
+            const gender = document.getElementById(`select-gender-${taskId}`)?.value || 'woman';
+            const style = document.getElementById(`select-style-${taskId}`)?.value || 'long straight hair';
+            const bangs = document.getElementById(`select-bangs-${taskId}`)?.value || 'no bangs';
+            const hairColor = document.getElementById(`select-hair-color-${taskId}`)?.value || 'black';
+            const clothingColor = document.getElementById(`select-clothing-color-${taskId}`)?.value || 'black';
+            const glasses = document.getElementById(`select-glasses-${taskId}`)?.value || 'no glasses';
+            const necklace = document.getElementById(`select-necklace-${taskId}`)?.value || 'no necklace';
+            const earrings = document.getElementById(`select-earrings-${taskId}`)?.value || 'no earrings';
 
             const glassesText = glasses === 'wearing glasses' ? 'wearing glasses' : 'no glasses';
             const necklaceText = necklace === 'wearing necklace' ? 'wearing necklace' : 'no necklace';
@@ -123,9 +125,15 @@
             task.suggestedPrompt = updatedPrompt;
         }
 
-        function downloadSourceImage(taskId, base64Str) {
+        // 🌟 記憶體安全型下載函式：透過 ID 從快取讀取，絕不在 HTML 行內傳遞巨型 Base64 字串
+        function downloadSourceImage(taskId) {
+            const task = localTasksCache[taskId];
+            if (!task || !task.sourceImage) {
+                alert("找不到該任務的原始客照！");
+                return;
+            }
             const link = document.createElement('a');
-            link.href = base64Str;
+            link.href = task.sourceImage;
             link.download = `雷雕客照_#${taskId}.jpg`;
             document.body.appendChild(link);
             link.click();
@@ -194,8 +202,6 @@
                         hairColor: document.getElementById(`select-hair-color-${t.id}`).value,
                         clothingColor: document.getElementById(`select-clothing-color-${t.id}`).value,
                         glasses: document.getElementById(`select-glasses-${t.id}`).value,
-                        necklace: document.getElementById(`select-necklace-${t.id}`).value,
-                        earrings: document.getElementById(`select-earrings-${t.id}`).value,
                         textareaVal: document.getElementById(`textarea-${t.id}`).value
                     };
                 }
@@ -208,8 +214,6 @@
                 const cH = currentSelections[task.id]?.hairColor || extractFeature(task.suggestedPrompt, 'hairColor');
                 const cC = currentSelections[task.id]?.clothingColor || extractFeature(task.suggestedPrompt, 'clothingColor');
                 const cGl = currentSelections[task.id]?.glasses || extractFeature(task.suggestedPrompt, 'glasses');
-                const cN = currentSelections[task.id]?.necklace || extractFeature(task.suggestedPrompt, 'necklace');
-                const cE = currentSelections[task.id]?.earrings || extractFeature(task.suggestedPrompt, 'earrings');
                 const textValue = currentSelections[task.id]?.textareaVal || task.suggestedPrompt;
 
                 let userChoiceHtml = `<span class="text-amber-400 font-bold animate-pulse"><i class="fa-solid fa-hourglass-start"></i> ⏳ 客人正在二選一中...</span>`;
@@ -228,7 +232,8 @@
                         <div class="flex flex-col gap-2.5">
                             <div class="text-center relative group">
                                 <img src="${task.sourceImage}" class="w-24 h-24 object-cover rounded-xl border border-slate-700 bg-black shadow-inner" />
-                                <button onclick="downloadSourceImage('${task.id}', '${task.sourceImage}')" class="w-full mt-1.5 bg-slate-800 hover:bg-slate-750 text-cyan-400 font-bold py-1 px-2 rounded text-[10px] transition-all flex items-center justify-center gap-1">
+                                <!-- 🌟 已完美重組為安全的 ID 索引下載按鈕，避開巨型 Base64 Inline 解析 Bug -->
+                                <button onclick="downloadSourceImage('${task.id}')" class="w-full mt-1.5 bg-slate-800 hover:bg-slate-750 text-cyan-400 font-bold py-1 px-2 rounded text-[10px] transition-all flex items-center justify-center gap-1">
                                     <i class="fa-solid fa-download"></i> 💾 下載原圖
                                 </button>
                             </div>
@@ -291,8 +296,6 @@
                     document.getElementById(`select-hair-color-${t.id}`).value = currentSelections[t.id].hairColor;
                     document.getElementById(`select-clothing-color-${t.id}`).value = currentSelections[t.id].clothingColor;
                     document.getElementById(`select-glasses-${t.id}`).value = currentSelections[t.id].glasses;
-                    document.getElementById(`select-necklace-${t.id}`).value = currentSelections[t.id].necklace;
-                    document.getElementById(`select-earrings-${t.id}`).value = currentSelections[t.id].earrings;
                     document.getElementById(`textarea-${t.id}`).value = currentSelections[t.id].textareaVal;
                 }
             });
