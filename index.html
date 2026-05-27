@@ -145,18 +145,26 @@
             const pollingRef = useRef(null);
             const [isPrinting, setIsPrinting] = useState(false);
 
+            // 🌟 核心防禦：先拿鏡頭串流 ➡️ 成功後切換畫面 ➡️ 延時 150 毫秒綁定，徹底抹殺黑畫面/相機沒彈出 Bug！
             const startCamera = async () => {
-                setStep('camera');
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({
                         video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }
                     });
-                    if (videoRef.current) {
-                        videoRef.current.srcObject = stream;
-                        videoRef.current.play();
-                    }
+                    
+                    // 1. 成功拿取相機後，才切換至 camera 步驟
+                    setStep('camera');
+                    
+                    // 2. 利用 setTimeout 確保 React 已完成 video 標籤的 DOM 渲染
+                    setTimeout(() => {
+                        if (videoRef.current) {
+                            videoRef.current.srcObject = stream;
+                            videoRef.current.play().catch(e => console.log("播放影片失敗:", e));
+                        }
+                    }, 150);
                 } catch (err) {
-                    alert("請開通相機權限！");
+                    console.error("相機開通錯誤:", err);
+                    alert("請開通相機權限，否則無法進行風格化拍照體驗喔！");
                     setStep('home');
                 }
             };
@@ -399,7 +407,7 @@
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        root.render(App ? <App /> : <div>Loading...</div>);
     </script>
 </body>
 </html>
