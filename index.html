@@ -17,7 +17,6 @@
             --ai-pink: #ff00d0;
             --ai-dark: #020617;
         }
-
         body {
             touch-action: pan-x pan-y;
             user-select: none; 
@@ -26,8 +25,6 @@
             font-family: 'Noto Sans TC', sans-serif;
             background-color: var(--ai-dark);
         }
-
-        /* 深藍色像素方塊動態背景 */
         .cyber-bg {
             background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
             position: relative;
@@ -41,7 +38,6 @@
             background-size: 30px 30px;
             z-index: 0;
         }
-
         .kv-title {
             font-family: 'Orbitron', sans-serif;
             background: linear-gradient(to bottom, #fff 30%, var(--ai-cyan) 100%);
@@ -49,8 +45,6 @@
             -webkit-text-fill-color: transparent;
             filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.5));
         }
-
-        /* 仿照主視覺內頁的霓虹粉與青色發光漸層條 */
         .glow-bar {
             height: 3px;
             width: 180px;
@@ -58,162 +52,71 @@
             box-shadow: 0 0 12px var(--ai-pink), 0 0 20px var(--ai-cyan);
             border-radius: 50%;
         }
-
-        /* 🌟 核心升級：動態相應式內容容器 */
         .content-container {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center; /* 預設：在 iPad / 平板上完美垂直置中 */
+            justify-content: center;
             width: 100%;
             margin-top: 1rem;
             margin-bottom: 1rem;
-            transition: all 0.3s ease-in-out;
         }
-
-        /* 🚀 智慧判定：只有在超長直立式大螢幕（高度大於 1100px 且寬高比極度扁窄）下，才自動優化上移，避開視線死角 */
         @media (min-height: 1100px) and (max-aspect-ratio: 10/16) {
-            .content-container {
-                justify-content: flex-start;
-                padding-top: 6rem;
-            }
+            .content-container { justify-content: flex-start; padding-top: 5rem; }
         }
-
-        /* 🌟 核心升級：大幅放大拍照圖框 (動態適配手機、iPad 平板、大螢幕) */
         .camera-container {
-            width: 82vw;
-            height: 82vw;
-            max-width: 400px;
-            max-height: 400px;
-            position: relative;
-            overflow: hidden;
-            border-radius: 1.5rem;
+            width: 75vw; height: 75vw; max-width: 500px; max-height: 500px;
+            position: relative; overflow: hidden; border-radius: 1.5rem;
             border: 3px solid var(--ai-cyan);
-            box-shadow: 0 0 30px rgba(0, 242, 255, 0.4), inset 0 0 30px rgba(0, 242, 255, 0.2);
-            background-color: #000;
-            z-index: 10;
-            transition: all 0.3s ease-in-out;
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.4);
+            background-color: #000; transition: all 0.3s ease-in-out;
         }
-
-        /* 平板 / iPad 與一般中大螢幕 */
-        @media (min-width: 640px) and (min-height: 700px) {
-            .camera-container {
-                width: 75vw;
-                height: 75vw;
-                max-width: 580px; /* 大幅放大！確保 iPad 呈現大器畫面 */
-                max-height: 580px;
-            }
+        @media (min-height: 1100px) {
+            .camera-container { max-width: 680px; max-height: 680px; }
         }
-
-        /* 43 吋超大直立螢幕 */
-        @media (min-width: 1000px) and (min-height: 1100px) {
-            .camera-container {
-                width: 80vw;
-                height: 80vw;
-                max-width: 780px; /* 直立式大螢幕放大極限 */
-                max-height: 780px;
-            }
+        /* 雙圖二選一專用卡片樣式 */
+        .choice-card {
+            border: 3px solid #1e293b;
+            background: rgba(15, 23, 42, 0.6);
+            transition: all 0.25s ease;
+            cursor: pointer;
         }
-
-        /* 1:1.35 鵝蛋臉導引框 (隨比例自動完美放大) */
+        .choice-card.selected {
+            border-color: var(--ai-cyan);
+            box-shadow: 0 0 35px rgba(0, 242, 255, 0.5);
+            background: rgba(0, 242, 255, 0.1);
+            transform: scale(1.03);
+        }
         .face-guide {
-            width: 55%;
-            aspect-ratio: 1 / 1.35; 
-            border-radius: 50%;
+            width: 55%; aspect-ratio: 1 / 1.35; border-radius: 50%;
             border: 3px solid var(--ai-cyan);
             box-shadow: 0 0 20px var(--ai-cyan), 0 0 0 9999px rgba(2, 6, 23, 0.6);
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            z-index: 15;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none;
         }
-
-        .scan-line {
-            position: absolute;
-            width: 100%;
-            height: 5px;
-            background: var(--ai-cyan);
-            box-shadow: 0 0 20px var(--ai-cyan);
-            opacity: 0.7;
-            top: 0;
-            animation: scan 2.5s linear infinite;
-            z-index: 20;
-        }
-        @keyframes scan {
-            0% { top: 0%; opacity: 0; }
-            10% { opacity: 0.8; }
-            90% { opacity: 0.8; }
-            100% { top: 100%; opacity: 0; }
-        }
-
-        /* Loading 雷達動畫 */
         .radar-spinner {
-            position: relative;
-            width: 160px;
-            height: 160px;
-            border-radius: 50%;
-            border: 2px dashed rgba(0, 242, 255, 0.5);
+            position: relative; width: 160px; height: 160px;
+            border-radius: 50%; border: 2px dashed rgba(0, 242, 255, 0.5);
             animation: spin 8s linear infinite;
         }
         .radar-spinner::before {
-            content: '';
-            position: absolute;
-            top: 12px; left: 12px; right: 12px; bottom: 12px;
-            border-radius: 50%;
-            border: 4px solid transparent;
-            border-top-color: var(--ai-cyan);
-            border-bottom-color: var(--ai-cyan);
+            content: ''; position: absolute; inset: 12px; border-radius: 50%;
+            border: 4px solid transparent; border-top-color: var(--ai-cyan); border-bottom-color: var(--ai-cyan);
             animation: spin 2s linear infinite reverse;
         }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .text-glow-pulse {
-            animation: pulse-glow 2s ease-in-out infinite;
-        }
-        @keyframes pulse-glow {
-            0%, 100% { opacity: 1; text-shadow: 0 0 20px var(--ai-cyan); }
-            50% { opacity: 0.6; text-shadow: 0 0 8px var(--ai-cyan); }
-        }
-
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .text-glow-pulse { animation: pulse-glow 2s ease-in-out infinite; }
+        @keyframes pulse-glow { 0%, 100% { opacity: 1; text-shadow: 0 0 20px var(--ai-cyan); } 50% { opacity: 0.6; text-shadow: 0 0 8px var(--ai-cyan); } }
         .btn-cyan {
-            background: rgba(0, 242, 255, 0.1);
-            border: 2px solid var(--ai-cyan);
-            color: var(--ai-cyan);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            transition: all 0.3s;
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
-            z-index: 10;
+            background: rgba(0, 242, 255, 0.1); border: 2px solid var(--ai-cyan); color: var(--ai-cyan);
+            letter-spacing: 2px; transition: all 0.3s; box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
         }
-        .btn-cyan:active {
-            background: var(--ai-cyan);
-            color: #000;
-            box-shadow: 0 0 35px var(--ai-cyan);
-        }
-
-        /* 警告 / 返回首頁專用紅色調按鈕 */
+        .btn-cyan:active:not(:disabled) { background: var(--ai-cyan); color: #000; box-shadow: 0 0 35px var(--ai-cyan); }
         .btn-red {
-            background: rgba(255, 0, 208, 0.1);
-            border: 2px solid var(--ai-pink);
-            color: var(--ai-pink);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            transition: all 0.3s;
-            box-shadow: 0 0 15px rgba(255, 0, 208, 0.2);
-            z-index: 10;
+            background: rgba(255, 0, 208, 0.1); border: 2px solid var(--ai-pink); color: var(--ai-pink);
+            letter-spacing: 2px; transition: all 0.3s;
         }
-        .btn-red:active {
-            background: var(--ai-pink);
-            color: #000;
-            box-shadow: 0 0 35px var(--ai-pink);
-        }
+        .btn-red:active { background: var(--ai-pink); color: #000; }
     </style>
 </head>
 <body class="cyber-bg text-white min-h-[100dvh] w-screen flex flex-col">
@@ -223,53 +126,37 @@
         const { useState, useEffect, useRef } = React;
         const API_BASE_URL = "https://aicameraliveprint-back.onrender.com";
 
-        const LOADING_TEXTS_CH = [
-            "啟動視覺神經網路模組",
-            "正在萃取臉部幾何特徵",
-            "演算極簡線條結構中",
-            "套用 AI 大賞專屬模型",
-            "即將生成專屬雷雕底圖"
-        ];
-        const LOADING_TEXTS_EN = [
-            "BOOTING NEURAL NETWORK...",
-            "EXTRACTING FACIAL FEATURES...",
-            "CALCULATING VECTOR LINES...",
-            "APPLYING EXCLUSIVE LORA...",
-            "FINALIZING IMAGE GENERATION..."
-        ];
+        const LOADING_TEXTS_CH = ["啟動視覺網路模組", "正在萃取臉部幾何特徵", "演算極簡線條結構", "套用 AI 大賞專屬模型", "即將生成雙重對照風格"];
+        const LOADING_TEXTS_EN = ["BOOTING NEURAL...", "EXTRACTING PORTRAIT...", "VECTOR PROCESSING...", "APPLYING EXCLUSIVE LORA...", "GENERATING DUAL STYLES..."];
 
         const App = () => {
             const [step, setStep] = useState('home');
             const [taskId, setTaskId] = useState(null);
-            const [resultImage, setResultImage] = useState(null);
+            
+            // 雙圖核心狀態儲存
+            const [imgA, setImgA] = useState(null);
+            const [imgB, setImgB] = useState(null);
+            const [selectedChoice, setSelectedChoice] = useState(null); // 'A' 或是 'B'
+
             const videoRef = useRef(null);
             const canvasRef = useRef(null);
             const [countdown, setCountdown] = useState(0);
             const [textIndex, setTextIndex] = useState(0);
             const pollingRef = useRef(null);
-            
-            // 智慧出票系統：倒數返回首頁秒數、列印狀態
-            const [returnCountdown, setReturnCountdown] = useState(10); // 預設 10 秒自動返回首頁
             const [isPrinting, setIsPrinting] = useState(false);
 
             const startCamera = async () => {
                 setStep('camera');
                 try {
-                    // 智慧解析度配適：讓不同相機在行動端與 PC 都能完美相容並維持高張數
                     const stream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
-                        audio: false 
+                        video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }
                     });
-                    
                     if (videoRef.current) {
                         videoRef.current.srcObject = stream;
-                        // iOS 安全防禦，強制寫入 playsinline 阻止 Safari 劫持為影片播放器
-                        videoRef.current.setAttribute('playsinline', '');
-                        videoRef.current.setAttribute('webkit-playsinline', '');
-                        videoRef.current.play().catch(e => console.log("Play error:", e));
+                        videoRef.current.play();
                     }
                 } catch (err) {
-                    alert("請允許相機權限才能進行體驗喔！");
+                    alert("請開通相機權限！");
                     setStep('home');
                 }
             };
@@ -292,28 +179,17 @@
                 const video = videoRef.current;
                 const canvas = canvasRef.current;
                 const ctx = canvas.getContext('2d');
-
-                const vWidth = video.videoWidth;
-                const vHeight = video.videoHeight;
-                // 智慧中央等比裁切：不論輸入是直式或橫式畫面，皆能裁切成 1:1 正方形
-                const size = Math.min(vWidth, vHeight);
+                const size = Math.min(video.videoWidth, video.videoHeight);
                 
-                canvas.width = size; 
-                canvas.height = size;
-
-                // 畫布翻轉，使生成出的照片與照鏡子預覽 100% 一致
-                ctx.translate(size, 0); 
-                ctx.scale(-1, 1);
-
-                const startX = (vWidth - size) / 2;
-                const startY = (vHeight - size) / 2;
-                ctx.drawImage(video, startX, startY, size, size, 0, 0, size, size);
+                canvas.width = size; canvas.height = size;
+                ctx.translate(size, 0); ctx.scale(-1, 1);
+                ctx.drawImage(video, (video.videoWidth - size) / 2, (video.videoHeight - size) / 2, size, size, 0, 0, size, size);
                 
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                if (video.srcObject) video.srcObject.getTracks().forEach(t => t.stop());
                 
-                stopMediaStream();
                 setStep('loading');
-                setTextIndex(0);
+                setSelectedChoice(null);
 
                 try {
                     const res = await fetch(`${API_BASE_URL}/api/upload`, {
@@ -322,48 +198,19 @@
                         body: JSON.stringify({ image: dataUrl })
                     });
                     const data = await res.json();
-                    if (data.success) {
-                        setTaskId(data.taskId);
-                    }
-                } catch (err) { 
-                    console.log("後端未回應，開啟體驗模擬序號");
-                    setTimeout(() => { 
-                        setTaskId("007"); 
-                    }, 1500);
+                    if (data.success) setTaskId(data.taskId);
+                } catch (err) {
+                    setTimeout(() => { setTaskId("007"); }, 1500);
                 }
             };
 
-            // 修正後的媒體串流關閉函式：指向 srcObject.getTracks() 進行停止
-            const stopMediaStream = () => {
-                if (videoRef.current && videoRef.current.srcObject) {
-                    videoRef.current.srcObject.getTracks().forEach(t => t.stop());
-                }
-            };
-
-            const handleCancelAndGoHome = () => {
-                if (pollingRef.current) clearInterval(pollingRef.current);
-                stopMediaStream();
-                setTaskId(null);
-                setResultImage(null);
-                setStep('home');
-            };
-
-            // 智慧出票系統：背景生成隱藏 Iframe 進行熱感應列印的核心函式 (相容 58mm 與 80mm 出票機)
-            const triggerPrinter = (id, imgUrl) => {
+            // 觸發列印號碼牌，此處完美融入客人的最終抉擇圖
+            const triggerPrinter = (id, chosenImgUrl) => {
                 setIsPrinting(true);
-                // 建立或獲取隱藏的 Iframe
-                let iframe = document.getElementById('print-iframe');
-                if (!iframe) {
-                    iframe = document.createElement('iframe');
-                    iframe.id = 'print-iframe';
-                    iframe.style.position = 'fixed';
-                    iframe.style.right = '0';
-                    iframe.style.bottom = '0';
-                    iframe.style.width = '0';
-                    iframe.style.height = '0';
-                    iframe.style.border = '0';
-                    document.body.appendChild(iframe);
-                }
+                let iframe = document.getElementById('print-iframe') || document.createElement('iframe');
+                iframe.id = 'print-iframe';
+                iframe.style.display = 'none';
+                if (!iframe.parentElement) document.body.appendChild(iframe);
 
                 const doc = iframe.contentWindow.document;
                 doc.open();
@@ -372,279 +219,180 @@
                     <head>
                         <style>
                             @page { size: 58mm auto; margin: 0mm; }
-                            body {
-                                font-family: 'Noto Sans TC', sans-serif;
-                                width: 52mm;
-                                margin: 0 auto;
-                                padding: 8px 1px;
-                                text-align: center;
-                                color: #000;
-                                background: #fff;
-                            }
-                            .title { font-size: 13px; font-weight: 900; margin-bottom: 2px; letter-spacing: 1px; }
-                            .subtitle { font-size: 8px; letter-spacing: 1px; margin-bottom: 6px; border-bottom: 1px dashed #000; padding-bottom: 4px; text-transform: uppercase; }
-                            .id-title { font-size: 9px; font-weight: bold; margin-top: 4px; color: #333; letter-spacing: 1px; }
-                            .id-num { font-size: 32px; font-weight: 900; margin: 0px 0; letter-spacing: 1px; line-height: 1.1; }
+                            body { font-family: sans-serif; width: 52mm; margin: 0 auto; padding: 8px 1px; text-align: center; color: #000; background: #fff; }
+                            .title { font-size: 13px; font-weight: 900; }
+                            .id-num { font-size: 34px; font-weight: 900; margin: 2px 0; }
                             .ticket-img { width: 44mm; height: 44mm; object-fit: cover; margin: 4px auto; border: 1.5px solid #000; border-radius: 4px; display: block; }
-                            .footer-msg { font-size: 8px; line-height: 1.3; margin-top: 6px; border-top: 1px dashed #000; padding-top: 5px; font-weight: bold; }
-                            .time { font-size: 6px; color: #666; margin-top: 4px; }
+                            .footer-msg { font-size: 8.5px; font-weight: bold; margin-top: 5px; border-top: 1px dashed #000; padding-top: 4px; }
                         </style>
                     </head>
                     <body>
                         <div class="title">智慧創新大賞</div>
-                        <div class="subtitle">2026 BEST AI AWARDS</div>
-                        <div class="id-title">雷雕領取序號</div>
+                        <div style="font-size:8px;">2026 BEST AI AWARDS</div>
+                        <div style="font-size:9px; margin-top:3px; font-weight:bold;">雷雕領取序號</div>
                         <div class="id-num">#${id}</div>
-                        ${imgUrl ? `<img class="ticket-img" src="${imgUrl}" />` : ''}
-                        <div class="footer-msg">
-                            請憑此票券至雷雕體驗區<br/>
-                            領取您的專屬雷雕紀念品！
-                        </div>
-                        <div class="time">列印時間: ${new Date().toLocaleString('zh-TW')}</div>
+                        <img class="ticket-img" src="${chosenImgUrl}" />
+                        <div class="footer-msg">您已確認此客製外觀！<br/>請憑此票券至雷雕體驗區領取成品。</div>
                     </body>
                     </html>
                 `);
                 doc.close();
 
-                // 確保圖片在列印前完全加載
-                const ticketImg = doc.querySelector('.ticket-img');
-                if (ticketImg) {
-                    ticketImg.onload = () => {
-                        iframe.contentWindow.focus();
-                        iframe.contentWindow.print();
-                        setTimeout(() => setIsPrinting(false), 2000);
-                    };
-                    ticketImg.onerror = () => {
-                        iframe.contentWindow.focus();
-                        iframe.contentWindow.print();
-                        setTimeout(() => setIsPrinting(false), 2000);
-                    };
-                } else {
+                const img = doc.querySelector('.ticket-img');
+                const printIt = () => {
                     iframe.contentWindow.focus();
                     iframe.contentWindow.print();
-                    setTimeout(() => setIsPrinting(false), 2000);
-                }
+                    setIsPrinting(false);
+                    // 列印完成後引導回首頁
+                    setTimeout(() => { setStep('home'); setTaskId(null); }, 1500);
+                };
+                if (img) { img.onload = printIt; img.onerror = printIt; } else { printIt(); }
+            };
+
+            // 使用者在二選一介面按下確定列印
+            const finalizeChoiceAndPrint = async () => {
+                if (!selectedChoice) return;
+                const chosenImg = selectedChoice === 'A' ? imgA : imgB;
+                
+                // 1. 回傳決策給後端資料庫
+                try {
+                    await fetch(`${API_BASE_URL}/api/choice/${taskId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ choice: selectedChoice })
+                    });
+                } catch(e) { console.error("回傳選擇失敗", e); }
+
+                // 2. 啟動實體號碼牌列印流程
+                triggerPrinter(taskId, chosenImg);
             };
 
             useEffect(() => {
                 let textInterval;
-
                 if (step === 'loading') {
-                    textInterval = setInterval(() => {
-                        setTextIndex((prev) => (prev + 1) % LOADING_TEXTS_CH.length);
-                    }, 1500);
+                    textInterval = setInterval(() => { setTextIndex(p => (p + 1) % LOADING_TEXTS_CH.length); }, 1500);
 
                     if (taskId) {
                         pollingRef.current = setInterval(async () => {
                             try {
                                 const res = await fetch(`${API_BASE_URL}/api/status/${taskId}`);
                                 const data = await res.json();
-                                if (data.status === 'completed') {
-                                    setResultImage(data.resultImage);
-                                    setStep('result');
-                                    setReturnCountdown(10); // 重置為 10 秒倒數
+                                // 當雙圖都齊全被管理員上傳時，觸發前端二選一介面
+                                if (data.status === 'completed' && data.resultImageA && data.resultImageB) {
+                                    setImgA(data.resultImageA);
+                                    setImgB(data.resultImageB);
+                                    setStep('choice'); // 切換到二選一關卡！
                                     clearInterval(pollingRef.current);
-                                    
-                                    // 自動觸發列印實體號碼牌
-                                    triggerPrinter(taskId, data.resultImage);
                                 }
                             } catch (err) {
-                                if (taskId === "007") {
+                                if (taskId === "007") { // 展場模擬測試通道
                                     setTimeout(() => {
-                                        const mockCanvasUrl = canvasRef.current.toDataURL();
-                                        setResultImage(mockCanvasUrl);
-                                        setStep('result');
-                                        setReturnCountdown(10);
+                                        const mockUrl = canvasRef.current.toDataURL();
+                                        setImgA(mockUrl); setImgB(mockUrl);
+                                        setStep('choice');
                                         clearInterval(pollingRef.current);
-                                        
-                                        // 自動觸發列印
-                                        triggerPrinter(taskId, mockCanvasUrl);
                                     }, 4000);
                                 }
                             }
                         }, 3000);
                     }
                 }
-                return () => {
-                    clearInterval(textInterval);
-                    if (pollingRef.current) clearInterval(pollingRef.current);
-                };
+                return () => { clearInterval(textInterval); clearInterval(pollingRef.current); };
             }, [step, taskId]);
 
-            // 自動倒數返回首頁邏輯
-            useEffect(() => {
-                let returnTimer;
-                if (step === 'result' && returnCountdown > 0) {
-                    returnTimer = setTimeout(() => {
-                        setReturnCountdown(prev => prev - 1);
-                    }, 1000);
-                } else if (step === 'result' && returnCountdown === 0) {
-                    handleCancelAndGoHome();
-                }
-                return () => clearTimeout(returnTimer);
-            }, [step, returnCountdown]);
-
             return (
-                <div className="flex flex-col items-center justify-between h-[100dvh] w-full py-8 sm:py-10 px-4 sm:px-6">
+                <div className="flex flex-col items-center justify-between h-[100dvh] w-full py-6 px-4">
                     
                     {/* Header */}
-                    <div className="text-center z-10 mt-2 flex flex-col items-center flex-shrink-0 w-full">
-                        {/* 替換成您提供的高清原圖 LOGO，並加上霓虹發光特效 */}
-                        <img 
-                            src="https://img.shoplineapp.com/media/image_clips/6a14557eb36f6eb74d460308/original.png?1779717502=&owner_id=66221c5c384dbb002ec45c18" 
-                            alt="2026 BEST AI AWARDS"
-                            className="w-[260px] sm:w-[320px] md:w-[420px] h-auto mb-2 sm:mb-3 filter drop-shadow-[0_0_12px_rgba(0,242,255,0.7)] select-none pointer-events-none"
-                            onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.style.display = 'none';
-                            }}
-                        />
-                        
-                        <h1 className="kv-title text-4xl sm:text-5xl lg:text-6xl font-black mb-2 sm:mb-3 tracking-widest">智慧創新大賞</h1>
+                    <div className="text-center z-10 flex flex-col items-center flex-shrink-0 w-full">
+                        <img src="https://img.shoplineapp.com/media/image_clips/6a14557eb36f6eb74d460308/original.png?1779717502=&owner_id=66221c5c384dbb002ec45c18" className="w-[240px] sm:w-[350px] h-auto mb-1 filter drop-shadow-[0_0_10px_rgba(0,242,255,0.6)]" />
+                        <h1 className="kv-title text-3xl sm:text-5xl font-black mb-1.5 tracking-widest">智慧創新大賞</h1>
                         <div className="glow-bar"></div>
                     </div>
 
-                    {/* 內容區區塊：使用動態 CSS 類別，在 iPad/平板上完全垂直置中，在 43 吋大螢幕上自動優化上抬 */}
+                    {/* 互動內容控制中樞 */}
                     <div className="content-container">
                         
-                        {/* 狀態 1：首頁 */}
+                        {/* 關卡 1：首頁 */}
                         {step === 'home' && (
-                            <div className="text-center flex flex-col items-center justify-center">
-                                {/* 文案：AI 虛擬肖像風格化 */}
-                                <p className="text-ai-cyan text-lg sm:text-xl md:text-2xl mb-8 sm:mb-12 tracking-[0.35em] font-light text-glow-pulse">AI 虛擬肖像風格化</p>
-                                <button 
-                                    onClick={startCamera} 
-                                    className="btn-cyan text-2xl sm:text-3xl md:text-4xl font-black px-12 sm:px-16 md:px-20 py-5 sm:py-8 md:py-10 rounded-full border-2 shadow-[0_0_20px_rgba(0,242,255,0.2)]"
-                                >
-                                    開始體驗 START
-                                </button>
+                            <div className="text-center">
+                                <p className="text-ai-cyan text-base sm:text-xl mb-8 tracking-[0.3em] text-glow-pulse font-light">AI 虛擬肖像風格化</p>
+                                <button onClick={startCamera} className="btn-cyan text-xl sm:text-3xl font-black px-12 py-5 sm:py-7 rounded-full animate-pulse">開始體驗 START</button>
                             </div>
                         )}
 
-                        {/* 狀態 2：相機拍攝 */}
+                        {/* 關卡 2：相機畫面 */}
                         {step === 'camera' && (
                             <div className="flex flex-col items-center w-full">
-                                {/* 拍照圖框：已大幅放大 (iPad 達 580px, 大螢幕達 780px) */}
-                                <div className="camera-container relative">
-                                    <video 
-                                        ref={videoRef} 
-                                        autoPlay={true}
-                                        playsInline={true}
-                                        muted={true}
-                                        className="w-full h-full object-cover absolute top-0 left-0" 
-                                        style={{ transform: 'rotateY(180deg)', WebkitTransform: 'rotateY(180deg)' }}
-                                    />
+                                <div className="camera-container">
+                                    <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover absolute inset-0" style={{ transform: 'rotateY(180deg)' }} />
                                     <div className="face-guide"></div>
-                                    
-                                    {/* 右上角 HUD 科技計時器 */}
                                     {countdown > 0 && (
-                                        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex flex-col items-center justify-center w-16 h-16 sm:w-24 sm:h-24 rounded-2xl border-2 border-ai-cyan bg-[#020617]/90 shadow-[0_0_25px_rgba(0,242,255,0.5)] z-30">
-                                            <span className="text-[9px] sm:text-[11px] text-ai-cyan font-bold tracking-[0.15em] opacity-80 mb-0.5 sm:mb-1">COUNT</span>
-                                            <span className="text-3xl sm:text-5xl font-black text-white font-mono drop-shadow-[0_0_12px_#00f2ff]">{countdown}</span>
+                                        <div className="absolute top-4 right-4 w-16 h-16 rounded-xl border border-ai-cyan bg-[#020617]/95 flex flex-col items-center justify-center">
+                                            <span className="text-[28px] font-black text-white font-mono">{countdown}</span>
                                         </div>
                                     )}
                                 </div>
-                                
-                                {/* 拍照控制按鈕區：🌟 補正 className、並將最大寬度限制鎖定為與上方的相機圖框完全一致 (避免在 iPad 偏左擠壓) */}
-                                <div className="mt-6 sm:mt-8 md:mt-10 flex gap-4 md:gap-6 justify-center w-[82vw] sm:w-[75vw] lg:w-[80vw] max-w-[400px] sm:max-w-[580px] lg:max-w-[780px] px-2 flex-shrink-0">
-                                    <button onClick={handleCancelAndGoHome} className="btn-cyan flex-1 py-4 md:py-5 rounded-2xl text-base sm:text-lg md:text-xl font-bold">返回首頁</button>
-                                    <button onClick={takePhoto} className="btn-cyan flex-[2.5] py-4 md:py-5 rounded-2xl text-xl sm:text-2xl md:text-3xl font-black bg-ai-cyan/25">拍攝照片 PHOTO</button>
+                                <div className="mt-5 flex gap-4 w-[82vw] sm:w-[75vw] lg:w-[80vw] max-w-[400px] sm:max-w-[580px] lg:max-w-[780px] px-2">
+                                    <button onClick={handleCancelAndGoHome} className="btn-cyan flex-1 py-3.5 rounded-xl text-sm font-bold">返回首頁</button>
+                                    <button onClick={takePhoto} className="btn-cyan flex-[2.5] py-3.5 rounded-xl text-lg font-black bg-ai-cyan/20">拍攝照片 PHOTO</button>
                                 </div>
                             </div>
                         )}
 
-                        {/* 狀態 3：AI 處理載入中 */}
+                        {/* 關卡 3：背景 AI 運算生成隊列中 */}
                         {step === 'loading' && (
-                            <div className="flex flex-col items-center justify-center w-full max-w-[800px] z-20">
-                                
-                                {/* 動態雷達 */}
-                                <div className="relative flex items-center justify-center mb-8 sm:mb-10">
-                                    <div className="radar-spinner"></div>
-                                    <div className="absolute text-ai-cyan text-5xl sm:text-6xl opacity-90"><i className="fa-solid fa-microchip animate-pulse"></i></div>
+                            <div className="flex flex-col items-center justify-center">
+                                <div className="relative flex items-center justify-center mb-6"><div className="radar-spinner"></div></div>
+                                <div className="h-20 text-center mb-4">
+                                    <h2 className="text-lg sm:text-2xl font-bold text-white tracking-wider mb-1 text-glow-pulse">{LOADING_TEXTS_CH[textIndex]}</h2>
+                                    <p className="text-ai-cyan text-xs font-mono opacity-80 tracking-widest">{LOADING_TEXTS_EN[textIndex]}</p>
                                 </div>
-                                
-                                {/* 多行跳動科技文字 */}
-                                <div className="h-24 sm:h-28 flex flex-col items-center justify-center text-center px-4 w-full mb-6 sm:mb-8">
-                                    <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-widest text-glow-pulse mb-3 sm:mb-4">
-                                        {LOADING_TEXTS_CH[textIndex]}
-                                    </h2>
-                                    <p className="text-ai-cyan text-xs sm:text-sm md:text-base font-mono opacity-80 tracking-[0.2em] sm:tracking-[0.25em]">
-                                        {LOADING_TEXTS_EN[textIndex]}
-                                    </p>
-                                </div>
-
-                                {/* 序號卡片上移 */}
-                                <div className="w-full flex flex-col items-center gap-6 sm:gap-8">
-                                    {taskId && (
-                                        <div className="relative overflow-hidden bg-black/55 p-6 sm:p-8 rounded-3xl border-2 border-ai-cyan backdrop-blur-md w-64 sm:w-72 md:w-80 text-center shadow-[0_0_35px_rgba(0,242,255,0.25)]">
-                                            <div className="scan-line" style={{animationDuration: '4s'}}></div>
-                                            <p className="text-xs sm:text-sm text-gray-400 mb-1 tracking-[0.3em] font-bold">PROGRESS ID</p>
-                                            <p className="text-5xl sm:text-6xl md:text-7xl font-black text-ai-cyan font-mono drop-shadow-[0_0_15px_rgba(0,242,255,0.6)]">
-                                                #{taskId}
-                                            </p>
-                                        </div>
-                                    )}
-
-                                    <button 
-                                        onClick={handleCancelAndGoHome} 
-                                        className="btn-red px-8 sm:px-10 py-3 sm:py-4 rounded-xl text-base sm:text-lg font-bold shadow-[0_0_15px_rgba(255,0,208,0.2)]"
-                                    >
-                                        取消並返回首頁 CANCEL
-                                    </button>
-                                </div>
+                                {taskId && (
+                                    <div className="bg-black/40 p-4 rounded-2xl border border-ai-cyan text-center w-56 shadow-lg mb-4">
+                                        <p className="text-[10px] text-slate-400 font-mono tracking-wider">PROGRESS ID</p>
+                                        <p className="text-4xl font-mono font-black text-ai-cyan">#{taskId}</p>
+                                    </div>
+                                )}
+                                <button onClick={handleCancelAndGoHome} className="btn-red px-6 py-2.5 rounded-xl text-xs font-bold">取消返回首頁</button>
                             </div>
                         )}
 
-                        {/* 狀態 4：顯示結果並自動列印 */}
-                        {step === 'result' && (
-                            <div className="flex flex-col items-center w-full">
-                                <div className="camera-container p-2 bg-white/5 mb-4 sm:mb-6">
-                                    <img src={resultImage} className="w-full h-full object-cover rounded-2xl" />
-                                </div>
+                        {/* 🌟 新增關卡 4：頂級雙重風格二選一互動介面 */}
+                        {step === 'choice' && (
+                            <div className="flex flex-col items-center w-full max-w-[750px] px-2">
+                                <p className="text-ai-cyan text-sm sm:text-base font-bold tracking-widest mb-3 animate-pulse">
+                                    ✨ 請手動挑選您最喜愛的專屬風格款式 ✨
+                                </p>
                                 
-                                {/* 自動出票與倒數狀態顯示 */}
-                                <div className="bg-ai-cyan/15 border-2 border-ai-cyan p-4 sm:p-6 rounded-3xl text-center mb-6 sm:mb-8 w-full max-w-[800px] shadow-[0_0_30px_rgba(0,242,255,0.15)] flex flex-col gap-2">
-                                    <p className="text-gray-300 text-xs sm:text-sm tracking-[0.2em] sm:tracking-[0.25em] font-bold">專屬雷雕領取序號</p>
-                                    <p className="text-5xl sm:text-6xl md:text-7xl font-black text-white font-mono drop-shadow-[0_0_10px_#fff]">#{taskId}</p>
-                                    
-                                    {/* 動態進度條與提示 */}
-                                    <div className="mt-3 pt-3 border-t border-cyan-500/20 text-center">
-                                        <p className="text-cyan-400 text-xs sm:text-sm font-semibold tracking-wider animate-pulse flex items-center justify-center gap-2">
-                                            <i className="fa-solid fa-print"></i>
-                                            {isPrinting ? "📟 正在為您列印實體號碼牌..." : "📟 票券已自動印出！請拿取您的票券"}
-                                        </p>
-                                        <p className="text-gray-400 text-[11px] mt-1.5 font-mono">
-                                            {returnCountdown} 秒後自動返回體驗首頁
-                                        </p>
+                                <div class="grid grid-cols-2 gap-4 w-full mb-6">
+                                    <div onClick={() => setSelectedChoice('A')} className={`choice-card p-2 rounded-2xl text-center ${selectedChoice === 'A' ? 'selected' : ''}`}>
+                                        <img src={imgA} className="w-full aspect-square object-cover rounded-xl mb-2 border border-slate-800" />
+                                        <span className="text-xs sm:text-sm font-black tracking-wider block">【 風格 A 款 】</span>
+                                    </div>
+                                    <div onClick={() => setSelectedChoice('B')} className={`choice-card p-2 rounded-2xl text-center ${selectedChoice === 'B' ? 'selected' : ''}`}>
+                                        <img src={imgB} className="w-full aspect-square object-cover rounded-xl mb-2 border border-slate-800" />
+                                        <span className="text-xs sm:text-sm font-black tracking-wider block">【 風格 B 款 】</span>
                                     </div>
                                 </div>
-                                
-                                {/* 控制按鈕：🌟 補正 className、並將最大寬度限制鎖定為與上方的相機圖框完全一致 */}
-                                <div className="flex gap-4 w-[82vw] sm:w-[75vw] lg:w-[80vw] max-w-[400px] sm:max-w-[580px] lg:max-w-[780px]">
+
+                                <div className="flex gap-4 w-full sm:max-w-[500px]">
+                                    <button onClick={handleCancelAndGoHome} className="btn-cyan flex-1 py-3.5 rounded-xl text-xs sm:text-sm font-bold">放棄返回</button>
                                     <button 
-                                        onClick={() => triggerPrinter(taskId, resultImage)} 
-                                        className="btn-cyan flex-1 py-4 sm:py-5 rounded-2xl text-base sm:text-lg font-bold flex items-center justify-center gap-2"
+                                        disabled={!selectedChoice || isPrinting} 
+                                        onClick={finalizeChoiceAndPrint} 
+                                        className={`flex-[2.5] py-3.5 rounded-xl text-base sm:text-lg font-black transition-all duration-300 ${selectedChoice ? 'btn-cyan bg-cyan-400 text-slate-950 shadow-[0_0_25px_rgba(0,242,255,0.4)]' : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'}`}
                                     >
-                                        <i className="fa-solid fa-arrows-rotate"></i>手動補印票券
-                                    </button>
-                                    <button 
-                                        onClick={handleCancelAndGoHome} 
-                                        className="btn-cyan flex-[1.5] py-4 sm:py-5 rounded-2xl text-lg sm:text-xl font-black bg-ai-cyan/15"
-                                    >
-                                        返回首頁 (GO)
+                                        <i className="fa-solid fa-print mr-1.5"></i>
+                                        {isPrinting ? "正在出票中..." : "確認雷雕列印"}
                                     </button>
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    {/* 將右下角文字精簡為 "2026" */}
-                    <div className="w-full flex justify-end items-end px-4 opacity-60 z-10 pb-1 sm:pb-2 flex-shrink-0">
-                        <div className="font-bold text-xs sm:text-sm md:text-base font-mono text-ai-cyan tracking-[0.2em] drop-shadow-[0_0_5px_#00f2ff]">
-                            2026
-                        </div>
-                    </div>
-
+                    {/* Footer */}
+                    <div className="w-full flex justify-end px-4 opacity-50 text-xs font-mono text-ai-cyan tracking-widest">2026</div>
                     <canvas ref={canvasRef} className="hidden"></canvas>
                 </div>
             );
