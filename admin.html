@@ -3,615 +3,277 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>控制台</title>
+    <title>2026 BEST AI AWARDS | 後台管理控制台</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;900&display=swap" rel="stylesheet">
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;700;900&display=swap" rel="stylesheet">
+    
     <style>
+        :root {
+            --ai-cyan: #00f2ff;
+            --ai-pink: #ff00d0;
+            --ai-dark: #020617;
+        }
         body {
             font-family: 'Noto Sans TC', sans-serif;
-            background-color: #0b0f19;
-            color: #f8fafc;
+            background-color: #0b1329;
+            background-image: radial-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 0);
+            background-size: 24px 24px;
         }
-        .tech-title {
-            font-family: 'Orbitron', sans-serif;
-            background: linear-gradient(135deg, #00f2ff, #ff00d0);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .cyber-panel {
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            backdrop-filter: blur(12px);
+        }
+        .cyber-card {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(0, 242, 255, 0.15);
+            transition: all 0.3s ease;
+        }
+        .cyber-card:hover {
+            border-color: var(--ai-cyan);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.15);
+        }
+        .glow-text {
+            text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
         }
     </style>
 </head>
-<body class="p-4 md:p-8 min-h-screen bg-slate-950">
-    <div id="root" class="max-w-7xl mx-auto"></div>
+<body class="text-slate-100 min-h-screen p-4 md:p-8">
 
-    <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+    <!-- 頂部導覽列 -->
+    <header class="max-w-7xl mx-auto mb-8 flex flex-col sm:flex-row justify-between items-center border-b border-cyan-500/20 pb-4 gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-3 h-3 rounded-full bg-cyan-400 animate-ping"></div>
+            <h1 class="text-2xl font-black tracking-wider text-white">
+                智慧創新大賞 <span class="text-cyan-400 font-mono font-normal text-lg">ADMIN PANEL</span>
+            </h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="text-xs bg-slate-800 px-3 py-1.5 rounded-md text-slate-400 font-mono border border-slate-700">SERVER: ONLINE</span>
+            <button onclick="fetchAllTasks()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2 shadow-[0_0_15px_rgba(0,242,255,0.3)]">
+                <i class="fa-solid fa-arrows-rotate"></i> 整理重新整理
+            </button>
+        </div>
+    </header>
 
-        // 預設官方後端網址
-        const DEFAULT_API_URL = "https://aicameraliveprint-back.onrender.com";
+    <!-- 主容器 -->
+    <main class="max-w-7xl mx-auto">
+        
+        <!-- 任務列表狀態欄 -->
+        <div class="mb-6 flex gap-4 text-xs font-bold tracking-wider">
+            <span class="text-cyan-400"><i class="fa-solid fa-list-check mr-1"></i> 全部的排隊任務</span>
+        </div>
 
-        const AdminPanel = () => {
-            const [allTasks, setAllTasks] = useState([]);
-            const [remarks, setRemarks] = useState({}); // 暫存修改中的備註
-            const [copiedId, setCopiedId] = useState(null); // 複製提示狀態
-            const [loadingId, setLoadingId] = useState(null);
-            
-            // 讀取快取網址，若無則使用預設值
-            const [apiUrl, setApiUrl] = useState(() => {
-                return localStorage.getItem('admin_api_url') || DEFAULT_API_URL;
-            });
-            const [apiStatus, setApiStatus] = useState('checking'); // 'checking', 'online', 'offline'
-            const [connectionError, setConnectionError] = useState("");
-            const [showSettings, setShowSettings] = useState(false);
-            
-            // 核心升級：向下相容模式狀態
-            const [legacyModeActive, setLegacyModeActive] = useState(false);
+        <!-- 卡片容器 -->
+        <div id="tasks-container" class="grid grid-cols-1 gap-6">
+            <!-- 動態資料會由 JavaScript 渲染至此 -->
+            <div class="text-center py-12 text-slate-400 border border-dashed border-slate-700 rounded-2xl">
+                <i class="fa-solid fa-circle-notch animate-spin text-3xl text-cyan-400 mb-3"></i>
+                <p>正在連線至 Render 後端獲取排隊號碼...</p>
+            </div>
+        </div>
+    </main>
 
-            // 偵測工作人員是否誤填了前台 GitHub 網址
-            const isGithubUrl = apiUrl.toLowerCase().includes("github.io");
+    <script>
+        const API_BASE_URL = "https://aicameraliveprint-back.onrender.com";
 
-            // 每 2.5 秒自動刷新一次完整名單
-            useEffect(() => {
-                let isMounted = true;
-                const fetchAllTasks = async () => {
-                    try {
-                        let res = await fetch(`${apiUrl}/api/admin/all-tasks`);
-                        let isLegacy = false;
-
-                        // 核心防禦：如果伺服器回傳了 HTML 404 頁面，或者不支援 JSON
-                        const contentType = res.headers.get('content-type') || '';
-                        if (!res.ok || contentType.includes('text/html') || !contentType.includes('application/json')) {
-                            console.warn("⚠️ 偵測到後端尚未更新。自動啟動向下相容模式...");
-                            res = await fetch(`${apiUrl}/api/admin/tasks`);
-                            isLegacy = true;
-                        }
-
-                        if (!res.ok) throw new Error(`HTTP 錯誤! 狀態碼: ${res.status}`);
-                        const data = await res.json();
-                        
-                        if (data.success && isMounted) {
-                            const tasksWithStatus = (data.tasks || []).map(t => ({
-                                ...t,
-                                status: t.status || 'pending',
-                                suggestedPrompt: t.suggestedPrompt || `Quirky minimalist hand-drawn doodle portrait, naive art, chibi kawaii aesthetic...`
-                            }));
-
-                            setAllTasks(tasksWithStatus);
-                            setApiStatus('online');
-                            setConnectionError("");
-                            setLegacyModeActive(isLegacy);
-                        }
-                    } catch (err) {
-                        if (isMounted) {
-                            setApiStatus('offline');
-                            setConnectionError(err.message || "Network Error");
-                            console.error("無法連線至後端伺服器:", err);
-                        }
-                    }
-                };
-                
-                fetchAllTasks();
-                const interval = setInterval(fetchAllTasks, 2.5 * 1000);
-                return () => {
-                    isMounted = false;
-                    clearInterval(interval);
-                };
-            }, [apiUrl]);
-
-            // 進行中與已處理歷史紀錄分流
-            const pendingTasks = allTasks.filter(t => t.status === 'pending');
-            const completedTasks = allTasks.filter(t => t.status === 'completed' || t.status === 'cancelled');
-
-            // 計算右上角看板數據
-            const totalTickets = allTasks.length;
-            const completedCount = allTasks.filter(t => t.status === 'completed').length;
-            const latestTicketId = allTasks.length > 0 
-                ? allTasks[allTasks.length - 1].id 
-                : "000";
-
-            // 手動更新狀態並同步至後端
-            const handleStatusChange = async (taskId, newStatus) => {
-                try {
-                    const res = await fetch(`${apiUrl}/api/admin/update-status/${taskId}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ status: newStatus })
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        setAllTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
-                    }
-                } catch (err) {
-                    console.error("無法同步進度狀態至伺服器:", err);
-                    setAllTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
-                }
-            };
-
-            // 一鍵複製 Leonardo 專用高保真咒語
-            const handleCopyPrompt = (taskId, promptText) => {
-                const textarea = document.createElement("textarea");
-                textarea.value = promptText;
-                document.body.appendChild(textarea);
-                textarea.select();
-                try {
-                    document.execCommand("copy");
-                    setCopiedId(taskId);
-                    setTimeout(() => setCopiedId(null), 2000);
-                } catch (err) {
-                    alert("複製失敗，請手動複製！");
-                }
-                document.body.removeChild(textarea);
-            };
-
-            // 處理更換 API 網址
-            const handleSaveApiUrl = (newUrl) => {
-                const cleanedUrl = newUrl.trim().replace(/\/$/, ""); 
-                localStorage.setItem('admin_api_url', cleanedUrl);
-                setApiUrl(cleanedUrl);
-                setApiStatus('checking');
-                setShowSettings(false);
-            };
-
-            // 一鍵清除瀏覽器快取殘留，重置回預設網址
-            const handleResetToDefault = () => {
-                localStorage.removeItem('admin_api_url');
-                setApiUrl(DEFAULT_API_URL);
-                setApiStatus('checking');
-                setShowSettings(false);
-                alert("已成功清除暫存快取！系統已重置回預設後端連線網址！");
-            };
-
-            // 處理工作人員上傳生成好的雷雕圖
-            const handleUploadResult = (e, taskId) => {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                const reader = new FileReader();
-                reader.onloadend = async () => {
-                    setLoadingId(taskId);
-                    try {
-                        const res = await fetch(`${apiUrl}/api/admin/upload-result/${taskId}`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ resultImage: reader.result })
-                        });
-                        const data = await res.json();
-                        if (data.success) {
-                            const updated = allTasks.map(t => t.id === taskId 
-                                ? { ...t, status: 'completed', resultImage: reader.result } 
-                                : t
-                            );
-                            setAllTasks(updated);
-                        }
-                    } catch (err) {
-                        alert("上傳失敗，請檢查網路連線！");
-                    }
-                    setLoadingId(null);
-                };
-                reader.readAsDataURL(file);
-            };
-
-            // 處理保存/修改備註
-            const handleSaveRemark = async (taskId) => {
-                const currentRemark = remarks[taskId] !== undefined 
-                    ? remarks[taskId] 
-                    : (allTasks.find(t => t.id === taskId)?.remark || '');
-
-                try {
-                    const res = await fetch(`${apiUrl}/api/admin/save-remark/${taskId}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ remark: currentRemark })
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        setAllTasks(prev => prev.map(t => t.id === taskId ? { ...t, remark: currentRemark } : t));
-                        alert(`號碼 #${taskId} 備註儲存成功！`);
-                    }
-                } catch (err) {
-                    alert("備註儲存失敗，請重試");
-                }
-            };
-
-            // 處理備註文字變更
-            const handleRemarkChange = (taskId, value) => {
-                setRemarks(prev => ({ ...prev, [taskId]: value }));
-            };
-
-            return (
-                <div className="flex flex-col gap-8">
-                    
-                    {/* Header: 只包含「控制台」、連線狀態 與 右側動態儀表板 */}
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-slate-900/60 p-6 rounded-3xl border border-slate-800/80 backdrop-blur">
-                        <div className="flex flex-col gap-2">
-                            <div className="flex items-center gap-3">
-                                <i className="fa-solid fa-bolt text-cyan-400"></i>
-                                <span className="tech-title text-3xl font-black tracking-wider">控制台</span>
-                                
-                                {/* 狀態指示燈 */}
-                                {apiStatus === 'online' && (
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 animate-pulse">
-                                        <span className="w-1.5 h-1.5 mr-1.5 bg-emerald-400 rounded-full"></span>已連線
-                                    </span>
-                                )}
-                                {apiStatus === 'checking' && (
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30">
-                                        <span className="w-1.5 h-1.5 mr-1.5 bg-amber-400 rounded-full animate-ping"></span>正在連線/喚醒中
-                                    </span>
-                                )}
-                                {apiStatus === 'offline' && (
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/30">
-                                        <span className="w-1.5 h-1.5 mr-1.5 bg-rose-400 rounded-full"></span>連線中斷
-                                    </span>
-                                )}
-                            </div>
-                            
-                            {/* 設定與強制重設按鈕 */}
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-xs text-slate-500 font-mono">連線網址: {apiUrl}</span>
-                                <button 
-                                    onClick={() => setShowSettings(!showSettings)} 
-                                    className="text-xs text-slate-400 hover:text-cyan-400 transition bg-slate-800 px-2 py-0.5 rounded-md border border-slate-700"
-                                >
-                                    <i className="fa-solid fa-gear mr-1"></i>手動修改網址
-                                </button>
-                                <button 
-                                    onClick={handleResetToDefault}
-                                    className="text-xs text-rose-400 hover:text-rose-300 transition bg-rose-950/40 px-2 py-0.5 rounded-md border border-rose-900/50"
-                                >
-                                    <i className="fa-solid fa-trash-can mr-1"></i>清除快取並重設網址
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* 右上角進度儀表板 (Dashboard) */}
-                        <div className="flex gap-4 sm:gap-6 items-center bg-black/40 p-4 rounded-2xl border border-cyan-500/30 shadow-[0_0_15px_rgba(0,242,255,0.1)]">
-                            <div className="text-center px-2">
-                                <p className="text-[10px] text-cyan-400 font-mono tracking-widest font-bold">LATEST ID</p>
-                                <p className="text-3xl font-black font-mono text-white mt-1">#{latestTicketId}</p>
-                            </div>
-                            <div className="h-10 w-px bg-slate-800"></div>
-                            <div className="text-center px-2">
-                                <p className="text-[10px] text-pink-500 font-mono tracking-widest font-bold font-black">PROGRESS</p>
-                                <p className="text-3xl font-black font-mono text-white mt-1">
-                                    {completedCount} <span className="text-lg text-slate-500">/ {totalTickets}</span>
-                                </p>
-                            </div>
-                            <div className="hidden sm:block h-10 w-px bg-slate-800"></div>
-                            <div className="hidden sm:block w-24">
-                                <div className="text-[10px] text-slate-400 font-mono text-right mb-1">
-                                    {totalTickets > 0 ? Math.round((completedCount/totalTickets)*100) : 0}%
-                                </div>
-                                <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                                    <div 
-                                        className="bg-gradient-to-r from-cyan-400 to-pink-500 h-full transition-all duration-500"
-                                        style={{ width: `${totalTickets > 0 ? (completedCount/totalTickets)*100 : 0}%` }}
-                                    ></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 智慧向下相容提示 */}
-                    {legacyModeActive && (
-                        <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 text-amber-300 text-sm flex flex-col gap-2">
-                            <div className="flex items-center gap-2 font-bold text-amber-400 text-base">
-                                <i className="fa-solid fa-triangle-exclamation"></i>
-                                相容模式已啟動（成功取得排隊單！）
-                            </div>
-                            <div className="text-xs text-amber-300/80 leading-relaxed">
-                                <p>系統偵測到您目前部署在 Render 的後端代碼為<b>舊版本</b>。我們已自動啟動相容機制為您載入排隊單，因此<b>目前功能一切正常且可以照常收單與下載</b>！</p>
-                                <p className="mt-1">💡 <i>提示：若要啟用「已完成區塊分流」與「備註功能」，請記得在有空時將最新的 <code>server.js</code> 部署至 Render 平台。</i></p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* 智慧網址防呆系統 */}
-                    {isGithubUrl && (
-                        <div className="bg-amber-500/10 border-2 border-amber-500/40 rounded-2xl p-6 text-amber-300 text-sm flex flex-col gap-3 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
-                            <div className="flex items-center gap-2 font-bold text-amber-400 text-base">
-                                <i className="fa-solid fa-triangle-exclamation text-xl"></i>
-                                ⚠️ 偵測到網址錯誤設定！
-                            </div>
-                            <div className="text-xs text-amber-200/90 leading-relaxed space-y-2">
-                                <p>您目前輸入的是 <strong>GitHub Pages 前台靜態網址</strong>，這會導致控制台無法抓取資料。</p>
-                                <p>後台必須連線到您的 <strong>Render 後端伺服器</strong> 才能正常運作。</p>
-                            </div>
-                            <div className="flex gap-3 mt-1">
-                                <button 
-                                    onClick={handleResetToDefault}
-                                    className="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-bold transition"
-                                >
-                                    一鍵修正：恢復 Render 預設網址
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* 彈出式 API 網址設定面板 */}
-                    {showSettings && (
-                        <div className="bg-slate-900 p-5 rounded-3xl border-2 border-cyan-500/40 flex flex-col md:flex-row gap-4 items-end animate-fadeIn">
-                            <div className="flex-grow w-full">
-                                <label className="block text-xs font-bold text-cyan-400 mb-1.5 tracking-wider"><i className="fa-solid fa-network-wired mr-1"></i>後端伺服器 API 連線網址 (API BASE URL)</label>
-                                <input 
-                                    type="text" 
-                                    defaultValue={apiUrl}
-                                    id="api-url-input"
-                                    placeholder="例如: https://aicameraliveprint-back.onrender.com"
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500 font-mono"
-                                />
-                            </div>
-                            <div className="flex gap-2 w-full md:w-auto">
-                                <button 
-                                    onClick={() => {
-                                        const val = document.getElementById('api-url-input').value;
-                                        handleSaveApiUrl(val);
-                                    }}
-                                    className="bg-cyan-500 hover:bg-cyan-400 text-black px-6 py-2.5 rounded-xl text-sm font-bold transition w-full md:w-auto"
-                                >
-                                    儲存並重連
-                                </button>
-                                <button 
-                                    onClick={() => setShowSettings(false)}
-                                    className="bg-slate-800 hover:bg-slate-750 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition w-full md:w-auto"
-                                >
-                                    取消
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* 故障排查提示 */}
-                    {apiStatus === 'offline' && !isGithubUrl && (
-                        <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-5 text-rose-300 text-sm flex flex-col gap-2">
-                            <div className="flex items-center gap-2 font-bold text-rose-400 text-base">
-                                <i className="fa-solid fa-circle-exclamation text-lg"></i>
-                                無法連線至後端伺服器 (錯誤原因: {connectionError || "連線逾時"})
-                            </div>
-                            <div className="text-xs text-rose-300/80 leading-relaxed space-y-1.5 mt-1">
-                                <p>1. <b>如果您剛剛重新部署或重開機：</b> 伺服器正在啟動，請靜待 30 ~ 50 秒，系統會自動在背景重複嘗試連線，連上後會立刻顯示排隊單。</p>
-                                <p>2. <b>瀏覽器快取了舊網址：</b> 請點選上方紅色的 <strong className="text-rose-400">「清除快取並重設網址」</strong> 按鈕，這會徹底強制清除瀏覽器的舊紀錄並重連預設伺服器！</p>
-                                <p>3. <b>檢查網址是否拼錯：</b> 點選「手動修改網址」，檢查您的後端網址（例如 <code>-back</code> 或 <code>-backend</code> 拼寫是否正確）。</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* 區塊一：進行中排隊名單 */}
-                    <div className="bg-slate-900/40 p-6 rounded-3xl border border-slate-800/60">
-                        <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-cyan-400">
-                            <span className="w-2.5 h-2.5 bg-cyan-400 rounded-full animate-ping"></span>
-                            進行中排隊名單 ({pendingTasks.length} 人在排隊)
-                        </h2>
-
-                        {pendingTasks.length === 0 ? (
-                            <div className="text-center py-16 text-slate-500 border-2 border-dashed border-slate-800/60 rounded-2xl bg-black/20">
-                                <i className="fa-solid fa-circle-check text-4xl text-cyan-500/40 mb-3"></i>
-                                <p className="text-lg">目前無人排隊，前台靜待體驗中...</p>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {pendingTasks.map(task => (
-                                    <div key={task.id} className="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-xl hover:border-cyan-500/50 transition duration-300">
-                                        <div className="bg-gradient-to-r from-cyan-950 to-slate-900 text-white font-bold text-lg px-4 py-3 flex justify-between items-center border-b border-slate-800">
-                                            <span className="text-cyan-400 font-mono">ID: #{task.id}</span>
-                                            <span className="text-xs text-slate-400 font-mono font-normal"><i className="fa-regular fa-clock mr-1"></i>{task.createdAt}</span>
-                                        </div>
-                                        <div className="p-4 flex flex-col gap-4">
-                                            <div className="relative group">
-                                                <img src={task.sourceImage} className="w-full h-52 object-cover rounded-xl border border-slate-800" alt="客人原圖" />
-                                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition rounded-xl">
-                                                    <a href={task.sourceImage} download={`task_${task.id}.jpg`} className="bg-cyan-500 hover:bg-cyan-400 text-black px-4 py-2 rounded-lg font-bold text-sm">
-                                                        <i className="fa-solid fa-magnifying-glass mr-1.5"></i>放大原圖
-                                                    </a>
-                                                </div>
-                                            </div>
-                                            
-                                            {/* 智慧自動推薦生圖咒語展示與複製區 */}
-                                            <div className="bg-slate-950 p-3.5 rounded-xl border border-cyan-500/30 flex flex-col gap-2">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-xs text-cyan-400 font-bold tracking-wider flex items-center gap-1">
-                                                        <i className="fa-solid fa-wand-magic-sparkles animate-pulse"></i>
-                                                        Llama AI 推薦生圖咒語
-                                                    </span>
-                                                    {copiedId === task.id ? (
-                                                        <span className="text-[10px] text-emerald-400 font-bold"><i className="fa-solid fa-check mr-0.5"></i>已複製</span>
-                                                    ) : (
-                                                        <span className="text-[10px] text-slate-500">已深度解析細節</span>
-                                                    )}
-                                                </div>
-                                                <p className="text-[11px] text-slate-300 font-mono break-words leading-relaxed select-all line-clamp-3 bg-black/40 p-2 rounded border border-slate-800">
-                                                    {task.suggestedPrompt}
-                                                </p>
-                                                <button 
-                                                    onClick={() => handleCopyPrompt(task.id, task.suggestedPrompt)}
-                                                    className="w-full bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/50 text-cyan-300 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1"
-                                                >
-                                                    <i className="fa-regular fa-copy"></i>
-                                                    一鍵複製 Leonardo 專用咒語
-                                                </button>
-                                            </div>
-
-                                            {/* 狀態與進度選擇器 */}
-                                            <div className="flex items-center justify-between bg-black/30 p-2 rounded-xl border border-slate-800">
-                                                <span className="text-xs text-slate-400 font-bold">進度管理:</span>
-                                                <select 
-                                                    value={task.status} 
-                                                    onChange={(e) => handleStatusChange(task.id, e.target.value)}
-                                                    className="bg-slate-950 border border-slate-800 text-xs rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-cyan-500 font-semibold cursor-pointer"
-                                                >
-                                                    <option value="pending" className="text-cyan-400 bg-slate-900 font-bold">⏳ 製作中</option>
-                                                    <option value="completed" className="text-emerald-400 bg-slate-900 font-bold">✅ 已完成</option>
-                                                    <option value="cancelled" className="text-rose-400 bg-slate-900 font-bold">❌ 已取消</option>
-                                                </select>
-                                            </div>
-
-                                            {/* 備註輸入區 */}
-                                            <div className="flex gap-2">
-                                                <input 
-                                                    type="text" 
-                                                    placeholder="新增此排隊備註 (例如：背景加愛心)..."
-                                                    value={remarks[task.id] !== undefined ? remarks[task.id] : (task.remark || '')}
-                                                    onChange={(e) => handleRemarkChange(task.id, e.target.value)}
-                                                    className="flex-grow bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
-                                                />
-                                                <button 
-                                                    onClick={() => handleSaveRemark(task.id)}
-                                                    className="bg-slate-800 hover:bg-slate-750 text-cyan-400 px-3 py-2 rounded-xl text-sm transition font-bold"
-                                                >
-                                                    儲存
-                                                </button>
-                                            </div>
-
-                                            {/* 操作：下載 與 上傳 */}
-                                            <div className="flex flex-col gap-2">
-                                                <a 
-                                                    href={task.sourceImage} 
-                                                    download={`task_${task.id}.jpg`} 
-                                                    className="w-full bg-slate-800 hover:bg-slate-750 text-white font-bold py-3 px-4 rounded-xl text-center text-sm transition flex items-center justify-center gap-2 border border-slate-700/50"
-                                                >
-                                                    <i className="fa-solid fa-download text-cyan-400"></i>
-                                                    1. 下載照片
-                                                </a>
-
-                                                <label className={`w-full text-center font-bold py-3 px-4 rounded-xl cursor-pointer text-sm transition flex items-center justify-center gap-2 ${loadingId === task.id ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-cyan-500 hover:bg-cyan-400 text-black'}`}>
-                                                    <i className="fa-solid fa-upload"></i>
-                                                    {loadingId === task.id ? '雷雕圖上傳中...' : '2. 上傳完成雷雕圖'}
-                                                    <input 
-                                                        type="file" 
-                                                        accept="image/*" 
-                                                        className="hidden" 
-                                                        onChange={(e) => handleUploadResult(e, task.id)}
-                                                        disabled={loadingId === task.id}
-                                                    />
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* 區塊二：已完成與已取消歷史紀錄 */}
-                    <div className="bg-slate-900/40 p-6 rounded-3xl border border-slate-800/60">
-                        <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-pink-500">
-                            <i className="fa-solid fa-circle-check"></i>
-                            已處理歷史紀錄 ({completedTasks.length} 筆已處理)
-                        </h2>
-
-                        {completedTasks.length === 0 ? (
-                            <div className="text-center py-12 text-slate-600 border-2 border-dashed border-slate-800 rounded-2xl">
-                                <p className="text-sm">尚無處理記錄，等待第一位體驗者誕生！</p>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {completedTasks.map(task => (
-                                    <div key={task.id} className="bg-slate-900/50 rounded-2xl overflow-hidden border border-slate-800/85 shadow hover:border-pink-500/30 transition duration-300">
-                                        <div className="bg-slate-900 text-white font-bold text-sm px-4 py-3 flex justify-between items-center border-b border-slate-800/80">
-                                            <span className={task.status === 'cancelled' ? "text-rose-500 font-mono" : "text-pink-500 font-mono"}
-                                            >ID: #{task.id}</span>
-                                            
-                                            {/* 頂部狀態徽章 */}
-                                            {task.status === 'cancelled' ? (
-                                                <span className="bg-rose-500/10 text-rose-500 text-[10px] px-2.5 py-0.5 rounded-full font-bold">
-                                                    <i className="fa-solid fa-ban mr-1"></i>已取消離線
-                                                </span>
-                                            ) : (
-                                                <span className="bg-emerald-500/10 text-emerald-400 text-[10px] px-2.5 py-0.5 rounded-full font-bold">
-                                                    <i className="fa-solid fa-circle-check mr-1"></i>已完成
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="p-4 flex flex-col gap-4">
-                                            
-                                            {/* 原圖 vs 風格化雷雕圖 完美並列呈現 */}
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div>
-                                                    <p className="text-[10px] text-slate-500 mb-1">原始拍照照片</p>
-                                                    <img src={task.sourceImage} className="w-full h-28 object-cover rounded-lg border border-slate-850" alt="原圖" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] text-pink-500 mb-1">風格化雷雕圖</p>
-                                                    {task.status === 'cancelled' ? (
-                                                        <div className="w-full h-28 flex flex-col items-center justify-center rounded-lg bg-rose-950/20 border border-rose-900/30 text-rose-400">
-                                                            <i className="fa-solid fa-ban text-lg mb-1"></i>
-                                                            <span className="text-[10px] font-bold">訂單已取消</span>
-                                                        </div>
-                                                    ) : task.resultImage ? (
-                                                        <img src={task.resultImage} className="w-full h-28 object-cover rounded-lg border border-pink-500/20" alt="完成圖" />
-                                                    ) : (
-                                                        <div className="w-full h-28 flex flex-col items-center justify-center rounded-lg bg-slate-950 border border-slate-800 text-slate-500">
-                                                            <i className="fa-solid fa-image text-lg mb-1 animate-pulse"></i>
-                                                            <span className="text-[10px]">待上傳風格圖</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* 行動端與平板操作：隨時可以在已處理歷史中切換進度 */}
-                                            <div className="flex items-center justify-between bg-black/20 p-2 rounded-xl border border-slate-800">
-                                                <span className="text-xs text-slate-400 font-bold">變更狀態:</span>
-                                                <select 
-                                                    value={task.status} 
-                                                    onChange={(e) => handleStatusChange(task.id, e.target.value)}
-                                                    className="bg-slate-950 border border-slate-800 text-xs rounded-lg px-2 py-1 text-white focus:outline-none focus:border-cyan-500 font-semibold cursor-pointer"
-                                                >
-                                                    <option value="pending" className="text-cyan-400 bg-slate-900">⏳ 製作中</option>
-                                                    <option value="completed" className="text-emerald-400 bg-slate-900">✅ 已完成</option>
-                                                    <option value="cancelled" className="text-rose-400 bg-slate-900">❌ 已取消</option>
-                                                </select>
-                                            </div>
-
-                                            {/* 已完成備註編輯 */}
-                                            <div className="flex gap-2 bg-black/20 p-2.5 rounded-xl border border-slate-800">
-                                                <input 
-                                                    type="text" 
-                                                    placeholder="修改備註或紀錄..."
-                                                    value={remarks[task.id] !== undefined ? remarks[task.id] : (task.remark || '')}
-                                                    onChange={(e) => handleRemarkChange(task.id, e.target.value)}
-                                                    className="flex-grow bg-transparent text-xs text-slate-300 focus:outline-none"
-                                                />
-                                                <button 
-                                                    onClick={() => handleSaveRemark(task.id)}
-                                                    className="text-pink-500 hover:text-pink-400 text-xs font-bold px-2"
-                                                >
-                                                    更新備註
-                                                </button>
-                                            </div>
-
-                                            {/* 重新上傳覆蓋按鈕 */}
-                                            {task.status !== 'cancelled' && (
-                                                <label className="w-full text-center font-bold py-2 px-3 rounded-lg cursor-pointer text-xs bg-slate-800 hover:bg-slate-750 text-slate-400 transition flex items-center justify-center gap-1.5">
-                                                    <i className="fa-solid fa-arrows-rotate text-pink-500"></i>
-                                                    重新上傳風格圖
-                                                    <input 
-                                                        type="file" 
-                                                        accept="image/*" 
-                                                        className="hidden" 
-                                                        onChange={(e) => handleUploadResult(e, task.id)}
-                                                    />
-                                                </label>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Footer */}
-                    <div className="w-full flex justify-end items-center opacity-40 py-4">
-                        <p className="text-xs font-mono tracking-wider text-cyan-400 font-bold">2026 AI INNOVATION CONTROL PANEL v2.6</p>
-                    </div>
-                </div>
-            );
+        // 🌟 核心翻譯對照字典：將 AI 吐出來的英文無縫轉換成現場中文標籤
+        const translationDict = {
+            // 性別
+            "man": "男生 👨", "woman": "女生 👩", "boy": "小男孩 👦", "girl": "小女孩 👧",
+            // 髮型
+            "messy bun": "慵懶包包頭/低髮髻 🍡",
+            "ponytail": "高/低綁馬尾 🐎",
+            "princess": "半開公主頭 👑",
+            "braids": "雙側編辮子 👧",
+            "loose hair": "自然披肩散髮 👩‍🦰",
+            // 特徵與配件
+            "wearing glasses": "有戴眼鏡 👓", "no glasses": "未戴眼鏡 ❌",
+            "wearing necklace": "有戴項鍊 ✨", "no necklace": "無項鍊 ❌",
+            "wearing earrings": "有戴耳環 💎", "no earrings": "無耳環 ❌",
+            "smiling": "開朗微笑 😊", "neutral": "高冷平靜 😐"
         };
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<AdminPanel />); // 🌟 已經徹底修正為正確的 <AdminPanel /> 實體，絕不黑屏！
+        // 智慧翻譯安全轉換函式
+        function translate(word) {
+            if (!word) return "未辨識";
+            const cleanWord = word.trim().toLowerCase();
+            return translationDict[cleanWord] || word;
+        }
+
+        // 從提示詞中逆向提取核心關鍵字的防禦函式
+        function extractFeature(prompt, featureType) {
+            if (!prompt) return "未辨識";
+            const p = prompt.toLowerCase();
+            
+            if (featureType === 'glasses') {
+                return p.includes('wearing glasses') ? 'wearing glasses' : 'no glasses';
+            }
+            if (featureType === 'necklace') {
+                return p.includes('wearing necklace') ? 'wearing necklace' : 'no necklace';
+            }
+            if (featureType === 'earrings') {
+                return p.includes('wearing earrings') ? 'wearing earrings' : 'no earrings';
+            }
+            if (featureType === 'style') {
+                if (p.includes('messy bun')) return 'messy bun';
+                if (p.includes('ponytail')) return 'ponytail';
+                if (p.includes('princess')) return 'princess';
+                if (p.includes('braids')) return 'braids';
+                if (p.includes('loose hair')) return 'loose hair';
+            }
+            if (featureType === 'gender') {
+                if (p.includes('of a woman')) return 'woman';
+                if (p.includes('of a man')) return 'man';
+                if (p.includes('of a girl')) return 'girl';
+                if (p.includes('of a boy')) return 'boy';
+            }
+            return "偵測中";
+        }
+
+        // 獲取所有排隊資料
+        async function fetchAllTasks() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/admin/all-tasks`);
+                const data = await res.json();
+                if (data.success) {
+                    renderTasks(data.tasks);
+                }
+            } catch (err) {
+                console.error("無法連線至 Render 後端:", err);
+            }
+        }
+
+        // 核心一鍵複製功能（純英文防干擾）
+        function copyToClipboard(text, btnId) {
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById(btnId);
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = `<i class="fa-solid fa-check mr-1"></i> 已複製成功！`;
+                btn.className = "bg-green-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-sm transition flex items-center gap-1 shadow-[0_0_15px_rgba(34,197,94,0.4)]";
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    btn.className = "w-full bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-black py-2.5 rounded-xl text-sm tracking-wider transition flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(0,242,255,0.2)]";
+                }, 1500);
+            });
+        }
+
+        // 渲染畫面邏輯（黃金中英對照版 UI）
+        function renderTasks(tasks) {
+            const container = document.getElementById('tasks-container');
+            if (tasks.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-slate-500 border border-dashed border-slate-800 rounded-2xl">
+                        <i class="fa-solid fa-inbox text-4xl mb-2"></i>
+                        <p>目前尚無任何拍照排隊任務</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = tasks.map(task => {
+                // 從英文提示詞中，將特徵精確拆解出來提供中文翻譯顯示
+                const genderRaw = extractFeature(task.suggestedPrompt, 'gender');
+                const styleRaw = extractFeature(task.suggestedPrompt, 'style');
+                const glassesRaw = extractFeature(task.suggestedPrompt, 'glasses');
+                const necklaceRaw = extractFeature(task.suggestedPrompt, 'necklace');
+                const earringsRaw = extractFeature(task.suggestedPrompt, 'earrings');
+
+                return `
+                <div class="cyber-card p-5 md:p-6 rounded-2xl flex flex-col lg:flex-row gap-6 items-start relative overflow-hidden">
+                    
+                    <!-- 左側欄：號碼牌與雙照片對照 -->
+                    <div class="flex flex-col items-center gap-3 w-full lg:w-auto flex-shrink-0">
+                        <div class="text-center">
+                            <span class="text-[10px] font-mono tracking-widest text-cyan-400 block font-bold">QUEUE NO</span>
+                            <span class="text-4xl font-black text-white font-mono glow-text">#${task.id}</span>
+                        </div>
+                        <div class="flex lg:flex-col gap-3 mt-1">
+                            <div class="text-center">
+                                <p class="text-[9px] text-slate-400 mb-1 font-bold">📷 現場原圖</p>
+                                <img src="${task.sourceImage}" class="w-28 h-28 object-cover rounded-xl border border-slate-700 bg-black shadow-inner" />
+                            </div>
+                            <div class="text-center">
+                                <p class="text-[9px] text-emerald-400 mb-1 font-bold">🎨 雷雕結果圖</p>
+                                ${task.resultImage ? 
+                                    `<img src="${task.resultImage}" class="w-28 h-28 object-cover rounded-xl border border-emerald-500/30 bg-black" />` : 
+                                    `<div class="w-28 h-28 rounded-xl border border-dashed border-slate-700 flex flex-col items-center justify-center text-slate-500 text-[10px] bg-slate-900/50">
+                                        <i class="fa-solid fa-spinner animate-spin text-lg text-cyan-500 mb-1"></i>正在等候上傳
+                                     </div>`
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右側欄：核心中英優化對照面版 -->
+                    <div class="flex-grow w-full grid grid-cols-1 md:grid-cols-12 gap-5">
+                        
+                        <!-- 1. Leonardo 專用純英文欄位 (佔據左半邊 7 格) -->
+                        <div class="md:col-span-7 flex flex-col justify-between h-full min-h-[180px]">
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-300 tracking-wider flex items-center gap-1.5 mb-1.5">
+                                    <i class="fa-solid fa-code text-cyan-400"></i> Leonardo 專用純英文咒語 (複製此欄)
+                                </label>
+                                <textarea readonly class="w-full h-24 bg-slate-950/90 text-slate-300 p-3 rounded-xl border border-slate-800 text-xs font-mono resize-none focus:outline-none select-all focus:border-cyan-500/50">${task.suggestedPrompt}</textarea>
+                            </div>
+                            <div class="mt-3">
+                                <button id="btn-${task.id}" onclick="copyToClipboard('${task.suggestedPrompt.replace(/'/g, "\\'")}', 'btn-${task.id}')" class="w-full bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-black py-2.5 rounded-xl text-sm tracking-wider transition flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(0,242,255,0.2)]">
+                                    <i class="fa-solid fa-copy"></i> 一鍵複製 Leonardo 專用咒語
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 🌟 2. 核心大升級：工作人員專用中文特徵檢查欄 (佔據右半邊 5 格) -->
+                        <div class="md:col-span-5 border-t md:border-t-0 md:border-l border-slate-800 pt-4 md:pt-0 md:pl-5 flex flex-col justify-between">
+                            <div>
+                                <label class="text-[11px] font-bold text-cyan-400 tracking-wider flex items-center gap-1.5 mb-3">
+                                    <i class="fa-solid fa-magnifying-glass-face"></i> AI 視覺特徵中文對照 (方便快速核對)
+                                </label>
+                                
+                                <div class="flex flex-wrap gap-2.5">
+                                    <!-- 性別標籤 -->
+                                    <span class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 border border-slate-700 text-slate-200">
+                                        身分：<span class="text-cyan-400">${translate(genderRaw)}</span>
+                                    </span>
+                                    <!-- 髮型標籤 -->
+                                    <span class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 border border-slate-700 text-slate-200">
+                                        髮型：<span class="text-yellow-400">${translate(styleRaw)}</span>
+                                    </span>
+                                    <!-- 眼鏡標籤 -->
+                                    <span class="px-3 py-1.5 rounded-lg text-xs font-bold ${glassesRaw === 'wearing glasses' ? 'bg-cyan-950/60 border-cyan-500/40 text-cyan-200' : 'bg-slate-900 border-slate-700 text-slate-400'}">
+                                        眼鏡：<span class="${glassesRaw === 'wearing glasses' ? 'text-cyan-400 font-extrabold' : ''}">${translate(glassesRaw)}</span>
+                                    </span>
+                                    <!-- 項鍊標籤 -->
+                                    <span class="px-3 py-1.5 rounded-lg text-xs font-bold ${necklaceRaw === 'wearing necklace' ? 'bg-pink-950/40 border-pink-500/30 text-pink-200' : 'bg-slate-900 border-slate-700 text-slate-400'}">
+                                        項鍊：<span>${translate(necklaceRaw)}</span>
+                                    </span>
+                                    <!-- 耳環標籤 -->
+                                    <span class="px-3 py-1.5 rounded-lg text-xs font-bold ${earringsRaw === 'wearing earrings' ? 'bg-purple-950/40 border-purple-500/30 text-purple-200' : 'bg-slate-900 border-slate-700 text-slate-400'}">
+                                        耳環：<span>${translate(earringsRaw)}</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- 狀態管理按鈕區 -->
+                            <div class="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-400 font-mono">
+                                <div>時間: ${task.createdAt || '--:--'}</div>
+                                <div class="flex gap-2">
+                                    <span class="px-2 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-sans font-bold">
+                                        ${task.status === 'completed' ? '✅ 已完成' : '⏳ 排隊中'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // 頁面加載後自動執行輪詢，每 3.5 秒自動整理一次，確保現場人員看到最新動態
+        fetchAllTasks();
+        setInterval(fetchAllTasks, 3500);
     </script>
 </body>
 </html>
