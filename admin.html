@@ -37,7 +37,6 @@
         .glow-text {
             text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
         }
-        /* 科技感下拉選單核心樣式 */
         .cyber-select {
             background-color: #0f172a;
             border: 1px solid #334155;
@@ -60,7 +59,8 @@
 </head>
 <body class="text-slate-100 min-h-screen p-4 md:p-8">
 
-    <!-- 頂部導覽列 -->
+    <input type="file" id="global-file-input" class="hidden" accept="image/*" />
+
     <header class="max-w-7xl mx-auto mb-8 flex flex-col sm:flex-row justify-between items-center border-b border-cyan-500/20 pb-4 gap-4">
         <div class="flex items-center gap-3">
             <div class="w-3 h-3 rounded-full bg-cyan-400 animate-ping"></div>
@@ -76,7 +76,6 @@
         </div>
     </header>
 
-    <!-- 主容器 -->
     <main class="max-w-7xl mx-auto">
         <div class="mb-6 flex gap-4 text-xs font-bold tracking-wider">
             <span class="text-cyan-400"><i class="fa-solid fa-sliders mr-1"></i> 即時連動控制面板（支援手動多維特徵微調與結果圖上傳）</span>
@@ -93,10 +92,10 @@
     <script>
         const API_BASE_URL = "https://aicameraliveprint-back.onrender.com";
         
-        // 全局儲存任務狀態，用於手動連動重組
         let localTasksCache = {};
+        let currentTargetTaskId = null; // 當前正在上傳的號碼牌 ID
 
-        // 🌟 多維度特徵資料庫與字典定義
+        // 多維度特徵資料庫與字典定義
         const femaleStyles = [
             { value: "high ponytail", label: "高馬尾 🐎" },
             { value: "low ponytail", label: "低馬尾 🐴" },
@@ -119,7 +118,7 @@
             { value: "messy textured hair style", label: "日系蓬鬆亂髮 🍃" }
         ];
 
-        // 智慧特徵正向解讀器 (從後端發回的原始咒語中提煉特徵)
+        // 智慧特徵正向解讀器
         function extractFeature(prompt, featureType) {
             if (!prompt) return "";
             const p = prompt.toLowerCase();
@@ -132,12 +131,11 @@
                 return 'woman';
             }
             if (featureType === 'style') {
-                // 優先尋找配對的女生或男生髮型
                 const allStyles = [...femaleStyles, ...maleStyles];
                 for (const s of allStyles) {
                     if (p.includes(s.value)) return s.value;
                 }
-                return 'long straight hair'; // 預設
+                return 'long straight hair';
             }
             if (featureType === 'bangs') {
                 if (p.includes('wispy bangs')) return 'wispy bangs';
@@ -164,7 +162,7 @@
                 if (p.includes('solid yellow')) return 'yellow';
                 if (p.includes('solid pink')) return 'pink';
                 if (p.includes('solid grey')) return 'grey';
-                return 'black'; // 預設
+                return 'black';
             }
             if (featureType === 'glasses') {
                 return p.includes('wearing glasses') ? 'wearing glasses' : 'no glasses';
@@ -177,7 +175,6 @@
             }
         }
 
-        // 動態生成髮型 Options 的輔助器
         function getStyleOptions(gender, currentStyle) {
             const isFemale = (gender === 'woman' || gender === 'girl');
             const styles = isFemale ? femaleStyles : maleStyles;
@@ -186,7 +183,6 @@
             `).join('');
         }
 
-        // 當身分性別改變時，必須動態抽換「綁法髮型」選單並重組
         function onGenderChange(taskId) {
             const gender = document.getElementById(`select-gender-${taskId}`).value;
             const styleSelect = document.getElementById(`select-style-${taskId}`);
@@ -195,7 +191,6 @@
             const targetStyles = isFemale ? femaleStyles : maleStyles;
             const currentStyle = styleSelect.value;
             
-            // 檢查當前髮型是否仍屬於新性別，如果不屬於，則重設為該性別的第一個預設髮型
             const styleExists = targetStyles.some(s => s.value === currentStyle);
             const newStyleDefault = styleExists ? currentStyle : targetStyles[0].value;
 
@@ -203,12 +198,10 @@
             updateLivePrompt(taskId);
         }
 
-        // 🌟 核心引擎：當工作人員拉動選單，0.01秒無感重組最純淨的英文 Leonardo 提示詞 (包含顏色與細節分線)
         function updateLivePrompt(taskId) {
             const task = localTasksCache[taskId];
             if (!task) return;
 
-            // 讀取當前選單的值
             const gender = document.getElementById(`select-gender-${taskId}`).value;
             const style = document.getElementById(`select-style-${taskId}`).value;
             const bangs = document.getElementById(`select-bangs-${taskId}`).value;
@@ -218,12 +211,10 @@
             const necklace = document.getElementById(`select-necklace-${taskId}`).value;
             const earrings = document.getElementById(`select-earrings-${taskId}`).value;
 
-            // 依選單重新配對純英文語意（100% 過濾掉任何中文括弧）
             const glassesText = glasses === 'wearing glasses' ? 'wearing glasses' : 'no glasses';
             const necklaceText = necklace === 'wearing necklace' ? 'wearing necklace' : 'no necklace';
             const earringsText = earrings === 'wearing earrings' ? 'wearing earrings' : 'no earrings';
 
-            // 組裝 bangs / parting 語意
             let bangsText = "no bangs";
             if (bangs === 'wispy bangs' || bangs === 'blunt bangs' || bangs === 'side-swept bangs') {
                 bangsText = `${bangs}`;
@@ -231,35 +222,41 @@
                 bangsText = `no bangs with a ${bangs}`;
             }
 
-            // 完美公式重組
             const updatedPrompt = `Quirky minimalist hand-drawn doodle portrait of a ${gender} with long straight ${hairColor} hair styled in a ${style} with ${bangsText}, showing a smiling. The person is ${glassesText}, ${necklaceText}, and ${earringsText}. Wearing a plain unpatterned solid ${clothingColor} t-shirt, absolutely no logos, no graphics, no text on shirt. Naive art, chibi kawaii aesthetic. Extreme chibi proportions, huge oversized head, tiny small body, narrow sloping shoulders. Extremely simplified facial features, simple vertical black dot eyes, tiny line nose, soft blurred pink blush on cheeks. Smooth clean bare neck, absolutely no neck lines. Clean solid color hair, no white dots, no shading. Drawn with a monoline marker brush. Flat soft colors. Solid pure white background.`;
 
-            // 即時反應到前端 TextArea
             document.getElementById(`textarea-${taskId}`).value = updatedPrompt;
-            
-            // 更新快取
             task.suggestedPrompt = updatedPrompt;
         }
 
-        // 將生成完成的雷雕結果圖非同步上傳回 Render
-        async function uploadResultImage(taskId) {
-            const fileInput = document.getElementById(`file-input-${taskId}`);
-            const file = fileInput.files[0];
+        // 🌟 改良型常駐觸發器：點擊按鈕直接喚醒最外層的常駐選擇器，完美避開所有刷新 Bug
+        function triggerUploadFlow(taskId, e) {
+            if(e) e.stopPropagation();
+            currentTargetTaskId = taskId;
+            document.getElementById('global-file-input').click();
+        }
+
+        // 初始化常駐檔案選擇器的接聽事件 (寫在外層，永不重繪)
+        document.getElementById('global-file-input').addEventListener('change', async function() {
+            const taskId = currentTargetTaskId;
+            if (!taskId) return;
+
+            const file = this.files[0];
             if (!file) return;
 
-            // 改變按鈕狀態為上傳中
+            // 改變對應卡片的按鈕狀態為上傳中
             const statusContainer = document.getElementById(`upload-status-${taskId}`);
             if (statusContainer) {
                 statusContainer.innerHTML = `
                     <i class="fa-solid fa-spinner animate-spin text-2xl text-cyan-400 mb-1.5"></i>
-                    <span>正在上傳...</span>
+                    <span>上傳中...</span>
                 `;
             }
 
             const reader = new FileReader();
-            reader.onload = async function(e) {
+            reader.onload = async (e) => {
                 const base64Data = e.target.result;
                 try {
+                    console.log(`正在上傳號碼牌 #${taskId} 的結果圖至 Render...`);
                     const res = await fetch(`${API_BASE_URL}/api/admin/upload-result/${taskId}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -267,21 +264,21 @@
                     });
                     const data = await res.json();
                     if (data.success) {
-                        console.log(`✅ 號碼 #${taskId} 上傳結果圖成功！`);
-                        // 重新獲取資料重新整理畫面
-                        fetchAllTasks();
+                        console.log(`✅ 號碼 #${taskId} 上傳成功！`);
+                        fetchAllTasks(); // 成功後整理數據
                     } else {
                         alert("上傳失敗：" + (data.error || "未知錯誤"));
                         fetchAllTasks();
                     }
                 } catch (err) {
-                    console.error("上傳過程出錯:", err);
-                    alert("連線到 Render 伺服器超時，請重試！");
+                    console.error("上傳發生斷線錯誤:", err);
+                    alert("連線 Render 後端超時！請檢查電腦網路是否已切換為手機熱點開通連線！");
                     fetchAllTasks();
                 }
             };
             reader.readAsDataURL(file);
-        }
+            this.value = ""; // 清空，允許重複選同張圖
+        });
 
         // 獲取後端即時資料
         async function fetchAllTasks() {
@@ -289,7 +286,6 @@
                 const res = await fetch(`${API_BASE_URL}/api/admin/all-tasks`);
                 const data = await res.json();
                 if (data.success) {
-                    // 將資料存入快取
                     data.tasks.forEach(t => {
                         if (!localTasksCache[t.id]) {
                             localTasksCache[t.id] = t;
@@ -302,7 +298,6 @@
             }
         }
 
-        // 複製功能
         function copyToClipboard(taskId, btnId) {
             const text = document.getElementById(`textarea-${taskId}`).value;
             navigator.clipboard.writeText(text).then(() => {
@@ -317,7 +312,7 @@
             });
         }
 
-        // 渲染 UI (智慧選單與上傳對照版)
+        // 渲染 UI
         function renderTasks(tasks) {
             const container = document.getElementById('tasks-container');
             if (tasks.length === 0) {
@@ -329,7 +324,6 @@
                 return;
             }
 
-            // 保存工作人員正在操作的選單狀態，防止自動重新整理時被重置
             const currentSelections = {};
             tasks.forEach(t => {
                 const gEl = document.getElementById(`select-gender-${t.id}`);
@@ -349,7 +343,6 @@
             });
 
             container.innerHTML = tasks.map(task => {
-                // 初次加載時，解讀 AI 原始狀態
                 const currentGender = currentSelections[task.id]?.gender || extractFeature(task.suggestedPrompt, 'gender');
                 const currentStyle = currentSelections[task.id]?.style || extractFeature(task.suggestedPrompt, 'style');
                 const currentBangs = currentSelections[task.id]?.bangs || extractFeature(task.suggestedPrompt, 'bangs');
@@ -363,7 +356,6 @@
                 return `
                 <div class="cyber-card p-5 md:p-6 rounded-2xl flex flex-col lg:flex-row gap-6 items-start relative overflow-hidden">
                     
-                    <!-- 號碼與原圖/結果上傳對照區 -->
                     <div class="flex flex-col items-center gap-3 w-full lg:w-auto flex-shrink-0">
                         <div class="text-center">
                             <span class="text-[10px] font-mono tracking-widest text-cyan-400 block font-bold">QUEUE NO</span>
@@ -375,31 +367,26 @@
                                 <img src="${task.sourceImage}" class="w-28 h-28 object-cover rounded-xl border border-slate-700 bg-black shadow-inner" />
                             </div>
                             
-                            <!-- 雷雕結果圖上傳與預覽欄 -->
                             <div class="text-center relative">
                                 <p class="text-[9px] text-emerald-400 mb-1 font-bold">🎨 雷雕結果圖</p>
                                 ${task.resultImage ? 
                                     `<div class="relative group cursor-pointer w-28 h-28">
                                         <img src="${task.resultImage}" class="w-full h-full object-cover rounded-xl border border-emerald-500/30 bg-black shadow-md" />
-                                        <button onclick="document.getElementById('file-input-${task.id}').click()" class="absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center rounded-xl text-[10px] text-cyan-400 font-bold transition-opacity duration-200">
+                                        <button onclick="triggerUploadFlow('${task.id}', event)" class="absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center rounded-xl text-[10px] text-cyan-400 font-bold transition-opacity duration-200">
                                             <i class="fa-solid fa-cloud-arrow-up text-lg mb-1"></i>重新上傳
                                         </button>
                                      </div>` : 
-                                    `<button onclick="document.getElementById('file-input-${task.id}').click()" id="upload-status-${task.id}" class="w-28 h-28 rounded-xl border border-dashed border-cyan-500/40 hover:border-cyan-400 flex flex-col items-center justify-center text-cyan-400/80 hover:text-cyan-400 text-[10px] bg-cyan-950/20 hover:bg-cyan-950/40 transition-all duration-200 cursor-pointer">
+                                    `<button onclick="triggerUploadFlow('${task.id}', event)" id="upload-status-${task.id}" class="w-28 h-28 rounded-xl border border-dashed border-cyan-500/40 hover:border-cyan-400 flex flex-col items-center justify-center text-cyan-400/80 hover:text-cyan-400 text-[10px] bg-cyan-950/20 hover:bg-cyan-950/40 transition-all duration-200 cursor-pointer">
                                         <i class="fa-solid fa-cloud-arrow-up text-2xl mb-1.5 text-cyan-400 animate-bounce"></i>
                                         <span>上傳結果圖</span>
                                      </button>`
                                 }
-                                <!-- 隱藏的實體檔案選擇器 -->
-                                <input type="file" id="file-input-${task.id}" class="hidden" onchange="uploadResultImage('${task.id}')" accept="image/*" />
                             </div>
                         </div>
                     </div>
 
-                    <!-- 核心操作控制台 -->
                     <div class="flex-grow w-full grid grid-cols-1 md:grid-cols-12 gap-5">
                         
-                        <!-- 左側：純英文框位 (支援即時重組) -->
                         <div class="md:col-span-6 flex flex-col justify-between h-full min-h-[180px]">
                             <div>
                                 <label class="text-[11px] font-bold text-slate-300 tracking-wider flex items-center gap-1.5 mb-1.5">
@@ -414,7 +401,6 @@
                             </div>
                         </div>
 
-                        <!-- 🌟 右側：大進化下拉選單微調控制面板 (完美中英連動，採雙排緊湊格排版) -->
                         <div class="md:col-span-6 border-t md:border-t-0 md:border-l border-slate-800 pt-4 md:pt-0 md:pl-5 flex flex-col justify-between">
                             <div>
                                 <label class="text-[11px] font-bold text-cyan-400 tracking-wider flex items-center gap-1.5 mb-3">
@@ -423,7 +409,6 @@
                                 
                                 <div class="grid grid-cols-2 gap-2">
                                     
-                                    <!-- 1. 性別選單 -->
                                     <div class="flex flex-col gap-1 bg-slate-900/50 p-2 rounded-lg border border-slate-800/60">
                                         <span class="text-[10px] font-bold text-slate-400">身分性別</span>
                                         <select id="select-gender-${task.id}" onchange="onGenderChange('${task.id}')" class="cyber-select w-full">
@@ -434,7 +419,6 @@
                                         </select>
                                     </div>
 
-                                    <!-- 2. 髮型選單 (動態性別配對) -->
                                     <div class="flex flex-col gap-1 bg-slate-900/50 p-2 rounded-lg border border-slate-800/60">
                                         <span class="text-[10px] font-bold text-yellow-400">髮型款式</span>
                                         <select id="select-style-${task.id}" onchange="updateLivePrompt('${task.id}')" class="cyber-select w-full text-yellow-400">
@@ -442,7 +426,6 @@
                                         </select>
                                     </div>
 
-                                    <!-- 3. 瀏海分線選單 -->
                                     <div class="flex flex-col gap-1 bg-slate-900/50 p-2 rounded-lg border border-slate-800/60">
                                         <span class="text-[10px] font-bold text-slate-400">瀏海/分線</span>
                                         <select id="select-bangs-${task.id}" onchange="updateLivePrompt('${task.id}')" class="cyber-select w-full text-emerald-400">
@@ -455,7 +438,6 @@
                                         </select>
                                     </div>
 
-                                    <!-- 4. 頭髮顏色選單 -->
                                     <div class="flex flex-col gap-1 bg-slate-900/50 p-2 rounded-lg border border-slate-800/60">
                                         <span class="text-[10px] font-bold text-slate-400">頭髮顏色</span>
                                         <select id="select-hair-color-${task.id}" onchange="updateLivePrompt('${task.id}')" class="cyber-select w-full">
@@ -469,7 +451,6 @@
                                         </select>
                                     </div>
 
-                                    <!-- 5. 衣服顏色選單 -->
                                     <div class="flex flex-col gap-1 bg-slate-900/50 p-2 rounded-lg border border-slate-800/60">
                                         <span class="text-[10px] font-bold text-slate-400">衣服顏色</span>
                                         <select id="select-clothing-color-${task.id}" onchange="updateLivePrompt('${task.id}')" class="cyber-select w-full">
@@ -484,7 +465,6 @@
                                         </select>
                                     </div>
 
-                                    <!-- 6. 眼鏡選單 -->
                                     <div class="flex flex-col gap-1 bg-slate-900/50 p-2 rounded-lg border border-slate-800/60">
                                         <span class="text-[10px] font-bold text-slate-400">配戴眼鏡</span>
                                         <select id="select-glasses-${task.id}" onchange="updateLivePrompt('${task.id}')" class="cyber-select w-full ${currentGlasses === 'wearing glasses' ? 'text-cyan-400 font-extrabold' : 'text-slate-400'}">
@@ -493,7 +473,6 @@
                                         </select>
                                     </div>
 
-                                    <!-- 7. 項鍊選單 -->
                                     <div class="flex flex-col gap-1 bg-slate-900/50 p-2 rounded-lg border border-slate-800/60">
                                         <span class="text-[10px] font-bold text-slate-400">項鍊飾品</span>
                                         <select id="select-necklace-${task.id}" onchange="updateLivePrompt('${task.id}')" class="cyber-select w-full text-slate-400">
@@ -502,7 +481,6 @@
                                         </select>
                                     </div>
 
-                                    <!-- 8. 耳環選單 -->
                                     <div class="flex flex-col gap-1 bg-slate-900/50 p-2 rounded-lg border border-slate-800/60">
                                         <span class="text-[10px] font-bold text-slate-400">耳環飾品</span>
                                         <select id="select-earrings-${task.id}" onchange="updateLivePrompt('${task.id}')" class="cyber-select w-full text-slate-400">
@@ -514,7 +492,6 @@
                                 </div>
                             </div>
 
-                            <!-- 時間與狀態管理 -->
                             <div class="mt-4 pt-2 border-t border-slate-800/60 flex items-center justify-between text-[10px] text-slate-500 font-mono">
                                 <div>時間: ${task.createdAt || '--:--'}</div>
                                 <span class="text-cyan-500/80 font-sans font-bold">
@@ -528,11 +505,10 @@
                 `;
             }).join('');
             
-            // 重新同步恢復工作人員剛才選擇的值
+            // 重新同步恢復值
             tasks.forEach(t => {
                 if (currentSelections[t.id]) {
                     document.getElementById(`select-gender-${t.id}`).value = currentSelections[t.id].gender;
-                    // 在性別改變或重整後，確保正確渲染髮型 Options
                     document.getElementById(`select-style-${t.id}`).innerHTML = getStyleOptions(currentSelections[t.id].gender, currentSelections[t.id].style);
                     
                     document.getElementById(`select-style-${t.id}`).value = currentSelections[t.id].style;
@@ -547,7 +523,6 @@
             });
         }
 
-        // 每 3.5 秒無感輪詢，且完美鎖定目前工作人員正在操作的選單
         fetchAllTasks();
         setInterval(fetchAllTasks, 3500);
     </script>
