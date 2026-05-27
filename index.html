@@ -59,12 +59,33 @@
             border-radius: 50%;
         }
 
-        /* 響應式寬高比安全拍照容器 (同時相容手機/平板/43吋直立螢幕) */
+        /* 🌟 核心升級：動態相應式內容容器 */
+        .content-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; /* 預設：在 iPad / 平板上完美垂直置中 */
+            width: 100%;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* 🚀 智慧判定：只有在超長直立式大螢幕（高度大於 1100px 且寬高比極度扁窄）下，才自動優化上移，避開視線死角 */
+        @media (min-height: 1100px) and (max-aspect-ratio: 10/16) {
+            .content-container {
+                justify-content: flex-start;
+                padding-top: 6rem;
+            }
+        }
+
+        /* 🌟 核心升級：大幅放大拍照圖框 (動態適配手機、iPad 平板、大螢幕) */
         .camera-container {
-            width: 85vw;
-            height: 85vw;
-            max-width: 380px; /* 在小螢幕 iPhone 上限制最大寬度，防止按鈕被擠出螢幕 */
-            max-height: 380px;
+            width: 82vw;
+            height: 82vw;
+            max-width: 400px;
+            max-height: 400px;
             position: relative;
             overflow: hidden;
             border-radius: 1.5rem;
@@ -75,23 +96,23 @@
             transition: all 0.3s ease-in-out;
         }
 
-        /* 當高度足夠（如 iPad 平板，高度大於 800px）時，視窗自動放大 */
-        @media (min-height: 800px) {
+        /* 平板 / iPad 與一般中大螢幕 */
+        @media (min-width: 640px) and (min-height: 700px) {
             .camera-container {
-                width: 90vw;
-                height: 90vw;
-                max-width: 550px;
-                max-height: 550px;
+                width: 75vw;
+                height: 75vw;
+                max-width: 580px; /* 大幅放大！確保 iPad 呈現大器畫面 */
+                max-height: 580px;
             }
         }
 
-        /* 當高度極高（如 43 吋直立大螢幕，高度大於 1200px）時，視窗放大到極限 800px */
-        @media (min-height: 1200px) {
+        /* 43 吋超大直立螢幕 */
+        @media (min-width: 1000px) and (min-height: 1100px) {
             .camera-container {
-                width: 90vw;
-                height: 90vw;
-                max-width: 800px;
-                max-height: 800px;
+                width: 80vw;
+                height: 80vw;
+                max-width: 780px; /* 直立式大螢幕放大極限 */
+                max-height: 780px;
             }
         }
 
@@ -328,6 +349,7 @@
             };
 
             // 智慧出票系統：背景生成隱藏 Iframe 進行熱感應列印的核心函式 (相容 58mm 與 80mm 出票機)
+            // 🌟 修正點：移除了所有多餘的反斜線 (\)，使其在 Babel Standalone 編譯時 100% 正常
             const triggerPrinter = (id, imgUrl) => {
                 setIsPrinting(true);
                 // 建立或獲取隱藏的 Iframe
@@ -483,17 +505,17 @@
                         <div className="glow-bar"></div>
                     </div>
 
-                    {/* 🌟 內容區區塊：對齊方式優化為 justify-start 並加上合適的上邊距，使相機框完美上移，完美適配大螢幕與 IPAD */}
-                    <div className="flex-grow flex flex-col items-center justify-start pt-4 sm:pt-10 lg:pt-14 w-full my-4">
+                    {/* 內容區區塊：使用動態 CSS 類別，在 iPad/平板上完全垂直置中，在 43 吋大螢幕上自動優化上抬 */}
+                    <div className="content-container">
                         
                         {/* 狀態 1：首頁 */}
                         {step === 'home' && (
-                            <div className="text-center flex flex-col items-center justify-center pt-8 sm:pt-16 lg:pt-24">
-                                {/* 🌟 核心修改：文案更新為「AI 虛擬肖像風格化」 */}
+                            <div className="text-center flex flex-col items-center justify-center">
+                                {/* 文案：AI 虛擬肖像風格化 */}
                                 <p className="text-ai-cyan text-lg sm:text-xl md:text-2xl mb-8 sm:mb-12 tracking-[0.35em] font-light text-glow-pulse">AI 虛擬肖像風格化</p>
                                 <button 
                                     onClick={startCamera} 
-                                    className="btn-cyan text-2xl sm:text-3xl md:text-4xl font-black px-12 sm:px-16 md:px-20 py-5 sm:py-8 md:py-10 rounded-full border-2 shadow-[0_0_20px_rgba(0,242,255,0.2)] animate-pulse"
+                                    className="btn-cyan text-2xl sm:text-3xl md:text-4xl font-black px-12 sm:px-16 md:px-20 py-5 sm:py-8 md:py-10 rounded-full border-2 shadow-[0_0_20px_rgba(0,242,255,0.2)]"
                                 >
                                     開始體驗 START
                                 </button>
@@ -503,6 +525,7 @@
                         {/* 狀態 2：相機拍攝 */}
                         {step === 'camera' && (
                             <div className="flex flex-col items-center w-full">
+                                {/* 拍照圖框：已大幅放大 (iPad 達 580px, 大螢幕達 780px) */}
                                 <div className="camera-container relative">
                                     <video 
                                         ref={videoRef} 
@@ -525,15 +548,15 @@
                                 
                                 {/* 拍照控制按鈕區 */}
                                 <div className="mt-6 sm:mt-8 md:mt-10 flex gap-4 md:gap-6 justify-center w-full max-w-[800px] px-2 flex-shrink-0">
-                                    <button onClick={handleCancelAndGoHome} className="btn-cyan flex-1 py-4 md:py-5 rounded-2xl text-base sm:text-lg md:text-xl font-bold">返回首頁</button>
-                                    <button onClick={takePhoto} className="btn-cyan flex-[2.5] py-4 md:py-5 rounded-2xl text-xl sm:text-2xl md:text-3xl font-black bg-ai-cyan/25">拍攝照片 PHOTO</button>
+                                    <button onClick={handleCancelAndGoHome} class="btn-cyan flex-1 py-4 md:py-5 rounded-2xl text-base sm:text-lg md:text-xl font-bold">返回首頁</button>
+                                    <button onClick={takePhoto} class="btn-cyan flex-[2.5] py-4 md:py-5 rounded-2xl text-xl sm:text-2xl md:text-3xl font-black bg-ai-cyan/25">拍攝照片 PHOTO</button>
                                 </div>
                             </div>
                         )}
 
                         {/* 狀態 3：AI 處理載入中 */}
                         {step === 'loading' && (
-                            <div className="flex flex-col items-center justify-start w-full max-w-[800px] z-20 pt-4">
+                            <div className="flex flex-col items-center justify-center w-full max-w-[800px] z-20">
                                 
                                 {/* 動態雷達 */}
                                 <div className="relative flex items-center justify-center mb-8 sm:mb-10">
