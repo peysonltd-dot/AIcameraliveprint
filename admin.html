@@ -54,7 +54,7 @@
             { value: "short curly hair", label: "短捲髮 🌀" }, { value: "bangs hair style", label: "帥氣瀏海 👦" },
             { value: "slicked-back hair style", label: "經典油頭 🎩" }, { value: "crew cut", label: "俐落吋頭 💈" },
             { value: "korean comma hair style", label: "韓系逗號頭 🇰🇷" }, { value: "3mm buzz cut", label: "3分頭 🦲" },
-            { value: "5mm buzz cut", label: "5分頭 🥚" }, { value: "undercut style", label: "側邊漸層 (Undercut) ⚡" }, { value: "messy textured hair style", label: "日系蓬鬆亂髮 🍃" }
+            { value: "5mm buzz cut", label: "5分頭 🥚" }, { value: "undercut style", label: "側邊漸層 ⚡" }, { value: "messy textured hair style", label: "日系蓬鬆亂髮 🍃" }
         ];
 
         function extractFeature(prompt, featureType) {
@@ -137,6 +137,7 @@
             document.getElementById(`global-file-input-${targetType}`).click();
         }
 
+        // 處理雙圖異步上傳綁定
         ['A', 'B'].forEach(type => {
             document.getElementById(`global-file-input-${type}`).addEventListener('change', async function() {
                 const taskId = currentUploadTaskId; if (!taskId || !this.files[0]) return;
@@ -227,7 +228,7 @@
                         <div class="flex flex-col gap-2.5">
                             <div class="text-center relative group">
                                 <img src="${task.sourceImage}" class="w-24 h-24 object-cover rounded-xl border border-slate-700 bg-black shadow-inner" />
-                                <button onclick="downloadSourceImage('${task.id}', '${task.sourceImage}')" class="w-full mt-1.5 bg-slate-800 hover:bg-slate-750 text-cyan-400 font-bold py-1 px-2 rounded text-[10px] transition-all flex items-center justify-center gap-1">
+                                <button onclick="downloadSourceImage('${task.id}', '${task.sourceImage}')" class="w-full mt-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold py-1 px-2 rounded text-[10px] transition-all flex items-center justify-center gap-1">
                                     <i class="fa-solid fa-download"></i> 💾 下載原圖
                                 </button>
                             </div>
