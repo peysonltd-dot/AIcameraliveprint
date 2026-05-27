@@ -22,7 +22,7 @@
 </head>
 <body class="text-slate-100 min-h-screen p-4 md:p-8">
 
-    <!-- 全局常駐雙圖實體檔案選擇器，徹底避開因 React 重繪刷新被洗掉的 Bug -->
+    <!-- 全局常駐雙圖實體檔案選擇器 -->
     <input type="file" id="global-file-input-A" class="hidden" accept="image/*" />
     <input type="file" id="global-file-input-B" class="hidden" accept="image/*" />
 
@@ -104,7 +104,6 @@
         function updateLivePrompt(taskId) {
             const task = localTasksCache[taskId]; if (!task) return;
             
-            // 智慧安全防錯：使用 Optional Chaining (?) 與 Fallback 預設值，完全防範 null 指標當機！
             const gender = document.getElementById(`select-gender-${taskId}`)?.value || 'woman';
             const style = document.getElementById(`select-style-${taskId}`)?.value || 'long straight hair';
             const bangs = document.getElementById(`select-bangs-${taskId}`)?.value || 'no bangs';
@@ -125,7 +124,6 @@
             task.suggestedPrompt = updatedPrompt;
         }
 
-        // 🌟 記憶體安全型下載函式：透過 ID 從快取讀取，絕不在 HTML 行內傳遞巨型 Base64 字串
         function downloadSourceImage(taskId) {
             const task = localTasksCache[taskId];
             if (!task || !task.sourceImage) {
@@ -140,12 +138,28 @@
             document.body.removeChild(link);
         }
 
+        // 🌟 新增：安全下載客人最終決定的雷雕結果圖
+        function downloadResultImage(taskId, choice) {
+            const task = localTasksCache[taskId];
+            if (!task) return;
+            const base64Str = choice === 'A' ? task.resultImageA : task.resultImageB;
+            if (!base64Str) {
+                alert("圖片資料尚未同步，請稍後再試！");
+                return;
+            }
+            const link = document.createElement('a');
+            link.href = base64Str;
+            link.download = `雷雕結果_#${taskId}_最終${choice}款.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
         function triggerDualUpload(taskId, targetType) {
             currentUploadTaskId = taskId;
             document.getElementById(`global-file-input-${targetType}`).click();
         }
 
-        // 處理雙圖異步上傳綁定
         ['A', 'B'].forEach(type => {
             document.getElementById(`global-file-input-${type}`).addEventListener('change', async function() {
                 const taskId = currentUploadTaskId; if (!taskId || !this.files[0]) return;
@@ -218,8 +232,21 @@
 
                 let userChoiceHtml = `<span class="text-amber-400 font-bold animate-pulse"><i class="fa-solid fa-hourglass-start"></i> ⏳ 客人正在二選一中...</span>`;
                 if (task.chosenDesign) {
-                    userChoiceHtml = `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded font-black text-xs"><i class="fa-solid fa-circle-check"></i> 🎯 已選擇風格：[ ${task.chosenDesign} 款 ]</span>`;
+                    userChoiceHtml = `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded font-black text-xs"><i class="fa-solid fa-circle-check"></i> 🎯 已確認：[ ${task.chosenDesign} 款 ]</span>`;
                 }
+
+                // 🌟 新增：如果客人已選擇，動態渲染選擇的「結果圖」與「下載按鈕」
+                const finalResultHtml = task.chosenDesign ? `
+                    <div class="flex flex-col gap-2.5 border-l border-slate-700/60 pl-4">
+                        <div class="text-center relative group">
+                            <span class="text-[10px] font-bold text-emerald-400 mb-1 block">🏆 客人最終決定 (${task.chosenDesign} 款)</span>
+                            <img src="${task.chosenDesign === 'A' ? task.resultImageA : task.resultImageB}" class="w-24 h-24 object-cover rounded-xl border-2 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.25)]" />
+                            <button onclick="downloadResultImage('${task.id}', '${task.chosenDesign}')" class="w-full mt-1.5 bg-emerald-900/60 hover:bg-emerald-800 text-emerald-400 font-bold py-1 px-2 rounded text-[10px] transition-all flex items-center justify-center gap-1 border border-emerald-500/50">
+                                <i class="fa-solid fa-download"></i> 下載雷雕圖
+                            </button>
+                        </div>
+                    </div>
+                ` : '';
 
                 return `
                 <div class="cyber-card p-5 md:p-6 rounded-2xl flex flex-col lg:flex-row gap-5 items-start relative overflow-hidden">
@@ -229,33 +256,40 @@
                             <span class="text-[10px] font-mono tracking-widest text-cyan-400 block font-bold">QUEUE NO</span>
                             <span class="text-4xl font-black text-white font-mono glow-text">#${task.id}</span>
                         </div>
-                        <div class="flex flex-col gap-2.5">
-                            <div class="text-center relative group">
-                                <img src="${task.sourceImage}" class="w-24 h-24 object-cover rounded-xl border border-slate-700 bg-black shadow-inner" />
-                                <!-- 🌟 已完美重組為安全的 ID 索引下載按鈕，避開巨型 Base64 Inline 解析 Bug -->
-                                <button onclick="downloadSourceImage('${task.id}')" class="w-full mt-1.5 bg-slate-800 hover:bg-slate-750 text-cyan-400 font-bold py-1 px-2 rounded text-[10px] transition-all flex items-center justify-center gap-1">
-                                    <i class="fa-solid fa-download"></i> 💾 下載原圖
-                                </button>
-                            </div>
-                            
-                            <div class="flex gap-2 border-t border-slate-800 pt-2.5">
-                                <div class="text-center">
-                                    <span class="text-[9px] block text-slate-400 mb-1">風格 A 圖</span>
-                                    <button onclick="triggerDualUpload('${task.id}', 'A')" id="upload-status-A-${task.id}" class="w-12 h-12 rounded-lg border border-dashed ${task.resultImageA ? 'border-emerald-500 bg-emerald-950/20' : 'border-cyan-500/40 bg-slate-900'} flex items-center justify-center text-[10px] cursor-pointer">
-                                        ${task.resultImageA ? `<i class="fa-solid fa-check text-emerald-400 text-lg"></i>` : `<i class="fa-solid fa-plus text-cyan-400"></i>`}
+                        
+                        <!-- 🌟 圖片區域改為並排顯示 -->
+                        <div class="flex gap-4">
+                            <div class="flex flex-col gap-2.5">
+                                <div class="text-center relative group">
+                                    <span class="text-[9px] block text-slate-400 mb-1">現場原圖</span>
+                                    <img src="${task.sourceImage}" class="w-24 h-24 object-cover rounded-xl border border-slate-700 bg-black shadow-inner" />
+                                    <button onclick="downloadSourceImage('${task.id}')" class="w-full mt-1.5 bg-slate-800 hover:bg-slate-750 text-cyan-400 font-bold py-1 px-2 rounded text-[10px] transition-all flex items-center justify-center gap-1">
+                                        <i class="fa-solid fa-download"></i> 下載原圖
                                     </button>
                                 </div>
-                                <div class="text-center">
-                                    <span class="text-[9px] block text-slate-400 mb-1">風格 B 圖</span>
-                                    <button onclick="triggerDualUpload('${task.id}', 'B')" id="upload-status-B-${task.id}" class="w-12 h-12 rounded-lg border border-dashed ${task.resultImageB ? 'border-emerald-500 bg-emerald-950/20' : 'border-cyan-500/40 bg-slate-900'} flex items-center justify-center text-[10px] cursor-pointer">
-                                        ${task.resultImageB ? `<i class="fa-solid fa-check text-emerald-400 text-lg"></i>` : `<i class="fa-solid fa-plus text-cyan-400"></i>`}
-                                    </button>
+                                
+                                <div class="flex gap-2 border-t border-slate-800 pt-2.5">
+                                    <div class="text-center">
+                                        <span class="text-[9px] block text-slate-400 mb-1">風格 A 圖</span>
+                                        <button onclick="triggerDualUpload('${task.id}', 'A')" id="upload-status-A-${task.id}" class="w-12 h-12 rounded-lg border border-dashed ${task.resultImageA ? 'border-emerald-500 bg-emerald-950/20' : 'border-cyan-500/40 bg-slate-900'} flex items-center justify-center text-[10px] cursor-pointer">
+                                            ${task.resultImageA ? `<i class="fa-solid fa-check text-emerald-400 text-lg"></i>` : `<i class="fa-solid fa-plus text-cyan-400"></i>`}
+                                        </button>
+                                    </div>
+                                    <div class="text-center">
+                                        <span class="text-[9px] block text-slate-400 mb-1">風格 B 圖</span>
+                                        <button onclick="triggerDualUpload('${task.id}', 'B')" id="upload-status-B-${task.id}" class="w-12 h-12 rounded-lg border border-dashed ${task.resultImageB ? 'border-emerald-500 bg-emerald-950/20' : 'border-cyan-500/40 bg-slate-900'} flex items-center justify-center text-[10px] cursor-pointer">
+                                            ${task.resultImageB ? `<i class="fa-solid fa-check text-emerald-400 text-lg"></i>` : `<i class="fa-solid fa-plus text-cyan-400"></i>`}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
+
+                            <!-- 客人完成抉擇後，此處將動態顯示雷雕圖 -->
+                            ${finalResultHtml}
                         </div>
                     </div>
 
-                    <div class="flex-grow w-full grid grid-cols-1 md:grid-cols-12 gap-5">
+                    <div class="flex-grow w-full grid grid-cols-1 md:grid-cols-12 gap-5 mt-4 lg:mt-0">
                         <div class="md:col-span-6 flex flex-col justify-between h-full min-h-[180px]">
                             <div>
                                 <label class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5 mb-1.5"><i class="fa-solid fa-code text-cyan-400"></i> Leonardo 專用英文咒語</label>
