@@ -75,7 +75,6 @@
         @media (min-height: 1100px) {
             .camera-container { max-width: 680px; max-height: 680px; }
         }
-        /* 雙圖二選一專用卡片樣式 */
         .choice-card {
             border: 3px solid #1e293b;
             background: rgba(15, 23, 42, 0.6);
@@ -136,7 +135,7 @@
             // 雙圖核心狀態儲存
             const [imgA, setImgA] = useState(null);
             const [imgB, setImgB] = useState(null);
-            const [selectedChoice, setSelectedChoice] = useState(null); // 'A' 或是 'B'
+            const [selectedChoice, setSelectedChoice] = useState(null);
 
             const videoRef = useRef(null);
             const canvasRef = useRef(null);
@@ -144,30 +143,29 @@
             const [textIndex, setTextIndex] = useState(0);
             const pollingRef = useRef(null);
             const [isPrinting, setIsPrinting] = useState(false);
+            const [stream, setStream] = useState(null);
 
-            // 🌟 核心防禦：先拿鏡頭串流 ➡️ 成功後切換畫面 ➡️ 延時 150 毫秒綁定，徹底抹殺黑畫面/相機沒彈出 Bug！
+            // 🌟 100% 安全鏡頭啟動流：先請求 Stream，成功後才推進 React 切換畫面，避免 ref 讀取到 null 的當機衝突
             const startCamera = async () => {
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({
+                    const mediaStream = await navigator.mediaDevices.getUserMedia({
                         video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }
                     });
-                    
-                    // 1. 成功拿取相機後，才切換至 camera 步驟
+                    setStream(mediaStream);
                     setStep('camera');
-                    
-                    // 2. 利用 setTimeout 確保 React 已完成 video 標籤的 DOM 渲染
-                    setTimeout(() => {
-                        if (videoRef.current) {
-                            videoRef.current.srcObject = stream;
-                            videoRef.current.play().catch(e => console.log("播放影片失敗:", e));
-                        }
-                    }, 150);
                 } catch (err) {
-                    console.error("相機開通錯誤:", err);
-                    alert("請開通相機權限，否則無法進行風格化拍照體驗喔！");
+                    alert("請開通相機權限！");
                     setStep('home');
                 }
             };
+
+            // 當 React 把 HTML 的 <video> 節點成功掛載並準備妥當後，useEffect 自動將 Stream 指向 Ref
+            useEffect(() => {
+                if (step === 'camera' && stream && videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                    videoRef.current.play().catch(e => console.log("Play error:", e));
+                }
+            }, [step, stream]);
 
             const takePhoto = () => {
                 if (countdown > 0) return;
@@ -194,13 +192,18 @@
                 ctx.drawImage(video, (video.videoWidth - size) / 2, (video.videoHeight - size) / 2, size, size, 0, 0, size, size);
                 
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-                if (video.srcObject) video.srcObject.getTracks().forEach(t => t.stop());
+                
+                // 停止鏡頭 Stream 防止耗電
+                if (stream) {
+                    stream.getTracks().forEach(t => t.stop());
+                }
+                setStream(null);
                 
                 setStep('loading');
                 setSelectedChoice(null);
 
                 try {
-                    const res = await fetch(`${API_BASE_URL}/api/upload`, {
+                    const res = await fetch(API_BASE_URL + "/api/upload", {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ image: dataUrl })
@@ -212,7 +215,7 @@
                 }
             };
 
-            // 觸發列印號碼牌，此處完美融入客人的最終抉擇圖
+            // 🌟 徹底根除 Babel 死黑 Bug：改採「標準字串拼接」生成印表機 Web 模板，100% 避開巢狀轉義反斜線之解析衝突
             const triggerPrinter = (id, chosenImgUrl) => {
                 setIsPrinting(true);
                 let iframe = document.getElementById('print-iframe') || document.createElement('iframe');
@@ -222,28 +225,24 @@
 
                 const doc = iframe.contentWindow.document;
                 doc.open();
-                doc.write(`
-                    <html>
-                    <head>
-                        <style>
-                            @page { size: 58mm auto; margin: 0mm; }
-                            body { font-family: sans-serif; width: 52mm; margin: 0 auto; padding: 8px 1px; text-align: center; color: #000; background: #fff; }
-                            .title { font-size: 13px; font-weight: 900; }
-                            .id-num { font-size: 34px; font-weight: 900; margin: 2px 0; }
-                            .ticket-img { width: 44mm; height: 44mm; object-fit: cover; margin: 4px auto; border: 1.5px solid #000; border-radius: 4px; display: block; }
-                            .footer-msg { font-size: 8.5px; font-weight: bold; margin-top: 5px; border-top: 1px dashed #000; padding-top: 4px; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="title">智慧創新大賞</div>
-                        <div style="font-size:8px;">2026 BEST AI AWARDS</div>
-                        <div style="font-size:9px; margin-top:3px; font-weight:bold;">雷雕領取序號</div>
-                        <div class="id-num">#${id}</div>
-                        <img class="ticket-img" src="${chosenImgUrl}" />
-                        <div class="footer-msg">您已確認此客製外觀！<br/>請憑此票券至雷雕體驗區領取成品。</div>
-                    </body>
-                    </html>
-                `);
+                
+                const printHTML = "<html><head><style>" +
+                    "@page { size: 58mm auto; margin: 0mm; }" +
+                    "body { font-family: sans-serif; width: 52mm; margin: 0 auto; padding: 8px 1px; text-align: center; color: #000; background: #fff; }" +
+                    ".title { font-size: 13px; font-weight: 900; }" +
+                    ".id-num { font-size: 34px; font-weight: 900; margin: 2px 0; }" +
+                    ".ticket-img { width: 44mm; height: 44mm; object-fit: cover; margin: 4px auto; border: 1.5px solid #000; border-radius: 4px; display: block; }" +
+                    ".footer-msg { font-size: 8.5px; font-weight: bold; margin-top: 5px; border-top: 1px dashed #000; padding-top: 4px; }" +
+                    "</style></head><body>" +
+                    "<div class='title'>智慧創新大賞</div>" +
+                    "<div style='font-size:8px;'>2026 BEST AI AWARDS</div>" +
+                    "<div style='font-size:9px; margin-top:3px; font-weight:bold;'>雷雕領取序號</div>" +
+                    "<div class='id-num'>#" + id + "</div>" +
+                    "<img class='ticket-img' src='" + chosenImgUrl + "' />" +
+                    "<div class='footer-msg'>您已確認此客製外觀！<br/>請憑此票券至雷雕體驗區領取成品。</div>" +
+                    "</body></html>";
+                
+                doc.write(printHTML);
                 doc.close();
 
                 const img = doc.querySelector('.ticket-img');
@@ -251,28 +250,35 @@
                     iframe.contentWindow.focus();
                     iframe.contentWindow.print();
                     setIsPrinting(false);
-                    // 列印完成後引導回首頁
                     setTimeout(() => { setStep('home'); setTaskId(null); }, 1500);
                 };
                 if (img) { img.onload = printIt; img.onerror = printIt; } else { printIt(); }
             };
 
-            // 使用者在二選一介面按下確定列印
             const finalizeChoiceAndPrint = async () => {
                 if (!selectedChoice) return;
                 const chosenImg = selectedChoice === 'A' ? imgA : imgB;
                 
-                // 1. 回傳決策給後端資料庫
                 try {
-                    await fetch(`${API_BASE_URL}/api/choice/${taskId}`, {
+                    await fetch(API_BASE_URL + "/api/choice/" + taskId, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ choice: selectedChoice })
                     });
                 } catch(e) { console.error("回傳選擇失敗", e); }
 
-                // 2. 啟動實體號碼牌列印流程
                 triggerPrinter(taskId, chosenImg);
+            };
+
+            const handleCancelAndGoHome = () => {
+                if (pollingRef.current) clearInterval(pollingRef.current);
+                if (stream) {
+                    stream.getTracks().forEach(t => t.stop());
+                }
+                setStream(null);
+                setTaskId(null);
+                setResultImage(null);
+                setStep('home');
             };
 
             useEffect(() => {
@@ -283,17 +289,16 @@
                     if (taskId) {
                         pollingRef.current = setInterval(async () => {
                             try {
-                                const res = await fetch(`${API_BASE_URL}/api/status/${taskId}`);
+                                const res = await fetch(API_BASE_URL + "/api/status/" + taskId);
                                 const data = await res.json();
-                                // 當雙圖都齊全被管理員上傳時，觸發前端二選一介面
                                 if (data.status === 'completed' && data.resultImageA && data.resultImageB) {
                                     setImgA(data.resultImageA);
                                     setImgB(data.resultImageB);
-                                    setStep('choice'); // 切換到二選一關卡！
+                                    setStep('choice');
                                     clearInterval(pollingRef.current);
                                 }
                             } catch (err) {
-                                if (taskId === "007") { // 展場模擬測試通道
+                                if (taskId === "007") {
                                     setTimeout(() => {
                                         const mockUrl = canvasRef.current.toDataURL();
                                         setImgA(mockUrl); setImgB(mockUrl);
@@ -366,19 +371,19 @@
                             </div>
                         )}
 
-                        {/* 🌟 新增關卡 4：頂級雙重風格二選一互動介面 */}
+                        {/* 關卡 4：頂級雙重風格二選一互動介面 */}
                         {step === 'choice' && (
                             <div className="flex flex-col items-center w-full max-w-[750px] px-2">
                                 <p className="text-ai-cyan text-sm sm:text-base font-bold tracking-widest mb-3 animate-pulse">
                                     ✨ 請手動挑選您最喜愛的專屬風格款式 ✨
                                 </p>
                                 
-                                <div class="grid grid-cols-2 gap-4 w-full mb-6">
-                                    <div onClick={() => setSelectedChoice('A')} className={`choice-card p-2 rounded-2xl text-center ${selectedChoice === 'A' ? 'selected' : ''}`}>
+                                <div className="grid grid-cols-2 gap-4 w-full mb-6">
+                                    <div onClick={() => setSelectedChoice('A')} className={"choice-card p-2 rounded-2xl text-center " + (selectedChoice === 'A' ? 'selected' : '')}>
                                         <img src={imgA} className="w-full aspect-square object-cover rounded-xl mb-2 border border-slate-800" />
                                         <span className="text-xs sm:text-sm font-black tracking-wider block">【 風格 A 款 】</span>
                                     </div>
-                                    <div onClick={() => setSelectedChoice('B')} className={`choice-card p-2 rounded-2xl text-center ${selectedChoice === 'B' ? 'selected' : ''}`}>
+                                    <div onClick={() => setSelectedChoice('B')} className={"choice-card p-2 rounded-2xl text-center " + (selectedChoice === 'B' ? 'selected' : '')}>
                                         <img src={imgB} className="w-full aspect-square object-cover rounded-xl mb-2 border border-slate-800" />
                                         <span className="text-xs sm:text-sm font-black tracking-wider block">【 風格 B 款 】</span>
                                     </div>
@@ -389,7 +394,7 @@
                                     <button 
                                         disabled={!selectedChoice || isPrinting} 
                                         onClick={finalizeChoiceAndPrint} 
-                                        className={`flex-[2.5] py-3.5 rounded-xl text-base sm:text-lg font-black transition-all duration-300 ${selectedChoice ? 'btn-cyan bg-cyan-400 text-slate-950 shadow-[0_0_25px_rgba(0,242,255,0.4)]' : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'}`}
+                                        className={"flex-[2.5] py-3.5 rounded-xl text-base sm:text-lg font-black transition-all duration-300 " + (selectedChoice ? 'btn-cyan bg-cyan-400 text-slate-950 shadow-[0_0_25px_rgba(0,242,255,0.4)]' : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed')}
                                     >
                                         <i className="fa-solid fa-print mr-1.5"></i>
                                         {isPrinting ? "正在出票中..." : "確認雷雕列印"}
@@ -407,7 +412,7 @@
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(App ? <App /> : <div>Loading...</div>);
+        root.render(<App />);
     </script>
 </body>
 </html>
