@@ -132,7 +132,6 @@
             const [step, setStep] = useState('home');
             const [taskId, setTaskId] = useState(null);
             
-            // 雙圖核心狀態儲存
             const [imgA, setImgA] = useState(null);
             const [imgB, setImgB] = useState(null);
             const [selectedChoice, setSelectedChoice] = useState(null);
@@ -145,7 +144,6 @@
             const [isPrinting, setIsPrinting] = useState(false);
             const [stream, setStream] = useState(null);
 
-            // 🌟 100% 安全鏡頭啟動流：先請求 Stream，成功後才推進 React 切換畫面，避免 ref 讀取到 null 的當機衝突
             const startCamera = async () => {
                 try {
                     const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -159,7 +157,6 @@
                 }
             };
 
-            // 當 React 把 HTML 的 <video> 節點成功掛載並準備妥當後，useEffect 自動將 Stream 指向 Ref
             useEffect(() => {
                 if (step === 'camera' && stream && videoRef.current) {
                     videoRef.current.srcObject = stream;
@@ -193,7 +190,6 @@
                 
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
                 
-                // 停止鏡頭 Stream 防止耗電
                 if (stream) {
                     stream.getTracks().forEach(t => t.stop());
                 }
@@ -215,7 +211,6 @@
                 }
             };
 
-            // 🌟 徹底根除 Babel 死黑 Bug：改採「標準字串拼接」生成印表機 Web 模板，100% 避開巢狀轉義反斜線之解析衝突
             const triggerPrinter = (id, chosenImgUrl) => {
                 setIsPrinting(true);
                 let iframe = document.getElementById('print-iframe') || document.createElement('iframe');
@@ -259,14 +254,20 @@
                 if (!selectedChoice) return;
                 const chosenImg = selectedChoice === 'A' ? imgA : imgB;
                 
+                // 1. 先 Await 回傳客人的二選一抉擇，完成後才走印票（防堵 Safari 線程掐斷）
                 try {
-                    await fetch(API_BASE_URL + "/api/choice/" + taskId, {
+                    const response = await fetch(API_BASE_URL + "/api/choice/" + taskId, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ choice: selectedChoice })
                     });
-                } catch(e) { console.error("回傳選擇失敗", e); }
+                    const data = await response.json();
+                    console.log("後端資料同步完成", data);
+                } catch(e) { 
+                    console.error("回傳選擇失敗，進入強制出票機制", e); 
+                }
 
+                // 2. 啟動列印
                 triggerPrinter(taskId, chosenImg);
             };
 
@@ -277,7 +278,6 @@
                 }
                 setStream(null);
                 setTaskId(null);
-                setResultImage(null);
                 setStep('home');
             };
 
