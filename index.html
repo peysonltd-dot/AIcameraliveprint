@@ -141,7 +141,7 @@
             const [countdown, setCountdown] = useState(0);
             const [textIndex, setTextIndex] = useState(0);
             const pollingRef = useRef(null);
-            const [isPrinting, setIsPrinting] = useState(false);
+            const [isSubmitting, setIsSubmitting] = useState(false);
             const [stream, setStream] = useState(null);
 
             const startCamera = async () => {
@@ -211,8 +211,8 @@
                 }
             };
 
+            // 列印功能保留供未來使用
             const triggerPrinter = (id, chosenImgUrl) => {
-                setIsPrinting(true);
                 let iframe = document.getElementById('print-iframe') || document.createElement('iframe');
                 iframe.id = 'print-iframe';
                 iframe.style.display = 'none';
@@ -244,17 +244,16 @@
                 const printIt = () => {
                     iframe.contentWindow.focus();
                     iframe.contentWindow.print();
-                    setIsPrinting(false);
-                    setTimeout(() => { setStep('home'); setTaskId(null); }, 1500);
                 };
                 if (img) { img.onload = printIt; img.onerror = printIt; } else { printIt(); }
             };
 
             const finalizeChoiceAndPrint = async () => {
                 if (!selectedChoice) return;
+                setIsSubmitting(true);
                 const chosenImg = selectedChoice === 'A' ? imgA : imgB;
                 
-                // 1. 先 Await 回傳客人的二選一抉擇，完成後才走印票（防堵 Safari 線程掐斷）
+                // 1. 將客人的決定回傳後台資料庫
                 try {
                     const response = await fetch(API_BASE_URL + "/api/choice/" + taskId, {
                         method: 'POST',
@@ -264,11 +263,14 @@
                     const data = await response.json();
                     console.log("後端資料同步完成", data);
                 } catch(e) { 
-                    console.error("回傳選擇失敗，進入強制出票機制", e); 
+                    console.error("回傳選擇失敗", e); 
                 }
 
-                // 2. 啟動列印
-                triggerPrinter(taskId, chosenImg);
+                setIsSubmitting(false);
+                
+                // 2. 切換到完成畫面 (移除列印功能，如有需要可取消下方註解)
+                setStep('completed');
+                // triggerPrinter(taskId, chosenImg);
             };
 
             const handleCancelAndGoHome = () => {
@@ -280,6 +282,17 @@
                 setTaskId(null);
                 setStep('home');
             };
+
+            // 處理完成畫面的防呆倒數自動返回
+            useEffect(() => {
+                let returnTimer;
+                if (step === 'completed') {
+                    returnTimer = setTimeout(() => {
+                        handleCancelAndGoHome();
+                    }, 10000); // 停留 10 秒後自動回首頁
+                }
+                return () => clearTimeout(returnTimer);
+            }, [step]);
 
             useEffect(() => {
                 let textInterval;
@@ -392,16 +405,36 @@
                                 <div className="flex gap-4 w-full sm:max-w-[500px]">
                                     <button onClick={handleCancelAndGoHome} className="btn-cyan flex-1 py-3.5 rounded-xl text-xs sm:text-sm font-bold">放棄返回</button>
                                     <button 
-                                        disabled={!selectedChoice || isPrinting} 
+                                        disabled={!selectedChoice || isSubmitting} 
                                         onClick={finalizeChoiceAndPrint} 
                                         className={"flex-[2.5] py-3.5 rounded-xl text-base sm:text-lg font-black transition-all duration-300 " + (selectedChoice ? 'btn-cyan bg-cyan-400 text-slate-950 shadow-[0_0_25px_rgba(0,242,255,0.4)]' : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed')}
                                     >
-                                        <i className="fa-solid fa-print mr-1.5"></i>
-                                        {isPrinting ? "正在出票中..." : "確認雷雕列印"}
+                                        <i className="fa-solid fa-check mr-1.5"></i>
+                                        {isSubmitting ? "處理中..." : "確定"}
                                     </button>
                                 </div>
                             </div>
                         )}
+
+                        {/* 關卡 5：選擇完成畫面 (取代列印畫面) */}
+                        {step === 'completed' && (
+                            <div className="flex flex-col items-center w-full max-w-[600px] px-2 text-center">
+                                <h2 className="text-2xl sm:text-3xl font-black text-ai-cyan tracking-widest mb-6 animate-pulse">
+                                    <i className="fa-solid fa-circle-check mr-2"></i>選擇已送出
+                                </h2>
+
+                                <div className="bg-[#0f172a]/80 border-2 border-ai-cyan p-6 sm:p-8 rounded-3xl w-full mb-8 shadow-[0_0_30px_rgba(0,242,255,0.2)] flex flex-col items-center">
+                                    <img src={selectedChoice === 'A' ? imgA : imgB} className="w-40 h-40 sm:w-48 sm:h-48 object-cover rounded-2xl mb-4 border-2 border-slate-700" />
+                                    <p className="text-xs sm:text-sm text-slate-400 tracking-[0.3em] font-bold mb-1">您的專屬號碼</p>
+                                    <p className="text-6xl sm:text-7xl font-black text-white font-mono drop-shadow-[0_0_15px_rgba(0,242,255,0.5)]">#{taskId}</p>
+                                </div>
+
+                                <button onClick={handleCancelAndGoHome} className="btn-cyan w-full max-w-[400px] py-4 sm:py-5 rounded-2xl text-lg sm:text-xl font-black bg-ai-cyan/20">
+                                    返回首頁
+                                </button>
+                            </div>
+                        )}
+
                     </div>
 
                     {/* Footer */}
