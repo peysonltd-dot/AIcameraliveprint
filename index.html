@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>2026 BEST AI AWARDS | 智慧創新大賞</title>
+    <!-- 修正後的 CDN 連結 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;900&display=swap" rel="stylesheet">
@@ -131,7 +132,6 @@
         const App = () => {
             const [step, setStep] = useState('home');
             const [taskId, setTaskId] = useState(null);
-            
             const [imgA, setImgA] = useState(null);
             const [imgB, setImgB] = useState(null);
             const [selectedChoice, setSelectedChoice] = useState(null);
@@ -143,6 +143,7 @@
             const pollingRef = useRef(null);
             const [isSubmitting, setIsSubmitting] = useState(false);
             const [stream, setStream] = useState(null);
+            const [returnCountdown, setReturnCountdown] = useState(10);
 
             const startCamera = async () => {
                 try {
@@ -189,12 +190,8 @@
                 ctx.drawImage(video, (video.videoWidth - size) / 2, (video.videoHeight - size) / 2, size, size, 0, 0, size, size);
                 
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-                
-                if (stream) {
-                    stream.getTracks().forEach(t => t.stop());
-                }
+                if (stream) stream.getTracks().forEach(t => t.stop());
                 setStream(null);
-                
                 setStep('loading');
                 setSelectedChoice(null);
 
@@ -211,88 +208,45 @@
                 }
             };
 
-            // 列印功能保留供未來使用
-            const triggerPrinter = (id, chosenImgUrl) => {
-                let iframe = document.getElementById('print-iframe') || document.createElement('iframe');
-                iframe.id = 'print-iframe';
-                iframe.style.display = 'none';
-                if (!iframe.parentElement) document.body.appendChild(iframe);
-
-                const doc = iframe.contentWindow.document;
-                doc.open();
-                
-                const printHTML = "<html><head><style>" +
-                    "@page { size: 58mm auto; margin: 0mm; }" +
-                    "body { font-family: sans-serif; width: 52mm; margin: 0 auto; padding: 8px 1px; text-align: center; color: #000; background: #fff; }" +
-                    ".title { font-size: 13px; font-weight: 900; }" +
-                    ".id-num { font-size: 34px; font-weight: 900; margin: 2px 0; }" +
-                    ".ticket-img { width: 44mm; height: 44mm; object-fit: cover; margin: 4px auto; border: 1.5px solid #000; border-radius: 4px; display: block; }" +
-                    ".footer-msg { font-size: 8.5px; font-weight: bold; margin-top: 5px; border-top: 1px dashed #000; padding-top: 4px; }" +
-                    "</style></head><body>" +
-                    "<div class='title'>智慧創新大賞</div>" +
-                    "<div style='font-size:8px;'>2026 BEST AI AWARDS</div>" +
-                    "<div style='font-size:9px; margin-top:3px; font-weight:bold;'>雷雕領取序號</div>" +
-                    "<div class='id-num'>#" + id + "</div>" +
-                    "<img class='ticket-img' src='" + chosenImgUrl + "' />" +
-                    "<div class='footer-msg'>您已確認此客製外觀！<br/>請憑此票券至雷雕體驗區領取成品。</div>" +
-                    "</body></html>";
-                
-                doc.write(printHTML);
-                doc.close();
-
-                const img = doc.querySelector('.ticket-img');
-                const printIt = () => {
-                    iframe.contentWindow.focus();
-                    iframe.contentWindow.print();
-                };
-                if (img) { img.onload = printIt; img.onerror = printIt; } else { printIt(); }
-            };
-
-            const finalizeChoiceAndPrint = async () => {
+            const finalizeChoice = async () => {
                 if (!selectedChoice) return;
                 setIsSubmitting(true);
-                const chosenImg = selectedChoice === 'A' ? imgA : imgB;
                 
-                // 1. 將客人的決定回傳後台資料庫
                 try {
                     const response = await fetch(API_BASE_URL + "/api/choice/" + taskId, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ choice: selectedChoice })
                     });
-                    const data = await response.json();
-                    console.log("後端資料同步完成", data);
+                    await response.json();
                 } catch(e) { 
                     console.error("回傳選擇失敗", e); 
                 }
 
                 setIsSubmitting(false);
-                
-                // 2. 切換到完成畫面 (移除列印功能，如有需要可取消下方註解)
+                setReturnCountdown(10);
                 setStep('completed');
-                // triggerPrinter(taskId, chosenImg);
             };
 
             const handleCancelAndGoHome = () => {
                 if (pollingRef.current) clearInterval(pollingRef.current);
-                if (stream) {
-                    stream.getTracks().forEach(t => t.stop());
-                }
+                if (stream) stream.getTracks().forEach(t => t.stop());
                 setStream(null);
                 setTaskId(null);
                 setStep('home');
             };
 
-            // 處理完成畫面的防呆倒數自動返回
             useEffect(() => {
                 let returnTimer;
-                if (step === 'completed') {
+                if (step === 'completed' && returnCountdown > 0) {
                     returnTimer = setTimeout(() => {
-                        handleCancelAndGoHome();
-                    }, 10000); // 停留 10 秒後自動回首頁
+                        setReturnCountdown(prev => prev - 1);
+                    }, 1000);
+                } else if (step === 'completed' && returnCountdown === 0) {
+                    handleCancelAndGoHome();
                 }
                 return () => clearTimeout(returnTimer);
-            }, [step]);
+            }, [step, returnCountdown]);
 
             useEffect(() => {
                 let textInterval;
@@ -323,11 +277,11 @@
                         }, 3000);
                     }
                 }
-                return () => { clearInterval(textInterval); clearInterval(pollingRef.current); };
+                return () => { clearInterval(textInterval); if(pollingRef.current) clearInterval(pollingRef.current); };
             }, [step, taskId]);
 
             return (
-                <div className="flex flex-col items-center justify-between h-[100dvh] w-full py-6 px-4">
+                <div className="flex flex-col items-center justify-between h-[100dvh] w-full py-6 px-4 cyber-bg">
                     
                     {/* Header */}
                     <div className="text-center z-10 flex flex-col items-center flex-shrink-0 w-full">
@@ -339,7 +293,6 @@
                     {/* 互動內容控制中樞 */}
                     <div className="content-container">
                         
-                        {/* 關卡 1：首頁 */}
                         {step === 'home' && (
                             <div className="text-center">
                                 <p className="text-ai-cyan text-base sm:text-xl mb-8 tracking-[0.3em] text-glow-pulse font-light">AI 虛擬肖像風格化</p>
@@ -347,7 +300,6 @@
                             </div>
                         )}
 
-                        {/* 關卡 2：相機畫面 */}
                         {step === 'camera' && (
                             <div className="flex flex-col items-center w-full">
                                 <div className="camera-container">
@@ -366,7 +318,6 @@
                             </div>
                         )}
 
-                        {/* 關卡 3：背景 AI 運算生成隊列中 */}
                         {step === 'loading' && (
                             <div className="flex flex-col items-center justify-center">
                                 <div className="relative flex items-center justify-center mb-6"><div className="radar-spinner"></div></div>
@@ -384,13 +335,9 @@
                             </div>
                         )}
 
-                        {/* 關卡 4：頂級雙重風格二選一互動介面 */}
                         {step === 'choice' && (
                             <div className="flex flex-col items-center w-full max-w-[750px] px-2">
-                                <p className="text-ai-cyan text-sm sm:text-base font-bold tracking-widest mb-3 animate-pulse">
-                                    ✨ 請手動挑選您最喜愛的專屬風格款式 ✨
-                                </p>
-                                
+                                <p className="text-ai-cyan text-sm sm:text-base font-bold tracking-widest mb-3 animate-pulse">✨ 請挑選您最喜愛的款式 ✨</p>
                                 <div className="grid grid-cols-2 gap-4 w-full mb-6">
                                     <div onClick={() => setSelectedChoice('A')} className={"choice-card p-2 rounded-2xl text-center " + (selectedChoice === 'A' ? 'selected' : '')}>
                                         <img src={imgA} className="w-full aspect-square object-cover rounded-xl mb-2 border border-slate-800" />
@@ -401,37 +348,32 @@
                                         <span className="text-xs sm:text-sm font-black tracking-wider block">【 風格 B 款 】</span>
                                     </div>
                                 </div>
-
                                 <div className="flex gap-4 w-full sm:max-w-[500px]">
-                                    <button onClick={handleCancelAndGoHome} className="btn-cyan flex-1 py-3.5 rounded-xl text-xs sm:text-sm font-bold">放棄返回</button>
+                                    <button onClick={handleCancelAndGoHome} className="btn-cyan flex-1 py-3.5 rounded-xl text-xs sm:text-sm font-bold">放棄</button>
                                     <button 
                                         disabled={!selectedChoice || isSubmitting} 
-                                        onClick={finalizeChoiceAndPrint} 
+                                        onClick={finalizeChoice} 
                                         className={"flex-[2.5] py-3.5 rounded-xl text-base sm:text-lg font-black transition-all duration-300 " + (selectedChoice ? 'btn-cyan bg-cyan-400 text-slate-950 shadow-[0_0_25px_rgba(0,242,255,0.4)]' : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed')}
                                     >
-                                        <i className="fa-solid fa-check mr-1.5"></i>
-                                        {isSubmitting ? "處理中..." : "確定"}
+                                        <i className="fa-solid fa-check mr-1.5"></i>{isSubmitting ? "處理中..." : "確定"}
                                     </button>
                                 </div>
                             </div>
                         )}
 
-                        {/* 關卡 5：選擇完成畫面 (取代列印畫面) */}
                         {step === 'completed' && (
                             <div className="flex flex-col items-center w-full max-w-[600px] px-2 text-center">
-                                <h2 className="text-2xl sm:text-3xl font-black text-ai-cyan tracking-widest mb-6 animate-pulse">
-                                    <i className="fa-solid fa-circle-check mr-2"></i>選擇已送出
-                                </h2>
-
-                                <div className="bg-[#0f172a]/80 border-2 border-ai-cyan p-6 sm:p-8 rounded-3xl w-full mb-8 shadow-[0_0_30px_rgba(0,242,255,0.2)] flex flex-col items-center">
+                                <h2 className="text-2xl sm:text-3xl font-black text-ai-cyan tracking-widest mb-6 animate-pulse">選擇已送出</h2>
+                                <div className="bg-[#0f172a]/80 border-2 border-ai-cyan p-6 sm:p-8 rounded-3xl w-full mb-6 shadow-[0_0_30px_rgba(0,242,255,0.2)] flex flex-col items-center">
                                     <img src={selectedChoice === 'A' ? imgA : imgB} className="w-40 h-40 sm:w-48 sm:h-48 object-cover rounded-2xl mb-4 border-2 border-slate-700" />
                                     <p className="text-xs sm:text-sm text-slate-400 tracking-[0.3em] font-bold mb-1">您的專屬號碼</p>
-                                    <p className="text-6xl sm:text-7xl font-black text-white font-mono drop-shadow-[0_0_15px_rgba(0,242,255,0.5)]">#{taskId}</p>
+                                    <p className="text-6xl sm:text-7xl font-black text-white font-mono drop-shadow-[0_0_15px_#00f2ff]">#{taskId}</p>
+                                    <div className="mt-6 flex items-center justify-center gap-2 text-ai-cyan text-sm sm:text-base font-bold tracking-widest bg-ai-cyan/10 px-5 py-2.5 rounded-full border border-ai-cyan/30">
+                                        <i className="fa-solid fa-spinner animate-spin text-lg"></i>
+                                        <span>{returnCountdown} 秒後自動返回</span>
+                                    </div>
                                 </div>
-
-                                <button onClick={handleCancelAndGoHome} className="btn-cyan w-full max-w-[400px] py-4 sm:py-5 rounded-2xl text-lg sm:text-xl font-black bg-ai-cyan/20">
-                                    返回首頁
-                                </button>
+                                <button onClick={handleCancelAndGoHome} className="btn-cyan w-full max-w-[400px] py-4 sm:py-5 rounded-2xl text-lg sm:text-xl font-black bg-ai-cyan/20">立刻返回首頁</button>
                             </div>
                         )}
 
