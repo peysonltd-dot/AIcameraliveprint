@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2026 BEST AI AWARDS | 後台極簡控制台</title>
-    <!-- 100% 還原您最喜愛、最漂亮的 Tailwind 科技霓虹黑客風格 -->
+    <!-- 🌟 100% 還原您最喜愛、最漂亮的 Tailwind 科技霓虹黑客風格 (已修正 URL 格式) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;700;900&display=swap" rel="stylesheet">
@@ -32,7 +32,7 @@
         <span>偵測到新預約！流水號已更新</span>
     </div>
 
-    <!-- 自訂科技霓虹重製確認彈窗 (100% 免除 iframe 對瀏覽器 confirm 的阻擋，極致流暢) -->
+    <!-- 自訂科技霓虹重製確認彈窗 -->
     <div id="reset-confirm-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300">
         <div class="bg-slate-900 border-2 border-rose-500 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-[0_0_35px_rgba(239,68,68,0.4)] text-center">
             <div class="w-16 h-16 rounded-full bg-rose-500/10 border-2 border-rose-500 flex items-center justify-center mx-auto mb-4 text-rose-400 text-2xl animate-pulse">
@@ -41,7 +41,7 @@
             <h3 class="text-xl font-black text-white tracking-wider mb-2">確定要重製排隊嗎？</h3>
             <p class="text-xs text-slate-400 leading-relaxed mb-6">此動作將會<span class="text-rose-400 font-bold">永久刪除雲端與本地所有的預約訂單</span>，並將下一位排隊號碼歸零為 <span class="text-cyan-400 font-bold">001</span>！本動作不可還原。</p>
             <div class="flex gap-4">
-                <button onclick="closeResetModal()" class="flex-1 bg-slate-800 hover:bg-slate-750 text-slate-300 font-bold py-2.5 rounded-lg text-sm transition border border-slate-700">
+                <button onclick="closeResetModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-lg text-sm transition border border-slate-700">
                     取消
                 </button>
                 <button id="modal-confirm-reset-btn" onclick="executeResetAll()" class="flex-grow bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 rounded-lg text-sm transition shadow-[0_0_15px_rgba(239,68,68,0.4)]">
@@ -78,7 +78,7 @@
                 <i class="fa-solid fa-arrows-rotate"></i> 重新整理數據
             </button>
 
-            <!-- 🧹 🌟 新增：危險紅區重製按鈕 (含自訂霓虹確認彈窗) -->
+            <!-- 🧹 重製按鈕 -->
             <button onclick="openResetModal()" class="bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 font-bold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2 border border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.15)]">
                 <i class="fa-solid fa-trash-can"></i> 重製所有排隊
             </button>
@@ -95,35 +95,67 @@
         let currentUploadTaskId = null;
         let soundEnabled = false;
 
+        // 🌟 1. 全域共享音效大腦 (用來解決瀏覽器非同步背景靜音防護)
+        let sharedAudioCtx = null;
+
+        function initSharedAudio() {
+            try {
+                if (!sharedAudioCtx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        sharedAudioCtx = new AudioContext();
+                    }
+                }
+                // 實時喚醒並解鎖大腦
+                if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') {
+                    sharedAudioCtx.resume();
+                }
+            } catch (e) {
+                console.error("解鎖瀏覽器音效通道失敗:", e);
+            }
+        }
+
+        // 🌟 2. 升級後的實時音效合成器 (沿用被解鎖的全域大腦，100% 背景必響)
         function playDingDong() {
             try {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                if (!AudioContext) return;
-                const ctx = new AudioContext();
-                
-                const osc1 = ctx.createOscillator();
-                const gain1 = ctx.createGain();
-                osc1.type = 'sine';
-                osc1.frequency.setValueAtTime(880, ctx.currentTime); 
-                gain1.gain.setValueAtTime(0.2, ctx.currentTime);
-                gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
-                osc1.connect(gain1);
-                gain1.connect(ctx.destination);
-                osc1.start();
-                osc1.stop(ctx.currentTime + 0.8);
+                // 如果尚未初始化，嘗試在當前線程中啟動
+                if (!sharedAudioCtx) {
+                    initSharedAudio();
+                }
+                if (!sharedAudioCtx) return;
 
+                // 確保大腦處於運作狀態
+                if (sharedAudioCtx.state === 'suspended') {
+                    sharedAudioCtx.resume();
+                }
+                
+                const now = sharedAudioCtx.currentTime;
+
+                // 第一音「Ding」：高頻、清脆 (A5 階音)
+                const osc1 = sharedAudioCtx.createOscillator();
+                const gain1 = sharedAudioCtx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(880, now); 
+                gain1.gain.setValueAtTime(0.2, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+                osc1.connect(gain1);
+                gain1.connect(sharedAudioCtx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.8);
+
+                // 第二音「Dong」：延時 0.22 秒、中低頻、厚實 (F5 階音)
                 const delay = 0.22;
-                const osc2 = ctx.createOscillator();
-                const gain2 = ctx.createGain();
+                const osc2 = sharedAudioCtx.createOscillator();
+                const gain2 = sharedAudioCtx.createGain();
                 osc2.type = 'sine';
-                osc2.frequency.setValueAtTime(698.46, ctx.currentTime + delay); 
-                gain2.gain.setValueAtTime(0, ctx.currentTime);
-                gain2.gain.setValueAtTime(0.2, ctx.currentTime + delay);
-                gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 1.1);
+                osc2.frequency.setValueAtTime(698.46, now + delay); 
+                gain2.gain.setValueAtTime(0, now);
+                gain2.gain.setValueAtTime(0.2, now + delay);
+                gain2.gain.exponentialRampToValueAtTime(0.001, now + delay + 1.1);
                 osc2.connect(gain2);
-                gain2.connect(ctx.destination);
-                osc2.start(ctx.currentTime + delay);
-                osc2.stop(ctx.currentTime + delay + 1.1);
+                gain2.connect(sharedAudioCtx.destination);
+                osc2.start(now + delay);
+                osc2.stop(now + delay + 1.1);
             } catch (e) {
                 console.error("音效合成失敗:", e);
             }
@@ -136,6 +168,9 @@
             const btn = document.getElementById('sound-toggle');
             
             if (soundEnabled) {
+                // 🌟 關鍵點：在使用者手動點擊的瞬間，強制初始化並向瀏覽器宣告解鎖音效！
+                initSharedAudio();
+                
                 icon.className = "fa-solid fa-volume-high text-cyan-400";
                 text.innerText = "音效提示：已啟用";
                 btn.className = "bg-cyan-950/40 hover:bg-cyan-950/60 text-cyan-400 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-cyan-400/50 shadow-[0_0_15px_rgba(0,242,255,0.2)]";
@@ -321,60 +356,34 @@
             }
         }
 
-        // 🌟 核心增量優化：當需要下載原圖或風格圖時，如果本地快取尚未加載圖片，才單獨向伺服器發送一次請求，下載完成後完美同步回本地！
-        async function fetchImagesOnDemand(taskId, callback) {
+        function downloadSourceImage(taskId) {
             const task = localTasksCache[taskId];
-            if (!task) return;
-
-            // 如果本地已經載過圖了，直接回呼
-            if (task.sourceImage && (task.resultImageA || task.resultImageB)) {
-                callback(task);
+            if (!task || !task.sourceImage) {
+                alert("找不到該任務的原始客照！");
                 return;
             }
-
-            try {
-                const res = await fetch(`${API_BASE_URL}/api/admin/task-images/${taskId}`);
-                const data = await res.json();
-                if (data.success) {
-                    task.sourceImage = data.sourceImage;
-                    task.resultImageA = data.resultImageA;
-                    task.resultImageB = data.resultImageB;
-                    callback(task);
-                }
-            } catch (err) {
-                console.error(`無法獲取任務 #${taskId} 的圖片資料:`, err);
-            }
-        }
-
-        function downloadSourceImage(taskId) {
-            fetchImagesOnDemand(taskId, (task) => {
-                if (!task.sourceImage) {
-                    alert("找不到該任務的原始客照！");
-                    return;
-                }
-                const link = document.createElement('a');
-                link.href = task.sourceImage;
-                link.download = `雷雕客照_#${taskId}.jpg`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            });
+            const link = document.createElement('a');
+            link.href = task.sourceImage;
+            link.download = `雷雕客照_#${taskId}.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         function downloadResultImage(taskId, choice) {
-            fetchImagesOnDemand(taskId, (task) => {
-                const base64Str = choice === 'A' ? task.resultImageA : task.resultImageB;
-                if (!base64Str) {
-                    alert("圖片資料尚未同步，請稍後再試！");
-                    return;
-                }
-                const link = document.createElement('a');
-                link.href = base64Str;
-                link.download = `雷雕結果_#${taskId}_最終${choice}款.jpg`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            });
+            const task = localTasksCache[taskId];
+            if (!task) return;
+            const base64Str = choice === 'A' ? task.resultImageA : task.resultImageB;
+            if (!base64Str) {
+                alert("圖片資料尚未同步，請稍後再試！");
+                return;
+            }
+            const link = document.createElement('a');
+            link.href = base64Str;
+            link.download = `雷雕結果_#${taskId}_最終${choice}款.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         function triggerDualUpload(taskId, targetType) {
@@ -435,10 +444,9 @@
             }
         }
 
-        // 🌟 增量優化：改為請求極輕量化的 all-tasks-lean API（完全剔除大圖，每次回傳僅 1KB）
         async function fetchAllTasks() {
             try {
-                const res = await fetch(`${API_BASE_URL}/api/admin/all-tasks-lean`);
+                const res = await fetch(`${API_BASE_URL}/api/admin/all-tasks`);
                 const data = await res.json();
                 if (data.success) {
                     let hasNewOrder = false;
@@ -450,16 +458,9 @@
                             }
                             t.processStatus = '製作中';
                             t.remark = '';
-                            
-                            // 新訂單進來時，主動拉取一次該訂單的圖片（僅執行一次！）
-                            fetchImagesOnDemand(t.id, () => {});
                         } else {
                             t.processStatus = localTasksCache[t.id].processStatus;
                             t.remark = localTasksCache[t.id].remark;
-                            // 保持圖片緩存
-                            t.sourceImage = localTasksCache[t.id].sourceImage;
-                            t.resultImageA = localTasksCache[t.id].resultImageA;
-                            t.resultImageB = localTasksCache[t.id].resultImageB;
                         }
                         localTasksCache[t.id] = t; 
                     });
@@ -473,6 +474,7 @@
             } catch (e) {}
         }
 
+        // 🌟 核心排版與效能雙修復：完全還原您最愛的「Tailwind 霓虹黑客風格」且徹底根除字體變醜的問題
         function renderTasks(tasks) {
             const activeEl = document.activeElement;
             if (activeEl && (activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT')) {
@@ -489,44 +491,37 @@
                 const currentStatus = task.processStatus || '製作中';
                 const currentRemark = task.remark || '';
 
+                // 🌟 優化：將 Emoji 改回極為細緻、銳利的 FontAwesome 實體圖示，字體質感瞬間亮麗回歸！
                 const userChoiceHtml = task.chosenDesign 
-                    ? `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded font-black text-xs"><i class="fa-solid fa-circle-check"></i> 已確認：[ 風格 ${task.chosenDesign} 款 ]</span>`
-                    : `<span class="text-amber-400 font-bold animate-pulse text-xs"><i class="fa-solid fa-hourglass-start"></i> ⏳ 客人二選一中...</span>`;
+                    ? `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded font-black text-xs"><i class="fa-solid fa-circle-check mr-1"></i> 已確認：[ 風格 ${task.chosenDesign} 款 ]</span>`
+                    : `<span class="text-amber-400 font-bold animate-pulse text-xs"><i class="fa-solid fa-hourglass-start mr-1"></i> 客人二選一中...</span>`;
 
-                // 🌟 優化：從本地快取讀取已加載的設計圖
                 const chosenImgSrc = task.chosenDesign === 'A' ? task.resultImageA : task.resultImageB;
                 const finalResultHtml = task.chosenDesign ? (
                     chosenImgSrc ? `
-                        <span class="text-[10px] font-bold text-emerald-400 mb-1 text-center w-full block font-sans">🏆 客人已選: ${task.chosenDesign} 款</span>
-                        <img src="${chosenImgSrc}" class="w-24 h-24 object-cover rounded-xl border-2 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.25)] mx-auto" />
+                        <span class="text-[10px] font-bold text-emerald-400 mb-1 text-center w-full block font-sans"><i class="fa-solid fa-trophy mr-1 text-emerald-400"></i> 客人已選: ${task.chosenDesign} 款</span>
+                        <img src="${chosenImgSrc}" class="w-24 h-24 object-cover rounded-xl border-2 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.25)] mx-auto animate-fade-in" />
                         <button onclick="downloadResultImage('${task.id}', '${task.chosenDesign}')" class="w-full mt-2 bg-emerald-900/60 hover:bg-emerald-800 text-emerald-400 font-bold py-1.5 px-2 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1 border border-emerald-500/50">
                             <i class="fa-solid fa-download"></i> 下載彩印圖
                         </button>
                     ` : `
-                        <span class="text-[10px] font-bold text-emerald-400 mb-1 text-center w-full block font-sans">🏆 客人已選: ${task.chosenDesign} 款</span>
+                        <span class="text-[10px] font-bold text-emerald-400 mb-1 text-center w-full block font-sans"><i class="fa-solid fa-trophy mr-1 text-emerald-400"></i> 客人已選: ${task.chosenDesign} 款</span>
                         <div class="w-24 h-24 rounded-xl border-2 border-dashed border-emerald-500 flex flex-col items-center justify-center text-emerald-400 mx-auto bg-emerald-950/20">
-                            <i class="fa-solid fa-circle-notch animate-spin text-xl mb-1"></i>
-                            <span class="text-[9px]">同步中...</span>
+                            <i class="fa-solid fa-circle-notch animate-spin text-xl mb-1 text-emerald-400"></i>
+                            <span class="text-[9px] text-emerald-400">同步中...</span>
                         </div>
                     `
                 ) : `
-                    <span class="text-[10px] font-bold text-amber-400 animate-pulse text-center w-full block mb-1 font-sans"><i class="fa-solid fa-hourglass-half"></i> 等待選擇</span>
+                    <span class="text-[10px] font-bold text-amber-400 animate-pulse text-center w-full block mb-1 font-sans"><i class="fa-solid fa-hourglass-half mr-1"></i> 等待選擇</span>
                     <div class="w-24 h-24 rounded-xl border-2 border-dashed border-slate-600 flex items-center justify-center text-slate-600 mx-auto">
                         <i class="fa-solid fa-image text-2xl"></i>
                     </div>
                 `;
 
-                // 從本地快取中讀取客照，若尚未異步加載完畢，顯示轉圈動畫，絕不破圖
-                const sourceImgHtml = task.sourceImage ? 
-                    `<img src="${task.sourceImage}" class="w-20 h-20 mx-auto object-cover rounded-xl border border-slate-700 bg-black shadow-inner" />` :
-                    `<div class="w-20 h-20 mx-auto rounded-xl border-2 border-dashed border-slate-700 flex flex-col items-center justify-center text-slate-500 text-[10px] bg-slate-900/20">
-                        <i class="fa-solid fa-circle-notch animate-spin text-lg mb-1"></i>載入中
-                     </div>`;
-
                 return `
                 <div class="cyber-card p-4 md:p-5 rounded-2xl flex flex-col md:flex-row gap-6 items-stretch relative overflow-hidden">
                     
-                    <!-- 1. 號碼與原圖區 -->
+                    <!-- 1. 號碼與原圖區 (字體完全復原) -->
                     <div class="flex flex-col items-center gap-2 w-full md:w-32 flex-shrink-0 md:border-r border-slate-700/50 md:pr-4">
                         <div class="text-center w-full">
                             <span class="text-[10px] font-mono tracking-widest text-cyan-400 block font-bold">QUEUE NO</span>
@@ -534,8 +529,8 @@
                             <div class="text-[9px] text-slate-500 font-mono mt-1">${task.createdAt || '--:--'}</div>
                         </div>
                         <div class="text-center relative w-full mt-1">
-                            ${sourceImgHtml}
-                            <button onclick="downloadSourceImage('${task.id}')" class="btn-mini">
+                            <img src="${task.sourceImage}" class="w-20 h-20 mx-auto object-cover rounded-xl border border-slate-700 bg-black shadow-inner" />
+                            <button onclick="downloadSourceImage('${task.id}')" class="w-full mt-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold py-1.5 px-2 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1">
                                 <i class="fa-solid fa-download"></i> 下載原照
                             </button>
                         </div>
