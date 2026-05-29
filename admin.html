@@ -68,7 +68,6 @@
         let currentUploadTaskId = null;
         let soundEnabled = false;
 
-        // Web Audio API 實時音效合成器 (免 mp3 檔案加載)
         function playDingDong() {
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -134,7 +133,7 @@
                 const res = await fetch(`${API_BASE_URL}/api/admin/printer-status`);
                 const data = await res.json();
                 if (data.success && data.data) {
-                    const statusText = data.data.data; // 返回例如 "在线，工作状态正常"
+                    const statusText = data.data.data; 
                     text.innerText = `狀態：${statusText}`;
                     btn.className = "bg-emerald-950/40 text-emerald-400 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-emerald-400/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]";
                     icon.className = "fa-solid fa-circle-check";
@@ -149,7 +148,6 @@
                 icon.className = "fa-solid fa-circle-xmark";
             }
             
-            // 4秒後恢復檢測按鈕預設樣式
             setTimeout(() => {
                 btn.disabled = false;
                 text.innerText = "檢測出票機狀態";
