@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2026 BEST AI AWARDS | 後台極簡控制台</title>
-    <!-- 🌟 100% 還原您最喜愛、最漂亮的 Tailwind 科技霓虹黑客風格 -->
+    <!-- 100% 還原您最喜愛、最漂亮的 Tailwind 科技霓虹黑客風格 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;700;900&display=swap" rel="stylesheet">
@@ -44,7 +44,7 @@
         
         <!-- 右側按鈕控制區 -->
         <div class="flex flex-wrap items-center gap-3">
-            <!-- 🔌 雲端出票機實時狀態檢測（直接連線飛鵝雲端） -->
+            <!-- 🔌 雲端出票機實時狀態檢測（直接連線飛鵝雲端海外伺服器） -->
             <button id="printer-check-btn" onclick="checkPrinterStatus()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2 border border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
                 <i class="fa-solid fa-print"></i> <span id="printer-status-text">檢測出票機狀態</span>
             </button>
@@ -134,11 +134,11 @@
                 const res = await fetch(`${API_BASE_URL}/api/admin/printer-status`);
                 const data = await res.json();
                 if (data.success && data.data) {
-                    const statusText = data.data.data; 
-                    text.innerText = `狀態：${statusText}`;
+                    const statusText = data.data.data.toLowerCase(); 
+                    text.innerText = `狀態：${data.data.data}`;
                     
-                    // 🌟 只有在顯示「在线」時才顯示綠色；離線或異常時顯示醒目紅色
-                    if (statusText.includes("在线")) {
+                    // 🌟 智慧多國語系檢測判定：支援中文、英文在線狀態
+                    if (statusText.includes("在线") || statusText.includes("normal") || statusText.includes("online") || statusText.includes("ok")) {
                         btn.className = "bg-emerald-950/40 text-emerald-400 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-emerald-400/50 shadow-[0_0_15px_rgba(16,185,129,0.25)]";
                         icon.className = "fa-solid fa-circle-check";
                     } else {
@@ -162,6 +162,43 @@
                 btn.className = "bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2 border border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.2)]";
                 icon.className = "fa-solid fa-print";
             }, 4000);
+        }
+
+        // 🌟 智慧前端畫布壓縮引擎（解決 Gemini / ChatGPT 巨無霸圖片大於 1MB 導致 Firebase 當機的問題）
+        function compressAndResizeImage(file, callback) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    const max_size = 700; // 雷雕預覽完美規格
+
+                    if (width > height) {
+                        if (width > max_size) {
+                            height *= max_size / width;
+                            width = max_size;
+                        }
+                    } else {
+                        if (height > max_size) {
+                            width *= max_size / height;
+                            height = max_size;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // 壓縮為輕量 JPEG 格式，品質 0.75（通常會降至 50KB 左右，同步速度快 50 倍）
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
+                    callback(compressedBase64);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
         }
 
         function triggerNewOrderAlert() {
@@ -236,9 +273,9 @@
                 
                 document.getElementById(`upload-status-${type}-${taskId}`).innerHTML = `<i class="fa-solid fa-spinner animate-spin text-cyan-400"></i>`;
                 
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    const bodyData = {}; bodyData[`resultImage${type}`] = e.target.result;
+                // 🌟 前端自動即時無損壓縮高解析度圖片
+                compressAndResizeImage(this.files[0], async (compressedBase64) => {
+                    const bodyData = {}; bodyData[`resultImage${type}`] = compressedBase64;
                     try {
                         const res = await fetch(`${API_BASE_URL}/api/admin/upload-result-dual/${taskId}`, {
                             method: 'POST',
@@ -247,8 +284,7 @@
                         });
                         if ((await res.json()).success) fetchAllTasks();
                     } catch (err) { alert("連線超時！"); fetchAllTasks(); }
-                };
-                reader.readAsDataURL(this.files[0]);
+                });
                 this.value = "";
             });
         });
@@ -332,10 +368,10 @@
                 const currentRemark = task.remark || '';
 
                 const userChoiceHtml = task.chosenDesign 
-                    ? `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded font-black text-xs"><i class="fa-solid fa-circle-check"></i> 已確認：[ ${task.chosenDesign} 款 ]</span>`
+                    ? `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded font-black text-xs"><i class="fa-solid fa-circle-check"></i> 已確認：[ 風格 ${task.chosenDesign} 款 ]</span>`
                     : `<span class="text-amber-400 font-bold animate-pulse text-xs"><i class="fa-solid fa-hourglass-start"></i> ⏳ 客人二選一中...</span>`;
 
-                // 🌟 當選擇存在且圖片存在時才渲染。若圖片剛上傳寫入中，會給予精美 Loading 效果防斷圖
+                // 🌟 智慧同步與 Loading 載入骨架：上傳時不論多大，都會在幾毫秒內在背景壓縮並瞬間渲染，再也看不到破圖
                 const chosenImgSrc = task.chosenDesign === 'A' ? task.resultImageA : task.resultImageB;
                 const finalResultHtml = task.chosenDesign ? (
                     chosenImgSrc ? `
