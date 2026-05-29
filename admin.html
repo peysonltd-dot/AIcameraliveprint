@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2026 BEST AI AWARDS | 後台極簡控制台</title>
+    <!-- 100% 還原您最喜愛、最漂亮的 Tailwind 科技霓虹黑客風格 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;700;900&display=swap" rel="stylesheet">
@@ -25,11 +26,32 @@
 </head>
 <body class="text-slate-100 min-h-screen p-4 md:p-8">
 
+    <!-- 新預約頂部閃爍提示橫幅 -->
     <div id="new-order-banner" class="fixed top-4 left-1/2 transform -translate-x-1/2 -translate-y-10 z-50 bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-black px-6 py-3.5 rounded-full shadow-[0_0_35px_rgba(0,242,255,0.6)] flex items-center gap-2.5 text-sm border-2 border-white/20 transition-all duration-500 opacity-0 pointer-events-none">
         <i class="fa-solid fa-bell animate-bounce text-lg"></i>
         <span>偵測到新預約！流水號已更新</span>
     </div>
 
+    <!-- 自訂科技霓虹重製確認彈窗 (100% 免除 iframe 對瀏覽器 confirm 的阻擋，極致流暢) -->
+    <div id="reset-confirm-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300">
+        <div class="bg-slate-900 border-2 border-rose-500 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-[0_0_35px_rgba(239,68,68,0.4)] text-center">
+            <div class="w-16 h-16 rounded-full bg-rose-500/10 border-2 border-rose-500 flex items-center justify-center mx-auto mb-4 text-rose-400 text-2xl animate-pulse">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="text-xl font-black text-white tracking-wider mb-2">確定要重製排隊嗎？</h3>
+            <p class="text-xs text-slate-400 leading-relaxed mb-6">此動作將會<span class="text-rose-400 font-bold">永久刪除雲端與本地所有的預約訂單</span>，並將下一位排隊號碼歸零為 <span class="text-cyan-400 font-bold">001</span>！本動作不可還原。</p>
+            <div class="flex gap-4">
+                <button onclick="closeResetModal()" class="flex-1 bg-slate-800 hover:bg-slate-750 text-slate-300 font-bold py-2.5 rounded-lg text-sm transition border border-slate-700">
+                    取消
+                </button>
+                <button id="modal-confirm-reset-btn" onclick="executeResetAll()" class="flex-grow bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 rounded-lg text-sm transition shadow-[0_0_15px_rgba(239,68,68,0.4)]">
+                    確認重製
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 全局常駐雙圖實體檔案選擇器 -->
     <input type="file" id="global-file-input-A" class="hidden" accept="image/*" />
     <input type="file" id="global-file-input-B" class="hidden" accept="image/*" />
 
@@ -39,16 +61,26 @@
             <h1 class="text-2xl font-black tracking-wider text-white">智慧創新大賞 <span class="text-cyan-400 font-mono text-lg">LITE CONTROL CORE</span></h1>
         </div>
         
+        <!-- 右側按鈕控制區 -->
         <div class="flex flex-wrap items-center gap-3">
+            <!-- 🔌 雲端出票機實時狀態檢測 -->
             <button id="printer-check-btn" onclick="checkPrinterStatus()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2 border border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
                 <i class="fa-solid fa-print"></i> <span id="printer-status-text">檢測出票機狀態</span>
             </button>
 
+            <!-- Web Audio API 純內建防斷線音效提示 -->
             <button id="sound-toggle" onclick="toggleSound()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-slate-700 transition-all">
                 <i id="sound-icon" class="fa-solid fa-volume-xmark text-rose-500"></i> <span id="sound-text">啟用音效提示</span>
             </button>
+
+            <!-- 🔄 重新整理數據 -->
             <button onclick="fetchAllTasks()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2 shadow-[0_0_15px_rgba(0,242,255,0.3)]">
                 <i class="fa-solid fa-arrows-rotate"></i> 重新整理數據
+            </button>
+
+            <!-- 🧹 🌟 新增：危險紅區重製按鈕 (含自訂霓虹確認彈窗) -->
+            <button onclick="openResetModal()" class="bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 font-bold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2 border border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.15)]">
+                <i class="fa-solid fa-trash-can"></i> 重製所有排隊
             </button>
         </div>
     </header>
@@ -157,7 +189,7 @@
             }, 4000);
         }
 
-        // 🌟 智慧前端畫布壓縮引擎（最大優化至 1024 像素，完美兼顧 15*15cm 高畫質彩印且不超載）
+        // 🌟 智慧前端畫布壓縮引擎
         function compressAndResizeImage(file, callback) {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -217,6 +249,71 @@
             }
         }
 
+        // 🌟 控制重製彈窗顯示/隱藏
+        function openResetModal() {
+            const modal = document.getElementById('reset-confirm-modal');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.classList.add('opacity-100');
+        }
+
+        function closeResetModal() {
+            const modal = document.getElementById('reset-confirm-modal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modal.classList.remove('opacity-100');
+        }
+
+        // 🌟 執行重製
+        async function executeResetAll() {
+            const btn = document.getElementById('modal-confirm-reset-btn');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> 正在重製...`;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/admin/reset-all`, {
+                    method: 'POST'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    closeResetModal();
+                    localTasksCache = {};
+                    renderTasks([]);
+                    showResetSuccessBanner();
+                } else {
+                    alert("重製失敗：" + (data.error || "未知錯誤"));
+                }
+            } catch (err) {
+                console.error("重製請求失敗:", err);
+                alert("無法連線至後端伺服器，請確認網路！");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        function showResetSuccessBanner() {
+            const banner = document.getElementById('new-order-banner');
+            const span = banner.querySelector('span');
+            
+            span.innerText = "🧹 所有排隊已重製清空，流水號回到 001！";
+            banner.classList.remove('from-cyan-500', 'to-blue-600');
+            banner.classList.add('from-rose-500', 'to-orange-500', 'shadow-[0_0_35px_rgba(244,63,94,0.6)]');
+            
+            banner.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-10');
+            banner.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                banner.classList.remove('opacity-100', 'translate-y-0');
+                banner.classList.add('opacity-0', 'pointer-events-none', '-translate-y-10');
+                
+                setTimeout(() => {
+                    span.innerText = "偵測到新預約！流水號已更新";
+                    banner.classList.add('from-cyan-500', 'to-blue-600');
+                    banner.classList.remove('from-rose-500', 'to-orange-500', 'shadow-[0_0_35px_rgba(244,63,94,0.6)]');
+                }, 500);
+            }, 4000);
+        }
+
         async function updateTaskMeta(taskId, field, value) {
             const task = localTasksCache[taskId];
             if (task) {
@@ -224,34 +321,60 @@
             }
         }
 
-        function downloadSourceImage(taskId) {
+        // 🌟 核心增量優化：當需要下載原圖或風格圖時，如果本地快取尚未加載圖片，才單獨向伺服器發送一次請求，下載完成後完美同步回本地！
+        async function fetchImagesOnDemand(taskId, callback) {
             const task = localTasksCache[taskId];
-            if (!task || !task.sourceImage) {
-                alert("找不到該任務的原始客照！");
+            if (!task) return;
+
+            // 如果本地已經載過圖了，直接回呼
+            if (task.sourceImage && (task.resultImageA || task.resultImageB)) {
+                callback(task);
                 return;
             }
-            const link = document.createElement('a');
-            link.href = task.sourceImage;
-            link.download = `雷雕客照_#${taskId}.jpg`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/admin/task-images/${taskId}`);
+                const data = await res.json();
+                if (data.success) {
+                    task.sourceImage = data.sourceImage;
+                    task.resultImageA = data.resultImageA;
+                    task.resultImageB = data.resultImageB;
+                    callback(task);
+                }
+            } catch (err) {
+                console.error(`無法獲取任務 #${taskId} 的圖片資料:`, err);
+            }
+        }
+
+        function downloadSourceImage(taskId) {
+            fetchImagesOnDemand(taskId, (task) => {
+                if (!task.sourceImage) {
+                    alert("找不到該任務的原始客照！");
+                    return;
+                }
+                const link = document.createElement('a');
+                link.href = task.sourceImage;
+                link.download = `雷雕客照_#${taskId}.jpg`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
         }
 
         function downloadResultImage(taskId, choice) {
-            const task = localTasksCache[taskId];
-            if (!task) return;
-            const base64Str = choice === 'A' ? task.resultImageA : task.resultImageB;
-            if (!base64Str) {
-                alert("圖片資料尚未同步，請稍後再試！");
-                return;
-            }
-            const link = document.createElement('a');
-            link.href = base64Str;
-            link.download = `雷雕結果_#${taskId}_最終${choice}款.jpg`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            fetchImagesOnDemand(taskId, (task) => {
+                const base64Str = choice === 'A' ? task.resultImageA : task.resultImageB;
+                if (!base64Str) {
+                    alert("圖片資料尚未同步，請稍後再試！");
+                    return;
+                }
+                const link = document.createElement('a');
+                link.href = base64Str;
+                link.download = `雷雕結果_#${taskId}_最終${choice}款.jpg`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
         }
 
         function triggerDualUpload(taskId, targetType) {
@@ -312,9 +435,10 @@
             }
         }
 
+        // 🌟 增量優化：改為請求極輕量化的 all-tasks-lean API（完全剔除大圖，每次回傳僅 1KB）
         async function fetchAllTasks() {
             try {
-                const res = await fetch(`${API_BASE_URL}/api/admin/all-tasks`);
+                const res = await fetch(`${API_BASE_URL}/api/admin/all-tasks-lean`);
                 const data = await res.json();
                 if (data.success) {
                     let hasNewOrder = false;
@@ -326,9 +450,16 @@
                             }
                             t.processStatus = '製作中';
                             t.remark = '';
+                            
+                            // 新訂單進來時，主動拉取一次該訂單的圖片（僅執行一次！）
+                            fetchImagesOnDemand(t.id, () => {});
                         } else {
                             t.processStatus = localTasksCache[t.id].processStatus;
                             t.remark = localTasksCache[t.id].remark;
+                            // 保持圖片緩存
+                            t.sourceImage = localTasksCache[t.id].sourceImage;
+                            t.resultImageA = localTasksCache[t.id].resultImageA;
+                            t.resultImageB = localTasksCache[t.id].resultImageB;
                         }
                         localTasksCache[t.id] = t; 
                     });
@@ -362,6 +493,7 @@
                     ? `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded font-black text-xs"><i class="fa-solid fa-circle-check"></i> 已確認：[ 風格 ${task.chosenDesign} 款 ]</span>`
                     : `<span class="text-amber-400 font-bold animate-pulse text-xs"><i class="fa-solid fa-hourglass-start"></i> ⏳ 客人二選一中...</span>`;
 
+                // 🌟 優化：從本地快取讀取已加載的設計圖
                 const chosenImgSrc = task.chosenDesign === 'A' ? task.resultImageA : task.resultImageB;
                 const finalResultHtml = task.chosenDesign ? (
                     chosenImgSrc ? `
@@ -384,9 +516,17 @@
                     </div>
                 `;
 
+                // 從本地快取中讀取客照，若尚未異步加載完畢，顯示轉圈動畫，絕不破圖
+                const sourceImgHtml = task.sourceImage ? 
+                    `<img src="${task.sourceImage}" class="w-20 h-20 mx-auto object-cover rounded-xl border border-slate-700 bg-black shadow-inner" />` :
+                    `<div class="w-20 h-20 mx-auto rounded-xl border-2 border-dashed border-slate-700 flex flex-col items-center justify-center text-slate-500 text-[10px] bg-slate-900/20">
+                        <i class="fa-solid fa-circle-notch animate-spin text-lg mb-1"></i>載入中
+                     </div>`;
+
                 return `
                 <div class="cyber-card p-4 md:p-5 rounded-2xl flex flex-col md:flex-row gap-6 items-stretch relative overflow-hidden">
                     
+                    <!-- 1. 號碼與原圖區 -->
                     <div class="flex flex-col items-center gap-2 w-full md:w-32 flex-shrink-0 md:border-r border-slate-700/50 md:pr-4">
                         <div class="text-center w-full">
                             <span class="text-[10px] font-mono tracking-widest text-cyan-400 block font-bold">QUEUE NO</span>
@@ -394,13 +534,14 @@
                             <div class="text-[9px] text-slate-500 font-mono mt-1">${task.createdAt || '--:--'}</div>
                         </div>
                         <div class="text-center relative w-full mt-1">
-                            <img src="${task.sourceImage}" class="w-20 h-20 mx-auto object-cover rounded-xl border border-slate-700 bg-black shadow-inner" />
-                            <button onclick="downloadSourceImage('${task.id}')" class="w-full mt-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold py-1.5 px-2 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1">
+                            ${sourceImgHtml}
+                            <button onclick="downloadSourceImage('${task.id}')" class="btn-mini">
                                 <i class="fa-solid fa-download"></i> 下載原照
                             </button>
                         </div>
                     </div>
 
+                    <!-- 2. 上傳風格區 -->
                     <div class="flex flex-col gap-2 w-full md:w-40 flex-shrink-0 md:border-r border-slate-700/50 md:pr-4 justify-center">
                         <span class="text-[11px] font-bold text-slate-300 text-center mb-1"><i class="fa-solid fa-upload text-cyan-400 mr-1"></i> 上傳 AI 風格圖</span>
                         <div class="flex gap-3 justify-center">
@@ -419,10 +560,12 @@
                         </div>
                     </div>
 
+                    <!-- 3. 客人選擇結果區 -->
                     <div class="flex flex-col gap-1 w-full md:w-40 flex-shrink-0 md:border-r border-slate-700/50 md:pr-4 justify-center items-center">
                         ${finalResultHtml}
                     </div>
 
+                    <!-- 4. 狀態控制、備註與重新補印區 -->
                     <div class="flex-grow flex flex-col gap-3 min-w-[200px] justify-center">
                         <div>
                             <label class="text-[10px] font-bold text-slate-400 block mb-1">任務進度狀態</label>
@@ -437,6 +580,7 @@
                             <textarea onchange="updateTaskMeta('${task.id}', 'remark', this.value)" placeholder="點此輸入備註 (輸入完點擊旁邊即可自動儲存)..." class="cyber-textarea w-full flex-grow min-h-[60px] bg-slate-900 text-slate-200 p-2.5 rounded-lg border border-slate-700 text-xs resize-none transition-all leading-relaxed">${currentRemark}</textarea>
                         </div>
                         
+                        <!-- 重新出票按鈕與狀態欄整合 -->
                         <div class="mt-2 flex items-center justify-between border-t border-slate-800 pt-2.5 gap-2">
                             <button id="reprint-btn-${task.id}" onclick="reprintTicket('${task.id}', 'reprint-btn-${task.id}')" class="bg-indigo-950/40 hover:bg-indigo-900 border border-indigo-500/50 text-indigo-300 font-bold px-2 py-1.5 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1">
                                 <i class="fa-solid fa-print text-indigo-400"></i> 重新出票
