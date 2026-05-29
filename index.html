@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>2026 BEST AI AWARDS | 智慧創新大賞</title>
-    <!-- 修正後的 CDN 連結 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;900&display=swap" rel="stylesheet">
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <style>
@@ -38,7 +37,7 @@
                               linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
             background-size: 30px 30px;
             z-index: 0;
-            pointer-events: none; /* 🚀 核心修正：讓背景網格事件穿透，防止攔截前台按鈕點擊 */
+            pointer-events: none; /* 讓背景網格事件穿透，防止阻擋按鈕點擊 */
         }
         .kv-title {
             font-family: 'Orbitron', sans-serif;
@@ -114,14 +113,14 @@
             background: rgba(0, 242, 255, 0.1); border: 2px solid var(--ai-cyan); color: var(--ai-cyan);
             letter-spacing: 2px; transition: all 0.3s; box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
             position: relative;
-            z-index: 10; /* 🚀 核心修正：強制置頂層級，防止被任何背景遮擋點擊 */
+            z-index: 10; /* 確保按鈕層級，不被背景遮擋 */
         }
         .btn-cyan:active:not(:disabled) { background: var(--ai-cyan); color: #000; box-shadow: 0 0 35px var(--ai-cyan); }
         .btn-red {
             background: rgba(255, 0, 208, 0.1); border: 2px solid var(--ai-pink); color: var(--ai-pink);
             letter-spacing: 2px; transition: all 0.3s;
             position: relative;
-            z-index: 10; /* 🚀 核心修正：強制置頂層級，防止被任何背景遮擋點擊 */
+            z-index: 10;
         }
         .btn-red:active { background: var(--ai-pink); color: #000; }
     </style>
@@ -189,6 +188,7 @@
             const capture = async () => {
                 const video = videoRef.current;
                 const canvas = canvasRef.current;
+                if (!video || !canvas) return;
                 const ctx = canvas.getContext('2d');
                 const size = Math.min(video.videoWidth, video.videoHeight);
                 
@@ -274,9 +274,11 @@
                             } catch (err) {
                                 if (taskId === "007") {
                                     setTimeout(() => {
-                                        const mockUrl = canvasRef.current.toDataURL();
-                                        setImgA(mockUrl); setImgB(mockUrl);
-                                        setStep('choice');
+                                        if (canvasRef.current) {
+                                            const mockUrl = canvasRef.current.toDataURL();
+                                            setImgA(mockUrl); setImgB(mockUrl);
+                                            setStep('choice');
+                                        }
                                         clearInterval(pollingRef.current);
                                     }, 4000);
                                 }
@@ -284,7 +286,10 @@
                         }, 3000);
                     }
                 }
-                return () => { clearInterval(textInterval); if(pollingRef.current) clearInterval(pollingRef.current); };
+                return () => { 
+                    clearInterval(textInterval); 
+                    if(pollingRef.current) clearInterval(pollingRef.current); 
+                };
             }, [step, taskId]);
 
             return (
@@ -346,11 +351,11 @@
                             <div className="flex flex-col items-center w-full max-w-[750px] px-2">
                                 <p className="text-ai-cyan text-sm sm:text-base font-bold tracking-widest mb-3 animate-pulse">✨ 請挑選您最喜愛的款式 ✨</p>
                                 <div className="grid grid-cols-2 gap-4 w-full mb-6">
-                                    <div onClick={() => setSelectedChoice('A')} className={"choice-card p-2 rounded-2xl text-center " + (selectedChoice === 'A' ? 'selected' : '')}>
+                                    <div onClick={() => setSelectedChoice('A')} className={`choice-card p-2 rounded-2xl text-center ${selectedChoice === 'A' ? 'selected' : ''}`}>
                                         <img src={imgA} className="w-full aspect-square object-cover rounded-xl mb-2 border border-slate-800" />
                                         <span className="text-xs sm:text-sm font-black tracking-wider block">【 風格 A 款 】</span>
                                     </div>
-                                    <div onClick={() => setSelectedChoice('B')} className={"choice-card p-2 rounded-2xl text-center " + (selectedChoice === 'B' ? 'selected' : '')}>
+                                    <div onClick={() => setSelectedChoice('B')} className={`choice-card p-2 rounded-2xl text-center ${selectedChoice === 'B' ? 'selected' : ''}`}>
                                         <img src={imgB} className="w-full aspect-square object-cover rounded-xl mb-2 border border-slate-800" />
                                         <span className="text-xs sm:text-sm font-black tracking-wider block">【 風格 B 款 】</span>
                                     </div>
@@ -360,7 +365,11 @@
                                     <button 
                                         disabled={!selectedChoice || isSubmitting} 
                                         onClick={finalizeChoice} 
-                                        className={"flex-[2.5] py-3.5 rounded-xl text-base sm:text-lg font-black transition-all duration-300 " + (selectedChoice ? 'btn-cyan bg-cyan-400 text-slate-950 shadow-[0_0_25px_rgba(0,242,255,0.4)]' : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed')}
+                                        className={`flex-[2.5] py-3.5 rounded-xl text-base sm:text-lg font-black transition-all duration-300 ${
+                                            selectedChoice 
+                                                ? 'btn-cyan bg-cyan-400 text-slate-950 shadow-[0_0_25px_rgba(0,242,255,0.4)]' 
+                                                : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
+                                        }`}
                                     >
                                         <i className="fa-solid fa-check mr-1.5"></i>{isSubmitting ? "處理中..." : "確定"}
                                     </button>
@@ -380,21 +389,27 @@
                                         <span>{returnCountdown} 秒後自動返回</span>
                                     </div>
                                 </div>
-                                <button onClick={handleCancelAndGoHome} className="btn-cyan w-full max-w-[400px] py-4 sm:py-5 rounded-2xl text-lg sm:text-xl font-black bg-ai-cyan/20">立刻返回首頁</button>
+                                {/* 🚀 隱藏返回按鈕：已將公開按鈕移除，改為右下角隱密點擊區 */}
                             </div>
                         )}
 
                     </div>
 
-                    {/* Footer */}
-                    <div className="w-full flex justify-end px-4 opacity-50 text-xs font-mono text-ai-cyan tracking-widest">2026</div>
+                    {/* Footer - 🌟 隱藏重置按鈕：點擊「2026」即可強制跳回首頁 */}
+                    <div 
+                        onClick={handleCancelAndGoHome}
+                        className="w-full flex justify-end px-4 opacity-50 text-xs font-mono text-ai-cyan tracking-widest cursor-default select-none active:text-white transition-colors duration-150"
+                        title="工作人員專用跳轉"
+                    >
+                        2026
+                    </div>
                     <canvas ref={canvasRef} className="hidden"></canvas>
                 </div>
             );
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(App ? <App /> : null); // 🚀 防禦機制：確保 App 變數解析正常
+        root.render(<App />);
     </script>
 </body>
 </html>
