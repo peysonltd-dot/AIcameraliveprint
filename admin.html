@@ -3,484 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 BEST AI AWARDS | 後台控制台</title>
-    <!-- 保留 FontAwesome 作為輔助，但內建 CSS 已做好完全防禦 -->
+    <title>2026 BEST AI AWARDS | 後台極簡控制台</title>
+    <!-- 🌟 100% 還原您最喜愛、最漂亮的 Tailwind 科技霓虹黑客風格 -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;700;900&display=swap" rel="stylesheet">
     
     <style>
-        /* 🌟 100% 零外接依賴 - 現場斷網也絕對不跑版之純 CSS 架構 */
-        :root {
-            --ai-cyan: #00f2ff;
-            --ai-pink: #ff00d0;
-            --bg-color: #0b1329;
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --border-color: rgba(0, 242, 255, 0.15);
-            --text-color: #f1f5f9;
-            --emerald: #10b981;
-            --emerald-bg: rgba(16, 185, 129, 0.1);
-            --indigo: #6366f1;
-            --slate-400: #94a3b8;
-            --slate-500: #64748b;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background-color: var(--bg-color);
-            background-image: radial-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 0);
-            background-size: 24px 24px;
-            color: var(--text-color);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1280px;
-            margin: 0 auto;
-        }
-
-        /* Header 導航區 */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(0, 242, 255, 0.2);
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .header-title-group {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .status-dot {
-            width: 12px;
-            height: 12px;
-            background-color: var(--ai-cyan);
-            border-radius: 50%;
-            animation: ping 1.5s infinite;
-        }
-
-        @keyframes ping {
-            0% { transform: scale(0.8); opacity: 1; }
-            50% { transform: scale(1.2); opacity: 0.5; }
-            100% { transform: scale(0.8); opacity: 1; }
-        }
-
-        h1 {
-            font-size: 24px;
-            font-weight: 900;
-            letter-spacing: 1px;
-            color: #ffffff;
-        }
-
-        h1 span {
-            color: var(--ai-cyan);
-            font-family: 'Orbitron', sans-serif;
-            font-size: 16px;
-            margin-left: 8px;
-            font-weight: bold;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        /* 💡 精美霓虹按鈕樣式 */
-        .btn {
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.25s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border: 1px solid transparent;
-            color: #ffffff;
-        }
-
-        .btn-indigo {
-            background-color: var(--indigo);
-            border-color: rgba(99, 102, 241, 0.5);
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
-        }
-        .btn-indigo:hover {
-            background-color: #4f46e5;
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
-        }
-
-        .btn-emerald {
-            background-color: #065f46;
-            border-color: var(--emerald);
-            color: var(--emerald);
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
-        }
-
-        .btn-rose {
-            background-color: #991b1b;
-            border-color: #ef4444;
-            color: #fca5a5;
-        }
-
-        .btn-slate {
-            background-color: #1e293b;
-            color: #cbd5e1;
-            border-color: #334155;
-        }
-        .btn-slate:hover {
-            background-color: #334155;
-        }
-
-        .btn-cyan {
-            background-color: rgba(0, 242, 255, 0.1);
-            color: var(--ai-cyan);
-            border-color: var(--ai-cyan);
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
-        }
-        .btn-cyan:hover {
-            background-color: var(--ai-cyan);
-            color: #020617;
-            box-shadow: 0 0 25px var(--ai-cyan);
-        }
-
-        /* 任務卡片網格佈局 */
-        .tasks-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 24px;
-        }
-
-        .cyber-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 20px;
-            display: flex;
-            flex-direction: row;
-            gap: 24px;
-            transition: all 0.3s ease;
-        }
-
-        .cyber-card:hover {
-            border-color: var(--ai-cyan);
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.15);
-        }
-
-        /* 響應式四欄式寬度控制 */
-        .col-1 {
-            width: 140px;
-            flex-shrink: 0;
-            border-right: 1px solid rgba(255, 255, 255, 0.08);
-            padding-right: 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-
-        .col-2 {
-            width: 190px;
-            flex-shrink: 0;
-            border-right: 1px solid rgba(255, 255, 255, 0.08);
-            padding-right: 16px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .col-3 {
-            width: 190px;
-            flex-shrink: 0;
-            border-right: 1px solid rgba(255, 255, 255, 0.08);
-            padding-right: 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .col-4 {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            justify-content: center;
-        }
-
-        /* 第一欄：號碼與原照 */
-        .queue-label {
-            font-size: 10px;
-            color: var(--ai-cyan);
-            font-family: 'Orbitron', sans-serif;
-            letter-spacing: 2px;
-            font-weight: bold;
-        }
-
-        .queue-no {
-            font-size: 38px;
-            font-weight: 900;
-            color: #ffffff;
-            font-family: 'Orbitron', sans-serif;
-            text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
-            margin: 2px 0;
-        }
-
-        .timestamp {
-            font-size: 10px;
-            color: var(--slate-500);
-            font-family: monospace;
-        }
-
-        .thumbnail {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 12px;
-            border: 1px solid #334155;
-            margin-top: 6px;
-            background-color: #000;
-        }
-
-        .btn-mini {
-            width: 100%;
-            padding: 6px 12px;
-            font-size: 11px;
-            border-radius: 6px;
-            background-color: #1e293b;
-            color: var(--ai-cyan);
-            border: 1px solid rgba(0, 242, 255, 0.2);
-            cursor: pointer;
-            margin-top: 8px;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
-        .btn-mini:hover {
-            background-color: rgba(0, 242, 255, 0.1);
-        }
-
-        /* 第二欄：上傳區 */
-        .col-title {
-            font-size: 12px;
-            font-weight: bold;
-            color: #cbd5e1;
-            text-align: center;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        .style-upload-group {
-            display: flex;
-            gap: 12px;
-        }
-
-        .style-box {
-            flex: 1;
-            text-align: center;
-        }
-
-        .style-label {
-            font-size: 10px;
-            color: var(--slate-400);
-            margin-bottom: 6px;
-            display: block;
-            font-weight: bold;
-        }
-
-        .dashed-upload-btn {
-            width: 100%;
-            height: 56px;
-            border-radius: 8px;
-            border: 1.5px dashed rgba(0, 242, 255, 0.4);
-            background-color: #0f172a;
-            color: var(--ai-cyan);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-        .dashed-upload-btn.uploaded {
-            border-color: var(--emerald);
-            background-color: rgba(16, 185, 129, 0.05);
-            color: var(--emerald);
-        }
-        .dashed-upload-btn:hover {
-            background-color: #1e293b;
-        }
-
-        /* 下拉式選單與備註區 */
-        .input-label {
-            font-size: 10px;
-            font-weight: bold;
-            color: var(--slate-400);
-            display: block;
-            margin-bottom: 4px;
-        }
-
+        :root { --ai-cyan: #00f2ff; --ai-pink: #ff00d0; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #0b1329; background-image: radial-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 0); background-size: 24px 24px; }
+        .cyber-card { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(0, 242, 255, 0.15); transition: all 0.3s ease; }
+        .cyber-card:hover { border-color: var(--ai-cyan); box-shadow: 0 0 20px rgba(0, 242, 255, 0.15); }
+        .glow-text { text-shadow: 0 0 10px rgba(0, 242, 255, 0.5); }
         .cyber-select {
-            width: 100%;
-            background-color: #0f172a;
-            border: 1px solid #334155;
-            color: #cbd5e1;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: bold;
-            outline: none;
-            cursor: pointer;
+            background-color: #0f172a; border: 1px solid #334155; color: #f1f5f9;
+            font-weight: bold; padding: 0.35rem 0.5rem; border-radius: 0.5rem; outline: none;
         }
-        .cyber-select:focus {
-            border-color: var(--ai-cyan);
-        }
-
-        .cyber-textarea {
-            width: 100%;
-            height: 60px;
-            background-color: #0f172a;
-            border: 1px solid #334155;
-            color: #cbd5e1;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            resize: none;
-            outline: none;
-            line-height: 1.5;
-        }
-        .cyber-textarea:focus {
-            border-color: var(--ai-cyan);
-        }
-
-        /* 卡片底部操作 */
-        .card-footer-action {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            padding-top: 12px;
-            margin-top: 8px;
-        }
-
-        .btn-reprint {
-            padding: 6px 12px;
-            font-size: 11px;
-            font-weight: bold;
-            border-radius: 6px;
-            background-color: rgba(99, 102, 241, 0.1);
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            color: #a5b4fc;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-        }
-        .btn-reprint:hover {
-            background-color: rgba(99, 102, 241, 0.2);
-            border-color: var(--indigo);
-        }
-
-        /* 頂部通知橫幅 */
-        .banner-alert {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translate(-50%, -50px);
-            z-index: 100;
-            background: linear-gradient(to right, #06b6d4, #3b82f6);
-            color: #020617;
-            font-weight: 900;
-            padding: 14px 24px;
-            border-radius: 50px;
-            box-shadow: 0 0 35px rgba(0, 242, 255, 0.6);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 14px;
-            transition: all 0.5s ease;
-            opacity: 0;
-            pointer-events: none;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-        }
-        .banner-alert.show {
-            transform: translate(-50%, 0);
-            opacity: 1;
-        }
-
-        /* RWD 手機版自動重排 */
-        @media (max-width: 900px) {
-            .cyber-card {
-                flex-direction: column;
-                gap: 16px;
-            }
-            .col-1, .col-2, .col-3 {
-                width: 100%;
-                border-right: none;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-                padding-right: 0;
-                padding-bottom: 16px;
-                align-items: flex-start;
-                text-align: left;
-            }
-            .thumbnail {
-                margin-left: 0;
-            }
+        .cyber-select:focus, .cyber-textarea:focus {
+            border-color: var(--ai-cyan); box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
         }
     </style>
 </head>
-<body>
+<body class="text-slate-100 min-h-screen p-4 md:p-8">
 
-    <div class="container">
-        <!-- 頂部新預約提示 -->
-        <div id="new-order-banner" class="banner-alert">
-            <span>🔔 偵測到新預約！流水號已更新</span>
-        </div>
-
-        <!-- 隱藏的實體檔案上傳節點 -->
-        <input type="file" id="global-file-input-A" class="hidden" style="display:none;" accept="image/*" />
-        <input type="file" id="global-file-input-B" class="hidden" style="display:none;" accept="image/*" />
-
-        <header>
-            <div class="header-title-group">
-                <div class="status-dot"></div>
-                <h1>智慧創新大賞 <span>LITE CONTROL CORE</span></h1>
-            </div>
-            
-            <div class="btn-group">
-                <button id="printer-check-btn" onclick="checkPrinterStatus()" class="btn btn-indigo">
-                    🔌 <span id="printer-status-text">檢測出票機狀態</span>
-                </button>
-
-                <button id="sound-toggle" onclick="toggleSound()" class="btn btn-slate">
-                    🔇 <span id="sound-text">啟用音效提示</span>
-                </button>
-                
-                <button onclick="fetchAllTasks()" class="btn btn-cyan">
-                    🔄 重新整理數據
-                </button>
-            </div>
-        </header>
-
-        <main id="tasks-container" class="tasks-grid">
-            <!-- 動態資料將在此處渲染 -->
-        </main>
+    <!-- 新預約頂部閃爍提示橫幅 -->
+    <div id="new-order-banner" class="fixed top-4 left-1/2 transform -translate-x-1/2 -translate-y-10 z-50 bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-black px-6 py-3.5 rounded-full shadow-[0_0_35px_rgba(0,242,255,0.6)] flex items-center gap-2.5 text-sm border-2 border-white/20 transition-all duration-500 opacity-0 pointer-events-none">
+        <i class="fa-solid fa-bell animate-bounce text-lg"></i>
+        <span>偵測到新預約！流水號已更新</span>
     </div>
+
+    <!-- 全局常駐雙圖實體檔案選擇器 -->
+    <input type="file" id="global-file-input-A" class="hidden" accept="image/*" />
+    <input type="file" id="global-file-input-B" class="hidden" accept="image/*" />
+
+    <header class="max-w-7xl mx-auto mb-8 flex flex-col sm:flex-row justify-between items-center border-b border-cyan-500/20 pb-4 gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-3 h-3 rounded-full bg-cyan-400 animate-ping"></div>
+            <h1 class="text-2xl font-black tracking-wider text-white">智慧創新大賞 <span class="text-cyan-400 font-mono text-lg">LITE CONTROL CORE</span></h1>
+        </div>
+        
+        <!-- 右側按鈕控制區 -->
+        <div class="flex flex-wrap items-center gap-3">
+            <!-- 🔌 雲端出票機實時狀態檢測（直接連線飛鵝雲端） -->
+            <button id="printer-check-btn" onclick="checkPrinterStatus()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2 border border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
+                <i class="fa-solid fa-print"></i> <span id="printer-status-text">檢測出票機狀態</span>
+            </button>
+
+            <!-- Web Audio API 純內建防斷線「叮咚」音效提示 -->
+            <button id="sound-toggle" onclick="toggleSound()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-slate-700 transition-all">
+                <i id="sound-icon" class="fa-solid fa-volume-xmark text-rose-500"></i> <span id="sound-text">啟用音效提示</span>
+            </button>
+            <button onclick="fetchAllTasks()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2 shadow-[0_0_15px_rgba(0,242,255,0.3)]">
+                <i class="fa-solid fa-arrows-rotate"></i> 重新整理數據
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto">
+        <div id="tasks-container" class="grid grid-cols-1 gap-6 transition-all duration-500"></div>
+    </main>
 
     <script>
         const API_BASE_URL = "https://aicameraliveprint-back.onrender.com";
@@ -488,7 +69,6 @@
         let currentUploadTaskId = null;
         let soundEnabled = false;
 
-        // Web Audio API 本地音效合成器 (100% 斷網也響得出來的叮咚聲)
         function playDingDong() {
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -525,23 +105,27 @@
 
         function toggleSound() {
             soundEnabled = !soundEnabled;
+            const icon = document.getElementById('sound-icon');
             const text = document.getElementById('sound-text');
             const btn = document.getElementById('sound-toggle');
             
             if (soundEnabled) {
+                icon.className = "fa-solid fa-volume-high text-cyan-400";
                 text.innerText = "音效提示：已啟用";
-                btn.className = "btn btn-cyan";
+                btn.className = "bg-cyan-950/40 hover:bg-cyan-950/60 text-cyan-400 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-cyan-400/50 shadow-[0_0_15px_rgba(0,242,255,0.2)]";
                 playDingDong();
             } else {
+                icon.className = "fa-solid fa-volume-xmark text-rose-500";
                 text.innerText = "音效提示：已停用";
-                btn.className = "btn btn-slate";
+                btn.className = "bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-slate-700";
             }
         }
 
-        // 🔌 查詢飛鵝雲端印表機狀態
+        // 🔌 實時向後端查詢飛鵝雲端印表機狀態
         async function checkPrinterStatus() {
             const btn = document.getElementById('printer-check-btn');
             const text = document.getElementById('printer-status-text');
+            const icon = btn.querySelector('i');
             
             text.innerText = "正在聯絡飛鵝雲端...";
             btn.disabled = true;
@@ -553,24 +137,30 @@
                     const statusText = data.data.data; 
                     text.innerText = `狀態：${statusText}`;
                     
+                    // 🌟 只有在顯示「在线」時才顯示綠色；離線或異常時顯示醒目紅色
                     if (statusText.includes("在线")) {
-                        btn.className = "btn btn-emerald";
+                        btn.className = "bg-emerald-950/40 text-emerald-400 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-emerald-400/50 shadow-[0_0_15px_rgba(16,185,129,0.25)]";
+                        icon.className = "fa-solid fa-circle-check";
                     } else {
-                        btn.className = "btn btn-rose";
+                        btn.className = "bg-rose-950/40 text-rose-400 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-rose-400/50 shadow-[0_0_15px_rgba(244,63,94,0.25)]";
+                        icon.className = "fa-solid fa-triangle-exclamation";
                     }
                 } else {
                     text.innerText = `連線錯誤 (請檢查 API 金鑰)`;
-                    btn.className = "btn btn-rose";
+                    btn.className = "bg-rose-950/40 text-rose-400 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-rose-400/50";
+                    icon.className = "fa-solid fa-circle-xmark";
                 }
             } catch (err) {
                 text.innerText = "無法聯絡 Render 後端";
-                btn.className = "btn btn-rose";
+                btn.className = "bg-rose-950/40 text-rose-400 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-rose-400/50";
+                icon.className = "fa-solid fa-circle-xmark";
             }
             
             setTimeout(() => {
                 btn.disabled = false;
                 text.innerText = "檢測出票機狀態";
-                btn.className = "btn btn-indigo";
+                btn.className = "bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2 border border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.2)]";
+                icon.className = "fa-solid fa-print";
             }, 4000);
         }
 
@@ -580,9 +170,20 @@
             }
             const banner = document.getElementById('new-order-banner');
             if (banner) {
-                banner.classList.add('show');
+                banner.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-10');
+                banner.classList.add('opacity-100', 'translate-y-0');
+
+                const container = document.getElementById('tasks-container');
+                if (container) {
+                    container.classList.add('ring-4', 'ring-cyan-400/30', 'ring-offset-2', 'ring-offset-[#0b1329]');
+                    setTimeout(() => {
+                        container.classList.remove('ring-4', 'ring-cyan-400/30', 'ring-offset-2', 'ring-offset-[#0b1329]');
+                    }, 1500);
+                }
+
                 setTimeout(() => {
-                    banner.classList.remove('show');
+                    banner.classList.remove('opacity-100', 'translate-y-0');
+                    banner.classList.add('opacity-0', 'pointer-events-none', '-translate-y-10');
                 }, 3500);
             }
         }
@@ -633,7 +234,7 @@
             document.getElementById(`global-file-input-${type}`).addEventListener('change', async function() {
                 const taskId = currentUploadTaskId; if (!taskId || !this.files[0]) return;
                 
-                document.getElementById(`upload-status-${type}-${taskId}`).innerHTML = `⏳`;
+                document.getElementById(`upload-status-${type}-${taskId}`).innerHTML = `<i class="fa-solid fa-spinner animate-spin text-cyan-400"></i>`;
                 
                 const reader = new FileReader();
                 reader.onload = async (e) => {
@@ -652,11 +253,12 @@
             });
         });
 
+        // 重新補印：呼叫後端 API 驅動飛鵝雲端重新出票列印
         async function reprintTicket(taskId, btnId) {
             const btn = document.getElementById(btnId);
             const originalHtml = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = `⏳ 出票中...`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> 出票中...`;
             
             try {
                 const res = await fetch(`${API_BASE_URL}/api/admin/reprint/${taskId}`, {
@@ -664,10 +266,8 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    btn.innerHTML = `✅ 已出單`;
-                    btn.style.backgroundColor = "rgba(16, 185, 129, 0.15)";
-                    btn.style.borderColor = "var(--emerald)";
-                    btn.style.color = "var(--emerald)";
+                    btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> 已出單`;
+                    btn.className = "bg-emerald-950/40 border border-emerald-500/50 text-emerald-300 font-bold px-2 py-1.5 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1";
                 } else {
                     alert("補印失敗：" + (data.error || "請確認出票機 WiFi 與 Render 環境變數是否正確！"));
                     btn.innerHTML = originalHtml;
@@ -679,10 +279,8 @@
             } finally {
                 setTimeout(() => {
                     btn.disabled = false;
-                    btn.innerHTML = `🖨️ 重新出票`;
-                    btn.style.backgroundColor = "rgba(99, 102, 241, 0.1)";
-                    btn.style.borderColor = "rgba(99, 102, 241, 0.3)";
-                    btn.style.color = "#a5b4fc";
+                    btn.innerHTML = `<i class="fa-solid fa-print text-indigo-400"></i> 重新出票`;
+                    btn.className = "bg-indigo-950/40 hover:bg-indigo-900 border border-indigo-500/50 text-indigo-300 font-bold px-2 py-1.5 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1";
                 }, 3000);
             }
         }
@@ -725,7 +323,7 @@
 
             const container = document.getElementById('tasks-container');
             if (tasks.length === 0) { 
-                container.innerHTML = `<div style="text-align:center; padding: 48px; color: var(--slate-500); border: 2px dashed #1e293b; border-radius: 16px;">尚無排隊訂單</div>`; 
+                container.innerHTML = `<div class="text-center py-12 text-slate-500 border border-dashed border-slate-800 rounded-2xl w-full">尚無排隊訂單</div>`; 
                 return; 
             }
 
@@ -734,81 +332,95 @@
                 const currentRemark = task.remark || '';
 
                 const userChoiceHtml = task.chosenDesign 
-                    ? `<span style="background-color: var(--emerald-bg); color: var(--emerald); border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 8px; border-radius: 4px; font-weight: 900; font-size: 12px;">✅ 已確認：[ 風格 ${task.chosenDesign} 款 ]</span>`
-                    : `<span style="color: #fbbf24; font-weight: bold; font-size: 12px;">⏳ 客人二選一中...</span>`;
+                    ? `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded font-black text-xs"><i class="fa-solid fa-circle-check"></i> 已確認：[ ${task.chosenDesign} 款 ]</span>`
+                    : `<span class="text-amber-400 font-bold animate-pulse text-xs"><i class="fa-solid fa-hourglass-start"></i> ⏳ 客人二選一中...</span>`;
 
-                const finalResultHtml = task.chosenDesign ? `
-                    <span style="font-size: 10px; font-weight: bold; color: var(--emerald); margin-bottom: 4px; text-align: center; width: 100%; display: block;">🏆 客人已選: ${task.chosenDesign} 款</span>
-                    <img src="${task.chosenDesign === 'A' ? task.resultImageA : task.resultImageB}" class="thumbnail" style="margin-top: 0; width: 100px; height: 100px;" />
-                    <button onclick="downloadResultImage('${task.id}', '${task.chosenDesign}')" class="btn-mini">
-                        📥 下載雷雕圖
-                    </button>
-                ` : `
-                    <span style="font-size: 10px; font-weight: bold; color: #fbbf24; text-align: center; width: 100%; display: block;">⏳ 等待選擇</span>
-                    <div style="width: 80px; height: 80px; border-radius: 12px; border: 2px dashed #334155; display: flex; align-items: center; justify-content: center; color: #334155; font-size: 24px; margin: 0 auto;">
-                        🖼️
+                // 🌟 當選擇存在且圖片存在時才渲染。若圖片剛上傳寫入中，會給予精美 Loading 效果防斷圖
+                const chosenImgSrc = task.chosenDesign === 'A' ? task.resultImageA : task.resultImageB;
+                const finalResultHtml = task.chosenDesign ? (
+                    chosenImgSrc ? `
+                        <span class="text-[10px] font-bold text-emerald-400 mb-1 text-center w-full block font-sans">🏆 客人已選: ${task.chosenDesign} 款</span>
+                        <img src="${chosenImgSrc}" class="w-24 h-24 object-cover rounded-xl border-2 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.25)] mx-auto" />
+                        <button onclick="downloadResultImage('${task.id}', '${task.chosenDesign}')" class="w-full mt-2 bg-emerald-900/60 hover:bg-emerald-800 text-emerald-400 font-bold py-1.5 px-2 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1 border border-emerald-500/50">
+                            <i class="fa-solid fa-download"></i> 下載雷雕圖
+                        </button>
+                    ` : `
+                        <span class="text-[10px] font-bold text-emerald-400 mb-1 text-center w-full block font-sans">🏆 客人已選: ${task.chosenDesign} 款</span>
+                        <div class="w-24 h-24 rounded-xl border-2 border-dashed border-emerald-500 flex flex-col items-center justify-center text-emerald-400 mx-auto bg-emerald-950/20">
+                            <i class="fa-solid fa-circle-notch animate-spin text-xl mb-1"></i>
+                            <span class="text-[9px]">同步中...</span>
+                        </div>
+                    `
+                ) : `
+                    <span class="text-[10px] font-bold text-amber-400 animate-pulse text-center w-full block mb-1 font-sans"><i class="fa-solid fa-hourglass-half"></i> 等待選擇</span>
+                    <div class="w-24 h-24 rounded-xl border-2 border-dashed border-slate-600 flex items-center justify-center text-slate-600 mx-auto">
+                        <i class="fa-solid fa-image text-2xl"></i>
                     </div>
                 `;
 
                 return `
-                <div class="cyber-card">
+                <div class="cyber-card p-4 md:p-5 rounded-2xl flex flex-col md:flex-row gap-6 items-stretch relative overflow-hidden">
                     
                     <!-- 1. 號碼與原圖區 -->
-                    <div class="col-1">
-                        <span class="queue-label">QUEUE NO</span>
-                        <span class="queue-no">#${task.id}</span>
-                        <div class="timestamp">${task.createdAt || '--:--'}</div>
-                        <img src="${task.sourceImage}" class="thumbnail" />
-                        <button onclick="downloadSourceImage('${task.id}')" class="btn-mini">
-                            📥 下載原照
-                        </button>
+                    <div class="flex flex-col items-center gap-2 w-full md:w-32 flex-shrink-0 md:border-r border-slate-700/50 md:pr-4">
+                        <div class="text-center w-full">
+                            <span class="text-[10px] font-mono tracking-widest text-cyan-400 block font-bold">QUEUE NO</span>
+                            <span class="text-4xl font-black text-white font-mono glow-text">#${task.id}</span>
+                            <div class="text-[9px] text-slate-500 font-mono mt-1">${task.createdAt || '--:--'}</div>
+                        </div>
+                        <div class="text-center relative w-full mt-1">
+                            <img src="${task.sourceImage}" class="w-20 h-20 mx-auto object-cover rounded-xl border border-slate-700 bg-black shadow-inner" />
+                            <button onclick="downloadSourceImage('${task.id}')" class="w-full mt-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold py-1.5 px-2 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-download"></i> 下載原照
+                            </button>
+                        </div>
                     </div>
 
                     <!-- 2. 上傳風格區 -->
-                    <div class="col-2">
-                        <span class="col-title">🎨 上傳 AI 風格圖</span>
-                        <div class="style-upload-group">
-                            <div class="style-box">
-                                <span class="style-label">A 款</span>
-                                <button onclick="triggerDualUpload('${task.id}', 'A')" id="upload-status-A-${task.id}" class="dashed-upload-btn ${task.resultImageA ? 'uploaded' : ''}">
-                                    ${task.resultImageA ? `✅` : `＋`}
+                    <div class="flex flex-col gap-2 w-full md:w-40 flex-shrink-0 md:border-r border-slate-700/50 md:pr-4 justify-center">
+                        <span class="text-[11px] font-bold text-slate-300 text-center mb-1"><i class="fa-solid fa-upload text-cyan-400 mr-1"></i> 上傳 AI 風格圖</span>
+                        <div class="flex gap-3 justify-center">
+                            <div class="text-center w-full">
+                                <span class="text-[9px] block text-slate-400 mb-1 font-bold">A 款</span>
+                                <button onclick="triggerDualUpload('${task.id}', 'A')" id="upload-status-A-${task.id}" class="w-full h-14 rounded-lg border border-dashed ${task.resultImageA ? 'border-emerald-500 bg-emerald-950/20' : 'border-cyan-500/40 bg-slate-900'} flex items-center justify-center text-[11px] cursor-pointer hover:bg-slate-800 transition-colors">
+                                    ${task.resultImageA ? `<i class="fa-solid fa-check text-emerald-400 text-xl"></i>` : `<i class="fa-solid fa-plus text-cyan-400"></i>`}
                                 </button>
                             </div>
-                            <div class="style-box">
-                                <span class="style-label">B 款</span>
-                                <button onclick="triggerDualUpload('${task.id}', 'B')" id="upload-status-B-${task.id}" class="dashed-upload-btn ${task.resultImageB ? 'uploaded' : ''}">
-                                    ${task.resultImageB ? `✅` : `＋`}
+                            <div class="text-center w-full">
+                                <span class="text-[9px] block text-slate-400 mb-1 font-bold">B 款</span>
+                                <button onclick="triggerDualUpload('${task.id}', 'B')" id="upload-status-B-${task.id}" class="w-full h-14 rounded-lg border border-dashed ${task.resultImageB ? 'border-emerald-500 bg-emerald-950/20' : 'border-cyan-500/40 bg-slate-900'} flex items-center justify-center text-[11px] cursor-pointer hover:bg-slate-800 transition-colors">
+                                    ${task.resultImageB ? `<i class="fa-solid fa-check text-emerald-400 text-xl"></i>` : `<i class="fa-solid fa-plus text-cyan-400"></i>`}
                                 </button>
                             </div>
                         </div>
                     </div>
 
                     <!-- 3. 客人選擇結果區 -->
-                    <div class="col-3">
+                    <div class="flex flex-col gap-1 w-full md:w-40 flex-shrink-0 md:border-r border-slate-700/50 md:pr-4 justify-center items-center">
                         ${finalResultHtml}
                     </div>
 
-                    <!-- 4. 狀態控制與備註區 -->
-                    <div class="col-4">
+                    <!-- 4. 狀態控制、備註與重新補印區 -->
+                    <div class="flex-grow flex flex-col gap-3 min-w-[200px] justify-center">
                         <div>
-                            <span class="input-label">任務進度狀態</span>
-                            <select onchange="updateTaskMeta('${task.id}', 'processStatus', this.value)" class="cyber-select">
+                            <label class="text-[10px] font-bold text-slate-400 block mb-1">任務進度狀態</label>
+                            <select onchange="updateTaskMeta('${task.id}', 'processStatus', this.value)" class="cyber-select w-full bg-slate-900 border border-slate-700 text-sm text-slate-200">
                                 <option value="製作中" ${currentStatus === '製作中' ? 'selected' : ''}>⏳ 製作中</option>
                                 <option value="已完成" ${currentStatus === '已完成' ? 'selected' : ''}>✅ 已完成</option>
                                 <option value="已取消" ${currentStatus === '已取消' ? 'selected' : ''}>❌ 已取消</option>
                             </select>
                         </div>
-                        <div>
-                            <span class="input-label">任務備註事項</span>
-                            <textarea onchange="updateTaskMeta('${task.id}', 'remark', this.value)" placeholder="點此輸入備註 (輸入完點擊旁邊即可自動儲存)..." class="cyber-textarea">${currentRemark}</textarea>
+                        <div class="flex-grow flex flex-col">
+                            <label class="text-[10px] font-bold text-slate-400 block mb-1">任務備註事項</label>
+                            <textarea onchange="updateTaskMeta('${task.id}', 'remark', this.value)" placeholder="點此輸入備註 (輸入完點擊旁邊即可自動儲存)..." class="cyber-textarea w-full flex-grow min-h-[60px] bg-slate-900 text-slate-200 p-2.5 rounded-lg border border-slate-700 text-xs resize-none transition-all leading-relaxed">${currentRemark}</textarea>
                         </div>
                         
                         <!-- 重新出票按鈕與狀態欄整合 -->
-                        <div class="card-footer-action">
-                            <button id="reprint-btn-${task.id}" onclick="reprintTicket('${task.id}', 'reprint-btn-${task.id}')" class="btn-reprint">
-                                🖨️ 重新出票
+                        <div class="mt-2 flex items-center justify-between border-t border-slate-800 pt-2.5 gap-2">
+                            <button id="reprint-btn-${task.id}" onclick="reprintTicket('${task.id}', 'reprint-btn-${task.id}')" class="bg-indigo-950/40 hover:bg-indigo-900 border border-indigo-500/50 text-indigo-300 font-bold px-2 py-1.5 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-print text-indigo-400"></i> 重新出票
                             </button>
-                            <div>${userChoiceHtml}</div>
+                            <div class="text-xs text-right">${userChoiceHtml}</div>
                         </div>
                     </div>
                 </div>
