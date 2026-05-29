@@ -25,7 +25,7 @@
 </head>
 <body class="text-slate-100 min-h-screen p-4 md:p-8">
 
-    <!-- 🌟 新增：新預約頂部閃爍提示橫幅 -->
+    <!-- 新預約頂部閃爍提示橫幅 -->
     <div id="new-order-banner" class="fixed top-4 left-1/2 transform -translate-x-1/2 -translate-y-10 z-50 bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-black px-6 py-3.5 rounded-full shadow-[0_0_35px_rgba(0,242,255,0.6)] flex items-center gap-2.5 text-sm border-2 border-white/20 transition-all duration-500 opacity-0 pointer-events-none">
         <i class="fa-solid fa-bell animate-bounce text-lg"></i>
         <span>偵測到新預約！流水號已更新</span>
@@ -41,8 +41,14 @@
             <h1 class="text-2xl font-black tracking-wider text-white">智慧創新大賞 <span class="text-cyan-400 font-mono text-lg">LITE CONTROL CORE</span></h1>
         </div>
         
-        <!-- 🌟 右側按鈕控制區：新增「音效啟動/解鎖」開關 -->
-        <div class="flex items-center gap-3">
+        <!-- 右側按鈕控制區 -->
+        <div class="flex flex-wrap items-center gap-3">
+            <!-- 🔌 雲端出票機實時狀態檢測（直接連線飛鵝雲端） -->
+            <button id="printer-check-btn" onclick="checkPrinterStatus()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2 border border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
+                <i class="fa-solid fa-print"></i> <span id="printer-status-text">檢測出票機狀態</span>
+            </button>
+
+            <!-- Web Audio API 純內建防斷線「叮咚」音效提示 -->
             <button id="sound-toggle" onclick="toggleSound()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-slate-700 transition-all">
                 <i id="sound-icon" class="fa-solid fa-volume-xmark text-rose-500"></i> <span id="sound-text">啟用音效提示</span>
             </button>
@@ -60,16 +66,15 @@
         const API_BASE_URL = "https://aicameraliveprint-back.onrender.com";
         let localTasksCache = {};
         let currentUploadTaskId = null;
-        let soundEnabled = false; // 音效預設關閉 (遵循瀏覽器安全性規範)
+        let soundEnabled = false;
 
-        // 🌟 1. Web Audio API：精準合成「叮咚」二重奏聲音 (完全不需載入任何 .mp3 外部資源，0 延遲且保證不當機)
+        // Web Audio API 實時音效合成器 (免 mp3 檔案加載)
         function playDingDong() {
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 if (!AudioContext) return;
                 const ctx = new AudioContext();
                 
-                // 第一音「Ding」：高頻、清脆 (A5 階音)
                 const osc1 = ctx.createOscillator();
                 const gain1 = ctx.createGain();
                 osc1.type = 'sine';
@@ -81,7 +86,6 @@
                 osc1.start();
                 osc1.stop(ctx.currentTime + 0.8);
 
-                // 第二音「Dong」：延時 0.22 秒、中低頻、厚實 (F5 階音)
                 const delay = 0.22;
                 const osc2 = ctx.createOscillator();
                 const gain2 = ctx.createGain();
@@ -99,7 +103,6 @@
             }
         }
 
-        // 🌟 2. 音效提示開啟與解鎖 (點擊時自動解鎖 AudioContext)
         function toggleSound() {
             soundEnabled = !soundEnabled;
             const icon = document.getElementById('sound-icon');
@@ -110,7 +113,6 @@
                 icon.className = "fa-solid fa-volume-high text-cyan-400";
                 text.innerText = "音效提示：已啟用";
                 btn.className = "bg-cyan-950/40 hover:bg-cyan-950/60 text-cyan-400 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-cyan-400/50 shadow-[0_0_15px_rgba(0,242,255,0.2)]";
-                // 順便發出一次測試音效，用以向瀏覽器登記音效授權
                 playDingDong();
             } else {
                 icon.className = "fa-solid fa-volume-xmark text-rose-500";
@@ -119,20 +121,52 @@
             }
         }
 
-        // 🌟 3. 觸發新單聲光雙重提醒
+        // 🔌 實時向後端查詢飛鵝雲端印表機狀態
+        async function checkPrinterStatus() {
+            const btn = document.getElementById('printer-check-btn');
+            const text = document.getElementById('printer-status-text');
+            const icon = btn.querySelector('i');
+            
+            text.innerText = "正在聯絡飛鵝雲端...";
+            btn.disabled = true;
+            
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/admin/printer-status`);
+                const data = await res.json();
+                if (data.success && data.data) {
+                    const statusText = data.data.data; // 返回例如 "在线，工作状态正常"
+                    text.innerText = `狀態：${statusText}`;
+                    btn.className = "bg-emerald-950/40 text-emerald-400 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-emerald-400/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]";
+                    icon.className = "fa-solid fa-circle-check";
+                } else {
+                    text.innerText = `連線錯誤 (請檢查 API 金鑰)`;
+                    btn.className = "bg-rose-950/40 text-rose-400 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-rose-400/50";
+                    icon.className = "fa-solid fa-circle-xmark";
+                }
+            } catch (err) {
+                text.innerText = "無法聯絡 Render 後端";
+                btn.className = "bg-rose-950/40 text-rose-400 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-rose-400/50";
+                icon.className = "fa-solid fa-circle-xmark";
+            }
+            
+            // 4秒後恢復檢測按鈕預設樣式
+            setTimeout(() => {
+                btn.disabled = false;
+                text.innerText = "檢測出票機狀態";
+                btn.className = "bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2 border border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.2)]";
+                icon.className = "fa-solid fa-print";
+            }, 4000);
+        }
+
         function triggerNewOrderAlert() {
-            // A. 音效叮咚聲
             if (soundEnabled) {
                 playDingDong();
             }
-
-            // B. 彈出頂部提示橫幅並發光
             const banner = document.getElementById('new-order-banner');
             if (banner) {
                 banner.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-10');
                 banner.classList.add('opacity-100', 'translate-y-0');
 
-                // 讓卡片容器整體閃爍一下呼吸光圈
                 const container = document.getElementById('tasks-container');
                 if (container) {
                     container.classList.add('ring-4', 'ring-cyan-400/30', 'ring-offset-2', 'ring-offset-[#0b1329]');
@@ -141,7 +175,6 @@
                     }, 1500);
                 }
 
-                // 3.5秒後自動隱藏橫幅
                 setTimeout(() => {
                     banner.classList.remove('opacity-100', 'translate-y-0');
                     banner.classList.add('opacity-0', 'pointer-events-none', '-translate-y-10');
@@ -214,7 +247,40 @@
             });
         });
 
-        // 🌟 4. 修改後的資料輪詢：智慧比對新 ID 並觸發通知
+        // 🌟 重新補印：呼叫後端 API 驅動飛鵝雲端重新出票列印
+        async function reprintTicket(taskId, btnId) {
+            const btn = document.getElementById(btnId);
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> 出票中...`;
+            
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/admin/reprint/${taskId}`, {
+                    method: 'POST'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> 已出單`;
+                    btn.className = "bg-emerald-950/40 border border-emerald-500/50 text-emerald-300 font-bold px-2 py-1.5 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1";
+                } else {
+                    alert("補印失敗：" + (data.error || "請確認出票機 WiFi 與 Render 環境變數是否正確！"));
+                    btn.innerHTML = originalHtml;
+                    btn.className = "bg-indigo-950/40 hover:bg-indigo-900 border border-indigo-500/50 text-indigo-300 font-bold px-2 py-1.5 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1";
+                }
+            } catch (err) {
+                console.error("補印連線錯誤:", err);
+                alert("連線後端伺服器失敗，請檢查網路！");
+                btn.innerHTML = originalHtml;
+                btn.className = "bg-indigo-950/40 hover:bg-indigo-900 border border-indigo-500/50 text-indigo-300 font-bold px-2 py-1.5 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1";
+            } finally {
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="fa-solid fa-print text-indigo-400"></i> 重新出票`;
+                    btn.className = "bg-indigo-950/40 hover:bg-indigo-900 border border-indigo-500/50 text-indigo-300 font-bold px-2 py-1.5 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1";
+                }, 3000);
+            }
+        }
+
         async function fetchAllTasks() {
             try {
                 const res = await fetch(`${API_BASE_URL}/api/admin/all-tasks`);
@@ -223,7 +289,6 @@
                     let hasNewOrder = false;
 
                     data.tasks.forEach(t => { 
-                        // 智慧判斷：如果快取中沒有此 ID 且不是網頁開機的第一次加載，視為「全新預約訂單」！
                         if (!localTasksCache[t.id]) {
                             if (Object.keys(localTasksCache).length > 0) {
                                 hasNewOrder = true;
@@ -237,10 +302,8 @@
                         localTasksCache[t.id] = t; 
                     });
 
-                    // 重新渲染卡片
                     renderTasks(Object.values(localTasksCache).sort((a, b) => b.id.localeCompare(a.id)));
                     
-                    // 如果有新預約，觸發聲光特效
                     if (hasNewOrder) {
                         triggerNewOrderAlert();
                     }
@@ -263,6 +326,10 @@
             container.innerHTML = tasks.map(task => {
                 const currentStatus = task.processStatus || '製作中';
                 const currentRemark = task.remark || '';
+
+                const userChoiceHtml = task.chosenDesign 
+                    ? `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded font-black text-xs"><i class="fa-solid fa-circle-check"></i> 已確認：[ ${task.chosenDesign} 款 ]</span>`
+                    : `<span class="text-amber-400 font-bold animate-pulse text-xs"><i class="fa-solid fa-hourglass-start"></i> ⏳ 客人二選一中...</span>`;
 
                 const finalResultHtml = task.chosenDesign ? `
                     <span class="text-[10px] font-bold text-emerald-400 mb-1 text-center w-full block font-sans">🏆 客人已選: ${task.chosenDesign} 款</span>
@@ -319,7 +386,7 @@
                         ${finalResultHtml}
                     </div>
 
-                    <!-- 4. 狀態控制與備註區 -->
+                    <!-- 4. 狀態控制、備註與重新補印區 -->
                     <div class="flex-grow flex flex-col gap-3 min-w-[200px] justify-center">
                         <div>
                             <label class="text-[10px] font-bold text-slate-400 block mb-1">任務進度狀態</label>
@@ -333,13 +400,20 @@
                             <label class="text-[10px] font-bold text-slate-400 block mb-1">任務備註事項</label>
                             <textarea onchange="updateTaskMeta('${task.id}', 'remark', this.value)" placeholder="點此輸入備註 (輸入完點擊旁邊即可自動儲存)..." class="cyber-textarea w-full flex-grow min-h-[60px] bg-slate-900 text-slate-200 p-2.5 rounded-lg border border-slate-700 text-xs resize-none transition-all leading-relaxed">${currentRemark}</textarea>
                         </div>
+                        
+                        <!-- 重新出票按鈕與狀態欄整合 -->
+                        <div class="mt-2 flex items-center justify-between border-t border-slate-800 pt-2.5 gap-2">
+                            <button id="reprint-btn-${task.id}" onclick="reprintTicket('${task.id}', 'reprint-btn-${task.id}')" class="bg-indigo-950/40 hover:bg-indigo-900 border border-indigo-500/50 text-indigo-300 font-bold px-2 py-1.5 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-print text-indigo-400"></i> 重新出票
+                            </button>
+                            <div class="text-xs text-right">${userChoiceHtml}</div>
+                        </div>
                     </div>
                 </div>
                 `;
             }).join('');
         }
 
-        // 啟動定時輪詢
         fetchAllTasks();
         setInterval(fetchAllTasks, 3200);
     </script>
