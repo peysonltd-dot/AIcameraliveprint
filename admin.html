@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2026 BEST AI AWARDS | 後台極簡控制台</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;700;900&display=swap" rel="stylesheet">
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css)">
+    <link href="[https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;700;900&display=swap](https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;700;900&display=swap)" rel="stylesheet">
     
     <style>
         :root { --ai-cyan: #00f2ff; --ai-pink: #ff00d0; }
@@ -63,7 +63,7 @@
     </main>
 
     <script>
-        const API_BASE_URL = "https://aicameraliveprint-back.onrender.com";
+        const API_BASE_URL = "[https://aicameraliveprint-back.onrender.com](https://aicameraliveprint-back.onrender.com)";
         let localTasksCache = {};
         let currentUploadTaskId = null;
         let soundEnabled = false;
@@ -133,10 +133,17 @@
                 const res = await fetch(`${API_BASE_URL}/api/admin/printer-status`);
                 const data = await res.json();
                 if (data.success && data.data) {
-                    const statusText = data.data.data; 
+                    const statusText = data.data.data; // 返回例如 "在线，工作状态正常"、"离线。" 等
                     text.innerText = `狀態：${statusText}`;
-                    btn.className = "bg-emerald-950/40 text-emerald-400 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-emerald-400/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]";
-                    icon.className = "fa-solid fa-circle-check";
+                    
+                    // 🌟 修正：只有當狀態真正包含「在线」時才顯示綠色；「离线」或「異常」時顯示醒目紅色警告
+                    if (statusText.includes("在线")) {
+                        btn.className = "bg-emerald-950/40 text-emerald-400 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-emerald-400/50 shadow-[0_0_15px_rgba(16,185,129,0.25)]";
+                        icon.className = "fa-solid fa-circle-check";
+                    } else {
+                        btn.className = "bg-rose-950/40 text-rose-400 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-rose-400/50 shadow-[0_0_15px_rgba(244,63,94,0.25)]";
+                        icon.className = "fa-solid fa-triangle-exclamation";
+                    }
                 } else {
                     text.innerText = `連線錯誤 (請檢查 API 金鑰)`;
                     btn.className = "bg-rose-950/40 text-rose-400 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-rose-400/50";
