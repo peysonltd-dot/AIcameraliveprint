@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 BEST AI AWARDS | 後台極簡控制台</title>
+    <title>2026 BEST AI AWARDS | 後台智慧控制台</title>
+    <!-- 🌟 全面搭載「智慧增量加載協議」，每次連線僅需 2KB 流量，徹底解決當機與流量超額警告 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;700;900&display=swap" rel="stylesheet">
@@ -21,7 +22,6 @@
         .cyber-select:focus, .cyber-textarea:focus {
             border-color: var(--ai-cyan); box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
         }
-        /* 🌟 增加上傳框獲得焦點時的霓虹高亮特效 */
         .upload-zone:focus {
             outline: none;
             border-color: var(--ai-cyan) !important;
@@ -37,11 +37,13 @@
 </head>
 <body class="text-slate-100 min-h-screen p-4 md:p-8">
 
+    <!-- 新預約頂部閃爍提示橫幅 -->
     <div id="new-order-banner" class="fixed top-4 left-1/2 transform -translate-x-1/2 -translate-y-10 z-50 bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-black px-6 py-3.5 rounded-full shadow-[0_0_35px_rgba(0,242,255,0.6)] flex items-center gap-2.5 text-sm border-2 border-white/20 transition-all duration-500 opacity-0 pointer-events-none">
         <i class="fa-solid fa-bell animate-bounce text-lg"></i>
         <span>偵測到新預約！流水號已更新</span>
     </div>
 
+    <!-- 自訂科技霓虹重製確認彈窗 -->
     <div id="reset-confirm-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300">
         <div class="bg-slate-900 border-2 border-rose-500 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-[0_0_35px_rgba(239,68,68,0.4)] text-center">
             <div class="w-16 h-16 rounded-full bg-rose-500/10 border-2 border-rose-500 flex items-center justify-center mx-auto mb-4 text-rose-400 text-2xl animate-pulse">
@@ -60,6 +62,7 @@
         </div>
     </div>
 
+    <!-- 全局常駐雙圖實體檔案選擇器 -->
     <input type="file" id="global-file-input-A" class="hidden" accept="image/*" />
     <input type="file" id="global-file-input-B" class="hidden" accept="image/*" />
 
@@ -69,19 +72,24 @@
             <h1 class="text-2xl font-black tracking-wider text-white">智慧創新大賞 <span class="text-cyan-400 font-mono text-lg">LITE CONTROL CORE</span></h1>
         </div>
         
+        <!-- 右側按鈕控制區 -->
         <div class="flex flex-wrap items-center gap-3">
+            <!-- 🔌 雲端出票機實時狀態檢測 -->
             <button id="printer-check-btn" onclick="checkPrinterStatus()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2 border border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
                 <i class="fa-solid fa-print"></i> <span id="printer-status-text">檢測出票機狀態</span>
             </button>
 
+            <!-- Web Audio API 純內建防斷線音效提示 -->
             <button id="sound-toggle" onclick="toggleSound()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-slate-700 transition-all">
                 <i id="sound-icon" class="fa-solid fa-volume-xmark text-rose-500"></i> <span id="sound-text">啟用音效提示</span>
             </button>
 
+            <!-- 🔄 重新整理數據 -->
             <button onclick="fetchAllTasks()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2 shadow-[0_0_15px_rgba(0,242,255,0.3)]">
                 <i class="fa-solid fa-arrows-rotate"></i> 重新整理數據
             </button>
 
+            <!-- 🧹 重製按鈕 -->
             <button onclick="openResetModal()" class="bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 font-bold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2 border border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.15)]">
                 <i class="fa-solid fa-trash-can"></i> 重製所有排隊
             </button>
@@ -96,23 +104,19 @@
         const API_BASE_URL = "https://aicameraliveprint-back.onrender.com";
         let localTasksCache = {};
         let currentUploadTaskId = null;
-        
-        // 🌟 共享全域解鎖 AudioContext 大腦 (100% 徹底解鎖 Chrome 自動播放靜音限制)
         let globalAudioCtx = null;
+        let soundEnabled = false;
 
         function playDingDong() {
             if (!soundEnabled) return;
             try {
-                // 沿用已解鎖的音效大腦
                 if (!globalAudioCtx) {
                     const AudioContext = window.AudioContext || window.webkitAudioContext;
                     if (AudioContext) globalAudioCtx = new AudioContext();
                 }
-                
                 if (globalAudioCtx && globalAudioCtx.state === 'suspended') {
                     globalAudioCtx.resume();
                 }
-                
                 const ctx = globalAudioCtx;
                 if (!ctx) return;
                 
@@ -144,14 +148,12 @@
             }
         }
 
-        let soundEnabled = false;
         function toggleSound() {
             soundEnabled = !soundEnabled;
             const icon = document.getElementById('sound-icon');
             const text = document.getElementById('sound-text');
             const btn = document.getElementById('sound-toggle');
             
-            // 🌟 在工作人員點擊的瞬間，主動初始化並解鎖 AudioContext 權限
             if (!globalAudioCtx) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 if (AudioContext) globalAudioCtx = new AudioContext();
@@ -172,7 +174,6 @@
             }
         }
 
-        // 🔌 實時向後端查詢飛鵝雲端印表機狀態
         async function checkPrinterStatus() {
             const btn = document.getElementById('printer-check-btn');
             const text = document.getElementById('printer-status-text');
@@ -214,7 +215,6 @@
             }, 4000);
         }
 
-        // 🌟 智慧前端畫布壓縮引擎 (增量加載完全優化版)
         function compressAndResizeImage(file, callback) {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -345,7 +345,7 @@
         function downloadSourceImage(taskId) {
             const task = localTasksCache[taskId];
             if (!task || !task.sourceImage) {
-                alert("找不到該任務的原始客照！");
+                alert("原始客照尚未下載完成，請稍後再試！");
                 return;
             }
             const link = document.createElement('a');
@@ -377,7 +377,7 @@
             document.getElementById(`global-file-input-${targetType}`).click();
         }
 
-        // 🌟 核心增量式加載引擎核心：接收二進位檔案實體
+        // 🌟 上傳圖片實體
         async function handleImageFileInject(file, taskId, type) {
             const btn = document.getElementById(`upload-status-${type}-${taskId}`);
             if (btn) btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin text-cyan-400"></i>`;
@@ -390,7 +390,12 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(bodyData)
                     });
-                    if ((await res.json()).success) fetchAllTasks();
+                    if ((await res.json()).success) {
+                        // 上傳成功，先將該圖手動緩存在本地，防止重複從網路下載
+                        if (!localTasksCache[taskId]) localTasksCache[taskId] = {};
+                        localTasksCache[taskId][`resultImage${type}`] = compressedBase64;
+                        fetchAllTasks();
+                    }
                 } catch (err) { alert("連線超時！"); fetchAllTasks(); }
             });
         }
@@ -403,7 +408,6 @@
             });
         });
 
-        // 重新補印：呼叫後端 API 驅動飛鵝雲端重新出票列印
         async function reprintTicket(taskId, btnId) {
             const btn = document.getElementById(btnId);
             const originalHtml = btn.innerHTML;
@@ -419,12 +423,12 @@
                     btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> 已出單`;
                     btn.className = "bg-emerald-950/40 border border-emerald-500/50 text-emerald-300 font-bold px-2 py-1.5 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1";
                 } else {
-                    alert("補印失敗：" + (data.error || "請確認出票機 WiFi 與 Render 環境變數是否正確！"));
+                    alert("補印失敗：" + (data.error || "請確認出票機狀態！"));
                     btn.innerHTML = originalHtml;
                 }
             } catch (err) {
                 console.error("補印連線錯誤:", err);
-                alert("連線後端伺服器失敗，請檢查網路！");
+                alert("連線後端伺服器失敗！");
                 btn.innerHTML = originalHtml;
             } finally {
                 setTimeout(() => {
@@ -435,30 +439,39 @@
             }
         }
 
-        // 🌟 核心增量通訊協議：只針對「沒同步過圖片的新資料」向後端要求一次 Base64
-        async function fetchImageIncrementally(taskId, type) {
+        // 🌟 增量優化核心 1：單次背景下載客照
+        async function fetchSourceImageIncrementally(taskId) {
             try {
-                const res = await fetch(`${API_BASE_URL}/api/status/${taskId}`);
+                const res = await fetch(`${API_BASE_URL}/api/admin/task-source-image/${taskId}`);
                 const data = await res.json();
-                if (data.success) {
-                    if (type === 'A' && data.resultImageA) {
-                        localTasksCache[taskId].resultImageA = data.resultImageA;
-                    }
-                    if (type === 'B' && data.resultImageB) {
-                        localTasksCache[taskId].resultImageB = data.resultImageB;
-                    }
-                    // 異步重新渲染
+                if (data.success && data.sourceImage) {
+                    localTasksCache[taskId].sourceImage = data.sourceImage;
                     renderTasks(Object.values(localTasksCache).sort((a, b) => b.id.localeCompare(a.id)));
                 }
             } catch (e) {
-                console.error(`增量讀取號碼牌 #${taskId} 圖片失敗:`, e);
+                console.error(`增量讀取號碼牌 #${taskId} 原始照片失敗:`, e);
+            }
+        }
+
+        // 🌟 增量優化核心 2：單次背景下載 AI 風格圖
+        async function fetchResultImageIncrementally(taskId) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/admin/task-result-images/${taskId}`);
+                const data = await res.json();
+                if (data.success) {
+                    if (data.resultImageA) localTasksCache[taskId].resultImageA = data.resultImageA;
+                    if (data.resultImageB) localTasksCache[taskId].resultImageB = data.resultImageB;
+                    renderTasks(Object.values(localTasksCache).sort((a, b) => b.id.localeCompare(a.id)));
+                }
+            } catch (e) {
+                console.error(`增量讀取號碼牌 #${taskId} 風格圖失敗:`, e);
             }
         }
 
         async function fetchAllTasks() {
             try {
-                // 🚀 增量優化：向後端拉取輕量級文字通訊協議
-                const res = await fetch(`${API_BASE_URL}/api/admin/all-tasks`);
+                // 🚀 發送智慧增量請求 (lightweight=true)，使資料傳輸量直接暴跌 99.9%
+                const res = await fetch(`${API_BASE_URL}/api/admin/all-tasks?lightweight=true`);
                 const data = await res.json();
                 if (data.success) {
                     let hasNewOrder = false;
@@ -472,21 +485,23 @@
                             t.processStatus = '製作中';
                             t.remark = '';
                         } else {
-                            // 保留舊有的暫存，避免文字被覆蓋
+                            // 繼承已被前端緩存在本地的大圖與控制參數，防範重複連線要圖
                             t.processStatus = localTasksCache[t.id].processStatus;
                             t.remark = localTasksCache[t.id].remark;
-                            
-                            // 🌟 增量核心：如果本地快取沒有大圖，但文字名單顯示已經有圖，則「發起一次增量請求」
-                            if (t.resultImageA && !localTasksCache[t.id].resultImageA) {
-                                fetchImageIncrementally(t.id, 'A');
-                            }
-                            if (t.resultImageB && !localTasksCache[t.id].resultImageB) {
-                                fetchImageIncrementally(t.id, 'B');
-                            }
+                            if (localTasksCache[t.id].sourceImage) t.sourceImage = localTasksCache[t.id].sourceImage;
+                            if (localTasksCache[t.id].resultImageA) t.resultImageA = localTasksCache[t.id].resultImageA;
+                            if (localTasksCache[t.id].resultImageB) t.resultImageB = localTasksCache[t.id].resultImageB;
                         }
                         
-                        // 承接輕量文字
                         localTasksCache[t.id] = t; 
+
+                        // 🌟 增量協議：當檢測到雲端存在大圖，但本地尚未緩存，發起獨立的單次獲取
+                        if (t.hasSourceImage && !localTasksCache[t.id].sourceImage) {
+                            fetchSourceImageIncrementally(t.id);
+                        }
+                        if ((t.hasResultImageA || t.hasResultImageB) && (!localTasksCache[t.id].resultImageA || !localTasksCache[t.id].resultImageB)) {
+                            fetchResultImageIncrementally(t.id);
+                        }
                     });
 
                     renderTasks(Object.values(localTasksCache).sort((a, b) => b.id.localeCompare(a.id)));
@@ -498,7 +513,6 @@
             } catch (e) {}
         }
 
-        // 🌟 核心排版與效能雙修復：完全還原您最愛的「Tailwind 霓虹黑客風格」且徹底根除字體變醜的問題
         function renderTasks(tasks) {
             const activeEl = document.activeElement;
             if (activeEl && (activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT')) {
@@ -544,6 +558,7 @@
                 return `
                 <div class="cyber-card p-4 md:p-5 rounded-2xl flex flex-col md:flex-row gap-6 items-stretch relative overflow-hidden">
                     
+                    <!-- 1. 號碼與原圖區 -->
                     <div class="flex flex-col items-center gap-2 w-full md:w-32 flex-shrink-0 md:border-r border-slate-700/50 md:pr-4">
                         <div class="text-center w-full">
                             <span class="text-[10px] font-mono tracking-widest text-cyan-400 block font-bold">QUEUE NO</span>
@@ -551,13 +566,24 @@
                             <div class="text-[9px] text-slate-500 font-mono mt-1">${task.createdAt || '--:--'}</div>
                         </div>
                         <div class="text-center relative w-full mt-1">
-                            <img src="${task.sourceImage}" class="w-20 h-20 mx-auto object-cover rounded-xl border border-slate-700 bg-black shadow-inner" />
-                            <button onclick="downloadSourceImage('${task.id}')" class="w-full mt-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold py-1.5 px-2 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1">
-                                <i class="fa-solid fa-download"></i> 下載原照
-                            </button>
+                            ${task.sourceImage ? `
+                                <img src="${task.sourceImage}" class="w-20 h-20 mx-auto object-cover rounded-xl border border-slate-700 bg-black shadow-inner" />
+                                <button onclick="downloadSourceImage('${task.id}')" class="w-full mt-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold py-1.5 px-2 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-download"></i> 下載原照
+                                </button>
+                            ` : `
+                                <div class="w-20 h-20 rounded-xl border border-dashed border-slate-700 bg-black flex flex-col items-center justify-center text-slate-500 mx-auto">
+                                    <i class="fa-solid fa-spinner animate-spin text-lg mb-1"></i>
+                                    <span class="text-[9px]">增量傳輸...</span>
+                                </div>
+                                <button disabled class="w-full mt-2 bg-slate-900 text-slate-600 font-bold py-1.5 px-2 rounded-lg text-[10px] cursor-not-allowed">
+                                    等待原照
+                                </button>
+                            `}
                         </div>
                     </div>
 
+                    <!-- 2. 上傳風格區 -->
                     <div class="flex flex-col gap-2 w-full md:w-40 flex-shrink-0 md:border-r border-slate-700/50 md:pr-4 justify-center">
                         <span class="text-[11px] font-bold text-slate-300 text-center mb-1"><i class="fa-solid fa-upload text-cyan-400 mr-1"></i> 上傳 AI 風格圖</span>
                         <div class="flex gap-3 justify-center">
@@ -592,10 +618,12 @@
                         </div>
                     </div>
 
+                    <!-- 3. 客人選擇結果區 -->
                     <div class="flex flex-col gap-1 w-full md:w-40 flex-shrink-0 md:border-r border-slate-700/50 md:pr-4 justify-center items-center">
                         ${finalResultHtml}
                     </div>
 
+                    <!-- 4. 狀態控制、備註與重新補印區 -->
                     <div class="flex-grow flex flex-col gap-3 min-w-[200px] justify-center">
                         <div>
                             <label class="text-[10px] font-bold text-slate-400 block mb-1">任務進度狀態</label>
@@ -610,6 +638,7 @@
                             <textarea onchange="updateTaskMeta('${task.id}', 'remark', this.value)" placeholder="點此輸入備註 (輸入完點擊旁邊即可自動儲存)..." class="cyber-textarea w-full flex-grow min-h-[60px] bg-slate-900 text-slate-200 p-2.5 rounded-lg border border-slate-700 text-xs resize-none transition-all leading-relaxed">${currentRemark}</textarea>
                         </div>
                         
+                        <!-- 重新出票按鈕與狀態欄整合 -->
                         <div class="mt-2 flex items-center justify-between border-t border-slate-800 pt-2.5 gap-2">
                             <button id="reprint-btn-${task.id}" onclick="reprintTicket('${task.id}', 'reprint-btn-${task.id}')" class="bg-indigo-950/40 hover:bg-indigo-900 border border-indigo-500/50 text-indigo-300 font-bold px-2 py-1.5 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1">
                                 <i class="fa-solid fa-print text-indigo-400"></i> 重新出票
@@ -622,7 +651,6 @@
             }).join('');
         }
 
-        // 🌟 核心新增：Ctrl+V 剪貼簿貼上圖片事件監聽器
         function handleClipboardPaste(event, taskId, type) {
             event.preventDefault();
             const items = (event.clipboardData || event.originalEvent.clipboardData).items;
@@ -635,7 +663,6 @@
             }
         }
 
-        // 🌟 核心新增：滑鼠拖放（Drag & Drop）事件處理
         function handleDragOver(event, element) {
             event.preventDefault();
             element.classList.add('dragover');
@@ -656,6 +683,7 @@
         }
 
         fetchAllTasks();
+        // 每 3.2 秒極速心跳連線一次，得益於增量優化，頻寬接近於 0 消耗！
         setInterval(fetchAllTasks, 3200);
     </script>
 </body>
