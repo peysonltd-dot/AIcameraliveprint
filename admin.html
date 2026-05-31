@@ -1,6 +1,8 @@
 /**
  * AI 互動雷雕拍照系統 - 後端 API (Firebase 雲端同步 & 飛鵝出票機防當機完全體版)
  * 🌟 升級功能：Leonardo.ai 官方 v2 API 雙模型智動化併發生圖 (支援金鑰無痛安全退回)
+ * 🌟 增量優化：新增首頁根路徑霓虹狀態儀表板，防範 404 誤判並方便手動喚醒
+ * 🌟 緩存優化：為 polling 路由注入 No-Cache 標頭，防止 iOS/Safari 強力快取導致狀態卡死不更新
  */
 const express = require('express');
 const cors = require('cors');
@@ -372,6 +374,84 @@ async function pollAndSaveResults(taskId, genIdA, genIdB) {
     }
 }
 
+// 🌟 根路徑儀表板首頁：防止手動喚醒時顯示 404，給予工作人員最直觀的連線信心
+app.get('/', (req, res) => {
+    const isLooKeyConfigured = LEONARDO_API_KEY && LEONARDO_API_KEY.length > 0;
+    res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>2026 AI AWARDS 後端核心狀態</title>
+            <style>
+                body { 
+                    background-color: #0b1329; 
+                    color: #00f2ff; 
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+                    text-align: center; 
+                    padding-top: 80px;
+                    background-image: radial-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 0);
+                    background-size: 24px 24px;
+                }
+                .container {
+                    max-width: 600px;
+                    margin: 0 auto;
+                    background: rgba(30, 41, 59, 0.7);
+                    border: 1px solid rgba(0, 242, 255, 0.2);
+                    border-radius: 20px;
+                    padding: 40px;
+                    box-shadow: 0 0 30px rgba(0, 242, 255, 0.15);
+                }
+                h1 { 
+                    font-size: 2.2rem; 
+                    margin-bottom: 20px;
+                    text-shadow: 0 0 15px rgba(0, 242, 255, 0.6); 
+                }
+                p { color: #f1f5f9; font-size: 1.1rem; line-height: 1.6; }
+                .status-badge {
+                    display: inline-block;
+                    padding: 8px 16px;
+                    border-radius: 50px;
+                    font-weight: bold;
+                    font-size: 0.9rem;
+                    margin-top: 15px;
+                }
+                .badge-success {
+                    background: rgba(16, 185, 129, 0.2);
+                    color: #10b981;
+                    border: 1px solid rgba(16, 185, 129, 0.4);
+                }
+                .badge-warning {
+                    background: rgba(245, 158, 11, 0.2);
+                    color: #f59e0b;
+                    border: 1px solid rgba(245, 158, 11, 0.4);
+                }
+                .footer {
+                    margin-top: 40px;
+                    color: #64748b;
+                    font-size: 0.8rem;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🚀 2026 AI AWARDS</h1>
+                <p>雙重風格叫號伺服器正在亮綠燈運行中！</p>
+                <p>今日累計下一張排隊號碼：<strong style="color: #ff00d0; font-size: 1.3rem;">#${String(ticketCounter).padStart(3, '0')}</strong></p>
+                <div class="status-badge ${isLooKeyConfigured ? 'badge-success' : 'badge-warning'}">
+                    系統生圖模式：${isLooKeyConfigured ? "⚡ Leonardo API 100% 全自動生圖" : "⚙️ 安全手動控制流程 (工作人員手動 Ctrl+V)"}
+                </div>
+                <div class="footer">
+                    App ID: ${appId} | Firebase: ${useFirebase ? "已同步連線" : "本機暫存模式"}<br>
+                    指導單位：經濟部 | 主辦單位：經濟部產業技術司
+                </div>
+            </div>
+        </body>
+        </html>
+    `);
+});
+
 app.post('/api/upload', async (req, res) => {
     try {
         const { image } = req.body;
@@ -443,6 +523,11 @@ app.post('/api/upload', async (req, res) => {
 });
 
 app.get('/api/status/:taskId', async (req, res) => {
+    // 🌟 緩存優化：強烈指示所有客戶端瀏覽器 (特別是 iOS Safari) 不要快取狀態
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     const taskId = req.params.taskId;
     let task = localTasksCache[taskId];
 
@@ -494,6 +579,11 @@ app.post('/api/choice/:taskId', async (req, res) => {
 });
 
 app.get('/api/admin/all-tasks', async (req, res) => {
+    // 🌟 緩存優化：強烈指示管理員控制台不要讀取本機快取名單，確保流暢更新
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     if (useFirebase) {
         try {
             const tasksCol = collection(db, 'artifacts', appId, 'public');
