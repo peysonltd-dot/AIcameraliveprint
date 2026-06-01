@@ -1,126 +1,419 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2026 AI AWARDS | 客人拍照選圖中心</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2026 BEST AI AWARDS | 智慧創新大賞</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
     <style>
-        body { background-color: #0b1329; font-family: -apple-system, sans-serif; overflow: hidden; }
-        .polaroid { background: white; padding: 12px 12px 24px 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); border-radius: 4px; transition: all 0.4s ease; cursor: pointer; }
-        .polaroid:hover { transform: scale(1.03); box-shadow: 0 20px 45px #00f2ff30; border: 2px solid #00f2ff; }
+        :root {
+            --ai-cyan: #00f2ff;
+            --ai-pink: #ff00d0;
+            --ai-dark: #020617;
+        }
+        body {
+            touch-action: pan-x pan-y;
+            user-select: none; 
+            -webkit-user-select: none;
+            overflow: hidden; 
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: var(--ai-dark);
+        }
+        .cyber-bg {
+            background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+            position: relative;
+        }
+        .cyber-bg::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: 0;
+            pointer-events: none; /* 讓背景網格事件穿透，防止阻擋按鈕點擊 */
+        }
+        .kv-title {
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(to bottom, #fff 30%, var(--ai-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 15px rgba(0, 242, 255, 0.6));
+        }
+        .glow-bar {
+            height: 4px;
+            width: 320px; /* 大螢幕專用加寬霓虹條 */
+            background: linear-gradient(90deg, transparent, var(--ai-pink), var(--ai-cyan), transparent);
+            box-shadow: 0 0 16px var(--ai-pink), 0 0 28px var(--ai-cyan);
+            border-radius: 50%;
+        }
+        .content-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; /* 🌟 修正：從 center 改為 flex-start 靠上對齊，把拍照方框往上提 */
+            width: 100%;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            padding-top: 1.5rem;          /* 🌟 新增：設定舒適的上方間距，緊貼智慧創新大賞標題下方 */
+        }
+        @media (min-height: 1100px) and (max-aspect-ratio: 10/16) {
+            /* 🌟 修正：大螢幕物理狀態下，一律維持靠上並預留 2rem 呼吸空間，防範大尺寸下的垂直置中硬傷 */
+            .content-container { justify-content: flex-start; padding-top: 2rem; } 
+        }
+        .camera-container {
+            width: 80vw; height: 80vw; max-width: 750px; max-height: 750px; /* 從原本 500px 放大至 750px 巨幅比例 */
+            position: relative; overflow: hidden; border-radius: 2rem;
+            border: 4px solid var(--ai-cyan);
+            box-shadow: 0 0 45px rgba(0, 242, 255, 0.5);
+            background-color: #000; transition: all 0.3s ease-in-out;
+        }
+        @media (min-height: 1100px) {
+            .camera-container { max-width: 750px; max-height: 750px; }
+        }
+        .choice-card {
+            border: 4px solid #1e293b;
+            background: rgba(15, 23, 42, 0.7);
+            transition: all 0.25s ease;
+            cursor: pointer;
+            position: relative;
+            z-index: 10;
+        }
+        .choice-card.selected {
+            border-color: var(--ai-cyan);
+            box-shadow: 0 0 45px rgba(0, 242, 255, 0.6);
+            background: rgba(0, 242, 255, 0.15);
+            transform: scale(1.04);
+        }
+        .face-guide {
+            width: 55%; aspect-ratio: 1 / 1.35; border-radius: 50%;
+            border: 4px solid var(--ai-cyan);
+            box-shadow: 0 0 25px var(--ai-cyan), 0 0 0 9999px rgba(2, 6, 23, 0.6);
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none;
+        }
+        .radar-spinner {
+            position: relative; width: 240px; height: 240px; /* 從原本 160px 顯著放大 */
+            border-radius: 50%; border: 3px dashed rgba(0, 242, 255, 0.5);
+            animation: spin 8s linear infinite;
+        }
+        .radar-spinner::before {
+            content: ''; position: absolute; inset: 18px; border-radius: 50%;
+            border: 6px solid transparent; border-top-color: var(--ai-cyan); border-bottom-color: var(--ai-cyan);
+            animation: spin 2s linear infinite reverse;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .text-glow-pulse { animation: pulse-glow 2s ease-in-out infinite; }
+        @keyframes pulse-glow { 0%, 100% { opacity: 1; text-shadow: 0 0 25px var(--ai-cyan); } 50% { opacity: 0.6; text-shadow: 0 0 10px var(--ai-cyan); } }
+        .btn-cyan {
+            background: rgba(0, 242, 255, 0.1); border: 2.5px solid var(--ai-cyan); color: var(--ai-cyan);
+            letter-spacing: 3px; transition: all 0.3s; box-shadow: 0 0 20px rgba(0, 242, 255, 0.25);
+            position: relative;
+            z-index: 10; /* 確保按鈕層級，不被背景遮擋 */
+        }
+        .btn-cyan:active:not(:disabled) { background: var(--ai-cyan); color: #000; box-shadow: 0 0 45px var(--ai-cyan); }
+        .btn-red {
+            background: rgba(255, 0, 208, 0.1); border: 2.5px solid var(--ai-pink); color: var(--ai-pink);
+            letter-spacing: 3px; transition: all 0.3s;
+            position: relative;
+            z-index: 10;
+        }
+        .btn-red:active { background: var(--ai-pink); color: #000; }
     </style>
 </head>
-<body class="text-slate-200 min-h-screen flex flex-col items-center justify-center p-4">
+<body class="cyber-bg text-white min-h-[100dvh] w-screen flex flex-col">
+    <div id="root" class="h-full w-full relative z-10 flex-grow flex flex-col"></div>
 
-    <div id="stage-capture" class="w-full max-w-md text-center flex flex-col gap-6">
-        <h2 class="text-3xl font-black text-white tracking-widest glow-text">AI 次元頭像拍貼機</h2>
-        <div class="w-full aspect-square bg-slate-950 rounded-3xl overflow-hidden border-2 border-slate-800 relative shadow-2xl">
-            <video id="video" class="w-full h-full object-cover" autoplay playsinline></video>
-            <canvas id="canvas" class="hidden w-full h-full object-cover"></canvas>
-        </div>
-        <button onclick="takePhotoAndUpload()" id="snap-btn" class="w-20 h-20 bg-gradient-to-tr from-cyan-400 to-blue-500 rounded-full mx-auto border-4 border-white shadow-[0_0_25px_rgba(0,242,255,0.5)] active:scale-95 transition flex items-center justify-center"><i class="fa-solid fa-camera text-slate-950 text-2xl"></i></button>
-    </div>
-
-    <div id="stage-loading" class="hidden text-center flex flex-col items-center gap-4">
-        <div class="w-24 h-24 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin shadow-[0_0_20px_rgba(0,242,255,0.2)]"></div>
-        <h3 class="text-xl font-bold tracking-widest text-cyan-400 mt-4">AI 正在捕捉您的五官神韻...</h3>
-        <p class="text-xs text-slate-400 font-mono">流水號：<span id="load-task-id">---</span> | 預計等待 6~8 秒</p>
-    </div>
-
-    <div id="stage-choice" class="hidden w-full max-w-2xl text-center flex flex-col gap-8">
-        <div>
-            <span class="text-xs font-mono font-bold text-cyan-400 tracking-widest block mb-1">GENERATION COMPLETE</span>
-            <h2 class="text-2xl font-black text-white">您的專屬Q版頭像已繪製完成！</h2>
-            <p class="text-xs text-slate-400 mt-1">請點擊您最喜愛的一款花色，即可現場啟動雷雕製程</p>
-        </div>
-        
-        <div class="grid grid-cols-2 gap-6 md:gap-10 px-2">
-            <div onclick="selectDesign('A')" class="polaroid">
-                <img id="img-style-A" class="w-full aspect-square object-cover rounded-md bg-slate-100" />
-                <div class="text-slate-800 font-black text-sm mt-3 tracking-wider">🌟 風格 A 款</div>
-            </div>
-            <div onclick="selectDesign('B')" class="polaroid">
-                <img id="img-style-B" class="w-full aspect-square object-cover rounded-md bg-slate-100" />
-                <div class="text-slate-800 font-black text-sm mt-3 tracking-wider">🎨 風格 B 款</div>
-            </div>
-        </div>
-    </div>
-
-    <div id="stage-success" class="hidden text-center flex flex-col items-center gap-4">
-        <div class="w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-400 flex items-center justify-center text-emerald-400 text-3xl animate-bounce"><i class="fa-solid fa-circle-check"></i></div>
-        <h2 class="text-2xl font-black text-white mt-2">雷雕發送成功！</h2>
-        <p class="text-sm text-slate-400">出票機正在為您列印兌換券<BR>請向工作人員領取您的客製化禮品</p>
-        <button onclick="resetToHome()" class="mt-6 bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 px-6 py-2 rounded-xl text-sm transition">重新拍照</button>
-    </div>
-
-    <script>
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
         const API_BASE_URL = "https://aicameraliveprint-back.onrender.com";
-        let activeTaskId = null; let pollingInterval = null;
-        const video = document.getElementById('video');
 
-        async function initCamera() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 1024, height: 1024 } });
-                video.srcObject = stream;
-            } catch { alert("鏡頭啟動失敗，請確認網頁 HTTPS 權限！"); }
-        }
+        const LOADING_TEXTS_CH = ["啟動視覺網路模組", "正在萃取臉部幾何特徵", "演算極簡線條結構", "套用 AI 大賞專屬模型", "即將生成雙重對照風格"];
+        const LOADING_TEXTS_EN = ["BOOTING NEURAL...", "EXTRACTING PORTRAIT...", "VECTOR PROCESSING...", "APPLYING EXCLUSIVE LORA...", "GENERATING DUAL STYLES..."];
 
-        async function takePhotoAndUpload() {
-            const btn = document.getElementById('snap-btn'); btn.disabled = true;
-            const canvas = document.getElementById('canvas'); const ctx = canvas.getContext('2d');
-            canvas.width = 1024; canvas.height = 1024;
-            ctx.drawImage(video, 0, 0, 1024, 1024);
-            const base64Image = canvas.toDataURL('image/jpeg', 0.85);
+        const App = () => {
+            const [step, setStep] = useState('home');
+            const [taskId, setTaskId] = useState(null);
+            const [imgA, setImgA] = useState(null);
+            const [imgB, setImgB] = useState(null);
+            const [selectedChoice, setSelectedChoice] = useState(null);
 
-            document.getElementById('stage-capture').classList.add('hidden');
-            document.getElementById('stage-loading').classList.remove('hidden');
+            const videoRef = useRef(null);
+            const canvasRef = useRef(null);
+            const [countdown, setCountdown] = useState(0);
+            const [textIndex, setTextIndex] = useState(0);
+            const pollingRef = useRef(null);
+            const [isSubmitting, setIsSubmitting] = useState(false);
+            const [stream, setStream] = useState(null);
+            const [returnCountdown, setReturnCountdown] = useState(10);
 
-            try {
-                const res = await fetch(`${API_BASE_URL}/api/upload`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64Image })
-                }).then(r => r.json());
+            const startCamera = async () => {
+                try {
+                    const mediaStream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }
+                    });
+                    setStream(mediaStream);
+                    setStep('camera');
+                } catch (err) {
+                    alert("請開通相機權限！");
+                    setStep('home');
+                }
+            };
+
+            useEffect(() => {
+                if (step === 'camera' && stream && videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                    videoRef.current.play().catch(e => console.log("Play error:", e));
+                }
+            }, [step, stream]);
+
+            const takePhoto = () => {
+                if (countdown > 0) return;
+                setCountdown(3);
+                let count = 3;
+                const timer = setInterval(() => {
+                    count -= 1;
+                    setCountdown(count);
+                    if (count === 0) {
+                        clearInterval(timer);
+                        capture();
+                    }
+                }, 1000);
+            };
+
+            const capture = async () => {
+                const video = videoRef.current;
+                const canvas = canvasRef.current;
+                if (!video || !canvas) return;
+                const ctx = canvas.getContext('2d');
+                const size = Math.min(video.videoWidth, video.videoHeight);
                 
-                if (res.success) {
-                    activeTaskId = res.taskId; document.getElementById('load-task-id').innerText = `#${res.taskId}`;
-                    pollingInterval = setInterval(checkAIStatus, 1500);
+                canvas.width = size; canvas.height = size;
+                ctx.translate(size, 0); ctx.scale(-1, 1);
+                ctx.drawImage(video, (video.videoWidth - size) / 2, (video.videoHeight - size) / 2, size, size, 0, 0, size, size);
+                
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                if (stream) stream.getTracks().forEach(t => t.stop());
+                setStream(null);
+                setStep('loading');
+                setSelectedChoice(null);
+
+                try {
+                    const res = await fetch(API_BASE_URL + "/api/upload", {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ image: dataUrl })
+                    });
+                    const data = await res.json();
+                    if (data.success) setTaskId(data.taskId);
+                } catch (err) {
+                    setTimeout(() => { setTaskId("007"); }, 1500);
                 }
-            } catch { alert("連線失敗！"); resetToHome(); }
-        }
+            };
 
-        async function checkAIStatus() {
-            try {
-                const res = await fetch(`${API_BASE_URL}/api/status/${activeTaskId}`).then(r => r.json());
-                if (res.success && res.status === 'completed' && res.resultImageA && res.resultImageB) {
-                    clearInterval(pollingInterval);
-                    document.getElementById('img-style-A').src = res.resultImageA;
-                    document.getElementById('img-style-B').src = res.resultImageB;
-                    document.getElementById('stage-loading').classList.add('hidden');
-                    document.getElementById('stage-choice').classList.remove('hidden');
+            const finalizeChoice = async () => {
+                if (!selectedChoice) return;
+                setIsSubmitting(true);
+                
+                try {
+                    const response = await fetch(API_BASE_URL + "/api/choice/" + taskId, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ choice: selectedChoice })
+                    });
+                    await response.json();
+                } catch(e) { 
+                    console.error("回傳選擇失敗", e); 
                 }
-            } catch (e) {}
-        }
 
-        async function selectDesign(choice) {
-            try {
-                await fetch(`${API_BASE_URL}/api/choice/${activeTaskId}`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ choice: choice })
-                });
-                document.getElementById('stage-choice').classList.add('hidden');
-                document.getElementById('stage-success').classList.remove('hidden');
-            } catch { alert("傳輸失敗！"); }
-        }
+                setIsSubmitting(false);
+                setReturnCountdown(10);
+                setStep('completed');
+            };
 
-        function resetToHome() {
-            clearInterval(pollingInterval); activeTaskId = null;
-            document.getElementById('stage-loading').classList.add('hidden');
-            document.getElementById('stage-choice').classList.add('hidden');
-            document.getElementById('stage-success').classList.add('hidden');
-            document.getElementById('stage-capture').classList.remove('hidden');
-            document.getElementById('snap-btn').disabled = false;
-        }
+            const handleCancelAndGoHome = () => {
+                if (pollingRef.current) clearInterval(pollingRef.current);
+                if (stream) stream.getTracks().forEach(t => t.stop());
+                setStream(null);
+                setTaskId(null);
+                setStep('home');
+            };
 
-        initCamera();
+            useEffect(() => {
+                let returnTimer;
+                if (step === 'completed' && returnCountdown > 0) {
+                    returnTimer = setTimeout(() => {
+                        setReturnCountdown(prev => prev - 1);
+                    }, 1000);
+                } else if (step === 'completed' && returnCountdown === 0) {
+                    handleCancelAndGoHome();
+                }
+                return () => clearTimeout(returnTimer);
+            }, [step, returnCountdown]);
+
+            useEffect(() => {
+                let textInterval;
+                if (step === 'loading') {
+                    textInterval = setInterval(() => { setTextIndex(p => (p + 1) % LOADING_TEXTS_CH.length); }, 1500);
+
+                    if (taskId) {
+                        pollingRef.current = setInterval(async () => {
+                            try {
+                                const res = await fetch(API_BASE_URL + "/api/status/" + taskId);
+                                const data = await res.json();
+                                if (data.status === 'completed' && data.resultImageA && data.resultImageB) {
+                                    setImgA(data.resultImageA);
+                                    setImgB(data.resultImageB);
+                                    setStep('choice');
+                                    clearInterval(pollingRef.current);
+                                }
+                            } catch (err) {
+                                if (taskId === "007") {
+                                    setTimeout(() => {
+                                        if (canvasRef.current) {
+                                            const mockUrl = canvasRef.current.toDataURL();
+                                            setImgA(mockUrl); setImgB(mockUrl);
+                                            setStep('choice');
+                                        }
+                                        clearInterval(pollingRef.current);
+                                    }, 4000);
+                                }
+                            }
+                        }, 3000);
+                    }
+                }
+                return () => { 
+                    clearInterval(textInterval); 
+                    if(pollingRef.current) clearInterval(pollingRef.current); 
+                };
+            }, [step, taskId]);
+
+            return (
+                <div className="flex flex-col items-center justify-between h-[100dvh] w-full py-12 px-6 cyber-bg">
+                    
+                    {/* Header - 放大 LOGO、標題與霓虹燈條 */}
+                    <div className="text-center z-10 flex flex-col items-center flex-shrink-0 w-full pt-4">
+                        <img src="https://img.shoplineapp.com/media/image_clips/6a14557eb36f6eb74d460308/original.png?1779717502=&owner_id=66221c5c384dbb002ec45c18" className="w-[320px] sm:w-[480px] md:w-[560px] h-auto mb-3 filter drop-shadow-[0_0_15px_rgba(0,242,255,0.6)]" />
+                        <h1 className="kv-title text-4xl sm:text-6xl md:text-7xl font-black mb-3 tracking-widest">智慧創新大賞</h1>
+                        <div className="glow-bar"></div>
+                    </div>
+
+                    {/* 互動內容控制中樞 - 已調整為頂部靠上對齊，拉高方框 */}
+                    <div className="content-container">
+                        
+                        {step === 'home' && (
+                            <div className="text-center py-20 my-auto flex flex-col items-center justify-center">
+                                <p className="text-ai-cyan text-xl sm:text-3xl md:text-4xl mb-12 tracking-[0.3em] text-glow-pulse font-light">AI 虛擬肖像風格化</p>
+                                <button onClick={startCamera} className="btn-cyan text-2xl sm:text-4xl md:text-5xl font-black px-16 py-8 sm:py-10 rounded-full animate-pulse shadow-[0_0_35px_rgba(0,242,255,0.4)]">開始體驗 START</button>
+                            </div>
+                        )}
+
+                        {step === 'camera' && (
+                            <div className="flex flex-col items-center w-full">
+                                <div className="camera-container">
+                                    <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover absolute inset-0" style={{ transform: 'rotateY(180deg)' }} />
+                                    <div className="face-guide"></div>
+                                    {countdown > 0 && (
+                                        <div className="absolute top-6 right-6 w-24 h-24 rounded-2xl border-2 border-ai-cyan bg-[#020617]/95 flex flex-col items-center justify-center shadow-[0_0_20px_rgba(0,242,255,0.4)]">
+                                            <span className="text-[44px] font-black text-white font-mono">{countdown}</span>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="mt-8 flex gap-6 w-[85vw] sm:w-[80vw] max-w-[500px] sm:max-w-[750px] px-2">
+                                    <button onClick={handleCancelAndGoHome} className="btn-cyan flex-1 py-5 rounded-2xl text-lg sm:text-2xl font-bold">返回首頁</button>
+                                    <button onClick={takePhoto} className="btn-cyan flex-[2.5] py-5 rounded-2xl text-2xl sm:text-3.5xl font-black bg-ai-cyan/20 shadow-[0_0_20px_rgba(0,242,255,0.3)]">拍攝照片 PHOTO</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {step === 'loading' && (
+                            <div className="flex flex-col items-center justify-center">
+                                <div className="relative flex items-center justify-center mb-8">
+                                    <div className="radar-spinner"></div>
+                                </div>
+                                <div className="h-28 text-center mb-6">
+                                    <h2 className="text-2xl sm:text-4xl font-bold text-white tracking-wider mb-2 text-glow-pulse">{LOADING_TEXTS_CH[textIndex]}</h2>
+                                    <p className="text-ai-cyan text-sm sm:text-lg font-mono opacity-80 tracking-widest">{LOADING_TEXTS_EN[textIndex]}</p>
+                                </div>
+                                {taskId && (
+                                    <div className="bg-black/40 p-6 rounded-3xl border-2 border-ai-cyan text-center w-72 shadow-[0_0_30px_rgba(0,242,255,0.2)] mb-6">
+                                        <p className="text-[12px] text-slate-400 font-mono tracking-wider">PROGRESS ID</p>
+                                        <p className="text-5xl font-mono font-black text-ai-cyan">#{taskId}</p>
+                                    </div>
+                                )}
+                                <button onClick={handleCancelAndGoHome} className="btn-red px-8 py-3.5 rounded-2xl text-sm sm:text-base font-bold">取消返回首頁</button>
+                            </div>
+                        )}
+
+                        {step === 'choice' && (
+                            <div className="flex flex-col items-center w-full max-w-[1000px] px-4">
+                                <p className="text-ai-cyan text-lg sm:text-2xl font-bold tracking-widest mb-6 animate-pulse">✨ 請挑選您最喜愛的款式 ✨</p>
+                                <div className="grid grid-cols-2 gap-6 w-full mb-8">
+                                    <div onClick={() => setSelectedChoice('A')} className={`choice-card p-3 rounded-3xl text-center ${selectedChoice === 'A' ? 'selected' : ''}`}>
+                                        <img src={imgA} className="w-full aspect-square object-cover rounded-2xl mb-3 border border-slate-800" />
+                                        <span className="text-sm sm:text-2xl font-black tracking-wider block">【 風格 A 款 】</span>
+                                    </div>
+                                    <div onClick={() => setSelectedChoice('B')} className={`choice-card p-3 rounded-3xl text-center ${selectedChoice === 'B' ? 'selected' : ''}`}>
+                                        <img src={imgB} className="w-full aspect-square object-cover rounded-2xl mb-3 border border-slate-800" />
+                                        <span className="text-sm sm:text-2xl font-black tracking-wider block">【 風格 B 款 】</span>
+                                    </div>
+                                </div>
+                                <div className="flex gap-6 w-full sm:max-w-[700px]">
+                                    <button onClick={handleCancelAndGoHome} className="btn-cyan flex-1 py-5 rounded-2xl text-sm sm:text-xl font-bold">放棄</button>
+                                    <button 
+                                        disabled={!selectedChoice || isSubmitting} 
+                                        onClick={finalizeChoice} 
+                                        className={`flex-[2.5] py-5 rounded-2xl text-lg sm:text-2xl font-black transition-all duration-300 ${
+                                            selectedChoice 
+                                                ? 'btn-cyan bg-cyan-400 text-slate-950 shadow-[0_0_35px_rgba(0,242,255,0.5)]' 
+                                                : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
+                                        }`}
+                                    >
+                                        <i className="fa-solid fa-check mr-2"></i>{isSubmitting ? "處理中..." : "確定"}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {step === 'completed' && (
+                            <div className="flex flex-col items-center w-full max-w-[800px] px-4 text-center">
+                                <h2 className="text-3xl sm:text-5xl font-black text-ai-cyan tracking-widest mb-8 animate-pulse">選擇已送出</h2>
+                                <div className="bg-[#0f172a]/80 border-2 border-ai-cyan p-8 sm:p-10 rounded-[2.5rem] w-full mb-8 shadow-[0_0_45px_rgba(0,242,255,0.3)] flex flex-col items-center">
+                                    <img src={selectedChoice === 'A' ? imgA : imgB} className="w-56 h-56 sm:w-72 sm:h-72 object-cover rounded-3xl mb-6 border-2 border-slate-700 shadow-lg" />
+                                    <p className="text-xs sm:text-lg text-slate-400 tracking-[0.3em] font-bold mb-2">您的專屬號碼</p>
+                                    <p className="text-7xl sm:text-9xl font-black text-white font-mono drop-shadow-[0_0_25px_#00f2ff]">#{taskId}</p>
+                                    <div className="mt-8 flex items-center justify-center gap-3 text-ai-cyan text-base sm:text-2xl font-bold tracking-widest bg-ai-cyan/10 px-8 py-4 rounded-full border border-ai-cyan/30 shadow-inner">
+                                        <i className="fa-solid fa-spinner animate-spin text-xl sm:text-2xl"></i>
+                                        <span>{returnCountdown} 秒後自動返回</span>
+                                    </div>
+                                </div>
+                                {/* 🚀 隱藏返回按鈕：已將公開按鈕移除，改為右下角隱密點擊區 */}
+                            </div>
+                        )}
+
+                    </div>
+
+                    {/* Footer - 🌟 隱藏重置按鈕：大螢幕上將點擊觸發區一併放大 (更方便現場人員觸碰)，外觀完全看不出 */}
+                    <div 
+                        onClick={handleCancelAndGoHome}
+                        className="w-full flex justify-end px-6 py-2 opacity-50 text-base sm:text-2xl font-mono text-ai-cyan tracking-widest cursor-default select-none active:text-white transition-colors duration-150"
+                        title="工作人員專用跳轉"
+                    >
+                        2026
+                    </div>
+                    <canvas ref={canvasRef} className="hidden"></canvas>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
