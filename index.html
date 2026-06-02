@@ -309,43 +309,41 @@
                         
                         {step === 'home' && (
                             <div className="text-center py-10 my-auto flex flex-col items-center justify-center w-full">
-                                {/* 🌟 修正：移除多餘的框線，改為純文字發光效果，加上禮物圖示，讓畫面更乾淨 */}
-                                <p className="text-ai-cyan text-xl sm:text-3xl md:text-4xl mb-3 tracking-[0.3em] text-glow-pulse font-light">AI 虛擬肖像風格化</p>
+                                <p className="text-ai-cyan text-xl sm:text-3xl md:text-4xl mb-3 tracking-[0.3em] text-glow-pulse font-light">AI 虛擬肖像</p>
                                 <p className="text-ai-pink text-xl sm:text-2xl md:text-3xl tracking-[0.5em] font-black mb-12 drop-shadow-[0_0_15px_rgba(255,0,208,0.8)]">
                                     <i className="fa-solid fa-gift mr-3 text-white/90"></i>專屬禮品兌換
                                 </p>
                                 
-                                {/* 🌟 新增：填補紅框區域的 3 步驟圖示說明 */}
-                                <div className="flex items-center justify-center gap-3 sm:gap-8 mb-16 w-full max-w-[800px] px-2">
+                                {/* 🌟 圖片展示區塊：取代原本的 Icon */}
+                                <div className="flex flex-row items-center justify-center gap-6 sm:gap-12 mb-16 w-full max-w-[800px] px-4">
                                     
-                                    {/* Step 1: 拍照 */}
-                                    <div className="flex flex-col items-center">
-                                        <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-2 border-ai-cyan bg-[#0f172a]/80 flex items-center justify-center shadow-[0_0_25px_rgba(0,242,255,0.25)] mb-4 relative z-10 transition-transform duration-500 hover:scale-105">
-                                            <i className="fa-solid fa-camera text-4xl sm:text-5xl text-white drop-shadow-[0_0_8px_rgba(0,242,255,0.8)]"></i>
+                                    {/* 圖片 1：拿著提袋的女孩 */}
+                                    <div className="flex flex-col items-center group">
+                                        <div className="w-36 h-36 sm:w-56 sm:h-56 rounded-[2rem] overflow-hidden border-2 border-ai-cyan shadow-[0_0_25px_rgba(0,242,255,0.2)] mb-4 transition-transform duration-500 group-hover:scale-105 group-hover:shadow-[0_0_35px_rgba(0,242,255,0.4)] bg-[#0f172a]/50 p-2">
+                                            <img 
+                                                src="https://img.shoplineapp.com/media/image_clips/6a1ef28ef1bda7070f35eecc/original.png?1780413070=&owner_id=66221c5c384dbb002ec45c18" 
+                                                className="w-full h-full object-contain" 
+                                                alt="專屬虛擬頭像" 
+                                            />
                                         </div>
-                                        <span className="text-ai-cyan font-black tracking-widest text-sm sm:text-xl drop-shadow-md">現場拍攝</span>
+                                        <span className="text-ai-cyan font-black tracking-widest text-sm sm:text-xl drop-shadow-md">AI 生成頭像</span>
                                     </div>
 
-                                    {/* 箭頭 */}
-                                    <i className="fa-solid fa-angles-right text-slate-500 text-xl sm:text-3xl animate-pulse pb-8"></i>
-
-                                    {/* Step 2: AI 生成 */}
-                                    <div className="flex flex-col items-center">
-                                        <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-2 border-ai-pink bg-[#0f172a]/80 flex items-center justify-center shadow-[0_0_25px_rgba(255,0,208,0.25)] mb-4 relative z-10 transition-transform duration-500 hover:scale-105">
-                                            <i className="fa-solid fa-wand-magic-sparkles text-4xl sm:text-5xl text-white drop-shadow-[0_0_8px_rgba(255,0,208,0.8)]"></i>
-                                        </div>
-                                        <span className="text-ai-pink font-black tracking-widest text-sm sm:text-xl drop-shadow-md">AI 演算</span>
+                                    {/* 動態箭頭 */}
+                                    <div className="flex flex-col items-center pb-8 animate-pulse">
+                                        <i className="fa-solid fa-arrow-right-long text-ai-pink text-2xl sm:text-4xl drop-shadow-[0_0_10px_rgba(255,0,208,0.6)]"></i>
                                     </div>
 
-                                    {/* 箭頭 */}
-                                    <i className="fa-solid fa-angles-right text-slate-500 text-xl sm:text-3xl animate-pulse pb-8" style={{ animationDelay: '0.5s' }}></i>
-
-                                    {/* Step 3: 帆布袋 */}
-                                    <div className="flex flex-col items-center">
-                                        <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-2 border-white bg-[#0f172a]/80 flex items-center justify-center shadow-[0_0_25px_rgba(255,255,255,0.2)] mb-4 relative z-10 transition-transform duration-500 hover:scale-105">
-                                            <i className="fa-solid fa-bag-shopping text-4xl sm:text-5xl text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"></i>
+                                    {/* 圖片 2：實體帆布袋 */}
+                                    <div className="flex flex-col items-center group">
+                                        <div className="w-36 h-36 sm:w-56 sm:h-56 rounded-[2rem] overflow-hidden border-2 border-white shadow-[0_0_25px_rgba(255,255,255,0.2)] mb-4 transition-transform duration-500 group-hover:scale-105 group-hover:shadow-[0_0_35px_rgba(255,255,255,0.4)] bg-[#0f172a]/50 p-2">
+                                            <img 
+                                                src="https://img.shoplineapp.com/media/image_clips/6a1ef3c33ce472c30e346dac/original.png?1780413379=&owner_id=66221c5c384dbb002ec45c18" 
+                                                className="w-full h-full object-contain" 
+                                                alt="專屬提袋印製" 
+                                            />
                                         </div>
-                                        <span className="text-white font-black tracking-widest text-sm sm:text-xl drop-shadow-md">專屬提袋</span>
+                                        <span className="text-white font-black tracking-widest text-sm sm:text-xl drop-shadow-md">現場印製提袋</span>
                                     </div>
 
                                 </div>
