@@ -299,7 +299,7 @@
                     
                     {/* Header - 放大 LOGO、標題與霓虹燈條 */}
                     <div className="text-center z-10 flex flex-col items-center flex-shrink-0 w-full pt-4">
-                        <img src="https://img.shoplineapp.com/media/image_clips/6a14557eb36f6eb74d460308/original.png?1779717502=&owner_id=66221c5c384dbb002ec45c18" className="w-[320px] sm:w-[480px] md:w-[560px] h-auto mb-3 filter drop-shadow-[0_0_15px_rgba(0,242,255,0.6)]" />
+                        <img src="https://img.shoplineapp.com/media/image_clips/6a14557eb36f6eb74d460308/original.png?1779717502=&owner_id=66221c5c384dbb002ec45c18" className="w-[320px] sm:w-[480px] md:w-[560px] h-auto mb-3 filter drop-shadow-[0_0_15px_rgba(0,242,255,0.6)]" alt="Logo" />
                         <h1 className="kv-title text-4xl sm:text-6xl md:text-7xl font-black mb-3 tracking-widest">智慧創新大賞</h1>
                         <div className="glow-bar"></div>
                     </div>
@@ -308,8 +308,48 @@
                     <div className="content-container">
                         
                         {step === 'home' && (
-                            <div className="text-center py-20 my-auto flex flex-col items-center justify-center">
-                                <p className="text-ai-cyan text-xl sm:text-3xl md:text-4xl mb-12 tracking-[0.3em] text-glow-pulse font-light">AI 虛擬肖像風格化</p>
+                            <div className="text-center py-10 my-auto flex flex-col items-center justify-center w-full">
+                                {/* 🌟 修正：將原本的副標題改為包含「禮品兌換」 */}
+                                <p className="text-ai-cyan text-xl sm:text-3xl md:text-4xl mb-4 tracking-[0.3em] text-glow-pulse font-light">AI 虛擬肖像風格化</p>
+                                <div className="inline-block bg-ai-pink/20 border border-ai-pink px-6 py-2 rounded-full mb-12 shadow-[0_0_15px_rgba(255,0,208,0.3)]">
+                                    <p className="text-white text-lg sm:text-2xl md:text-3xl tracking-[0.4em] font-black drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">專屬禮品兌換</p>
+                                </div>
+                                
+                                {/* 🌟 新增：填補紅框區域的 3 步驟圖示說明 */}
+                                <div className="flex items-center justify-center gap-3 sm:gap-8 mb-16 w-full max-w-[800px] px-2">
+                                    
+                                    {/* Step 1: 拍照 */}
+                                    <div className="flex flex-col items-center">
+                                        <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-2 border-ai-cyan bg-[#0f172a]/80 flex items-center justify-center shadow-[0_0_25px_rgba(0,242,255,0.25)] mb-4 relative z-10 transition-transform duration-500 hover:scale-105">
+                                            <i className="fa-solid fa-camera text-4xl sm:text-5xl text-white drop-shadow-[0_0_8px_rgba(0,242,255,0.8)]"></i>
+                                        </div>
+                                        <span className="text-ai-cyan font-black tracking-widest text-sm sm:text-xl drop-shadow-md">現場拍攝</span>
+                                    </div>
+
+                                    {/* 箭頭 */}
+                                    <i className="fa-solid fa-angles-right text-slate-500 text-xl sm:text-3xl animate-pulse pb-8"></i>
+
+                                    {/* Step 2: AI 生成 */}
+                                    <div className="flex flex-col items-center">
+                                        <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-2 border-ai-pink bg-[#0f172a]/80 flex items-center justify-center shadow-[0_0_25px_rgba(255,0,208,0.25)] mb-4 relative z-10 transition-transform duration-500 hover:scale-105">
+                                            <i className="fa-solid fa-wand-magic-sparkles text-4xl sm:text-5xl text-white drop-shadow-[0_0_8px_rgba(255,0,208,0.8)]"></i>
+                                        </div>
+                                        <span className="text-ai-pink font-black tracking-widest text-sm sm:text-xl drop-shadow-md">AI 演算</span>
+                                    </div>
+
+                                    {/* 箭頭 */}
+                                    <i className="fa-solid fa-angles-right text-slate-500 text-xl sm:text-3xl animate-pulse pb-8" style={{ animationDelay: '0.5s' }}></i>
+
+                                    {/* Step 3: 帆布袋 */}
+                                    <div className="flex flex-col items-center">
+                                        <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-2 border-white bg-[#0f172a]/80 flex items-center justify-center shadow-[0_0_25px_rgba(255,255,255,0.2)] mb-4 relative z-10 transition-transform duration-500 hover:scale-105">
+                                            <i className="fa-solid fa-bag-shopping text-4xl sm:text-5xl text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"></i>
+                                        </div>
+                                        <span className="text-white font-black tracking-widest text-sm sm:text-xl drop-shadow-md">專屬提袋</span>
+                                    </div>
+
+                                </div>
+
                                 <button onClick={startCamera} className="btn-cyan text-2xl sm:text-4xl md:text-5xl font-black px-16 py-8 sm:py-10 rounded-full animate-pulse shadow-[0_0_35px_rgba(0,242,255,0.4)]">開始體驗 START</button>
                             </div>
                         )}
@@ -356,11 +396,11 @@
                                 <p className="text-ai-cyan text-lg sm:text-2xl font-bold tracking-widest mb-6 animate-pulse">✨ 請挑選您最喜愛的款式 ✨</p>
                                 <div className="grid grid-cols-2 gap-6 w-full mb-8">
                                     <div onClick={() => setSelectedChoice('A')} className={`choice-card p-3 rounded-3xl text-center ${selectedChoice === 'A' ? 'selected' : ''}`}>
-                                        <img src={imgA} className="w-full aspect-square object-cover rounded-2xl mb-3 border border-slate-800" />
+                                        <img src={imgA} className="w-full aspect-square object-cover rounded-2xl mb-3 border border-slate-800" alt="Style A" />
                                         <span className="text-sm sm:text-2xl font-black tracking-wider block">【 風格 A 款 】</span>
                                     </div>
                                     <div onClick={() => setSelectedChoice('B')} className={`choice-card p-3 rounded-3xl text-center ${selectedChoice === 'B' ? 'selected' : ''}`}>
-                                        <img src={imgB} className="w-full aspect-square object-cover rounded-2xl mb-3 border border-slate-800" />
+                                        <img src={imgB} className="w-full aspect-square object-cover rounded-2xl mb-3 border border-slate-800" alt="Style B" />
                                         <span className="text-sm sm:text-2xl font-black tracking-wider block">【 風格 B 款 】</span>
                                     </div>
                                 </div>
@@ -385,7 +425,7 @@
                             <div className="flex flex-col items-center w-full max-w-[800px] px-4 text-center">
                                 <h2 className="text-3xl sm:text-5xl font-black text-ai-cyan tracking-widest mb-8 animate-pulse">選擇已送出</h2>
                                 <div className="bg-[#0f172a]/80 border-2 border-ai-cyan p-8 sm:p-10 rounded-[2.5rem] w-full mb-8 shadow-[0_0_45px_rgba(0,242,255,0.3)] flex flex-col items-center">
-                                    <img src={selectedChoice === 'A' ? imgA : imgB} className="w-56 h-56 sm:w-72 sm:h-72 object-cover rounded-3xl mb-6 border-2 border-slate-700 shadow-lg" />
+                                    <img src={selectedChoice === 'A' ? imgA : imgB} className="w-56 h-56 sm:w-72 sm:h-72 object-cover rounded-3xl mb-6 border-2 border-slate-700 shadow-lg" alt="Selected Style" />
                                     <p className="text-xs sm:text-lg text-slate-400 tracking-[0.3em] font-bold mb-2">您的專屬號碼</p>
                                     <p className="text-7xl sm:text-9xl font-black text-white font-mono drop-shadow-[0_0_25px_#00f2ff]">#{taskId}</p>
                                     <div className="mt-8 flex items-center justify-center gap-3 text-ai-cyan text-base sm:text-2xl font-bold tracking-widest bg-ai-cyan/10 px-8 py-4 rounded-full border border-ai-cyan/30 shadow-inner">
