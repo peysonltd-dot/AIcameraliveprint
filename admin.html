@@ -72,15 +72,12 @@
             <button id="printer-check-btn" onclick="checkPrinterStatus()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2 border border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
                 <i class="fa-solid fa-print"></i> <span id="printer-status-text">檢測出票機狀態</span>
             </button>
-
             <button id="sound-toggle" onclick="toggleSound()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-slate-700 transition-all">
                 <i id="sound-icon" class="fa-solid fa-volume-xmark text-rose-500"></i> <span id="sound-text">啟用音效提示</span>
             </button>
-
             <button onclick="fetchAllTasks()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2 shadow-[0_0_15px_rgba(0,242,255,0.3)]">
                 <i class="fa-solid fa-arrows-rotate"></i> 重新整理數據
             </button>
-
             <button onclick="openResetModal()" class="bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 font-bold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2 border border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.15)]">
                 <i class="fa-solid fa-trash-can"></i> 重製所有排隊
             </button>
@@ -134,9 +131,7 @@
                 gain2.connect(ctx.destination);
                 osc2.start(ctx.currentTime + delay);
                 osc2.stop(ctx.currentTime + delay + 1.1);
-            } catch (e) {
-                console.error("音效合成失敗:", e);
-            }
+            } catch (e) { console.error("音效合成失敗:", e); }
         }
 
         function toggleSound() {
@@ -149,9 +144,7 @@
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 if (AudioContext) globalAudioCtx = new AudioContext();
             }
-            if (globalAudioCtx) {
-                globalAudioCtx.resume();
-            }
+            if (globalAudioCtx) globalAudioCtx.resume();
             
             if (soundEnabled) {
                 icon.className = "fa-solid fa-volume-high text-cyan-400";
@@ -217,19 +210,12 @@
                     const max_size = 1024; 
 
                     if (width > height) {
-                        if (width > max_size) {
-                            height *= max_size / width;
-                            width = max_size;
-                        }
+                        if (width > max_size) { height *= max_size / width; width = max_size; }
                     } else {
-                        if (height > max_size) {
-                            width *= max_size / height;
-                            height = max_size;
-                        }
+                        if (height > max_size) { width *= max_size / height; height = max_size; }
                     }
 
-                    canvas.width = width;
-                    canvas.height = height;
+                    canvas.width = width; canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
 
@@ -251,9 +237,7 @@
                 const container = document.getElementById('tasks-container');
                 if (container) {
                     container.classList.add('ring-4', 'ring-cyan-400/30', 'ring-offset-2', 'ring-offset-[#0b1329]');
-                    setTimeout(() => {
-                        container.classList.remove('ring-4', 'ring-cyan-400/30', 'ring-offset-2', 'ring-offset-[#0b1329]');
-                    }, 1500);
+                    setTimeout(() => { container.classList.remove('ring-4', 'ring-cyan-400/30', 'ring-offset-2', 'ring-offset-[#0b1329]'); }, 1500);
                 }
 
                 setTimeout(() => {
@@ -265,41 +249,29 @@
 
         function openResetModal() {
             const modal = document.getElementById('reset-confirm-modal');
-            modal.classList.remove('opacity-0', 'pointer-events-none');
-            modal.classList.add('opacity-100');
+            modal.classList.remove('opacity-0', 'pointer-events-none'); modal.classList.add('opacity-100');
         }
 
         function closeResetModal() {
             const modal = document.getElementById('reset-confirm-modal');
-            modal.classList.add('opacity-0', 'pointer-events-none');
-            modal.classList.remove('opacity-100');
+            modal.classList.add('opacity-0', 'pointer-events-none'); modal.classList.remove('opacity-100');
         }
 
         async function executeResetAll() {
             const btn = document.getElementById('modal-confirm-reset-btn');
             const originalText = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> 正在重製...`;
+            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> 正在重製...`;
 
             try {
-                const res = await fetch(`${API_BASE_URL}/api/admin/reset-all`, {
-                    method: 'POST'
-                });
+                const res = await fetch(`${API_BASE_URL}/api/admin/reset-all`, { method: 'POST' });
                 const data = await res.json();
                 if (data.success) {
-                    closeResetModal();
-                    localTasksCache = {};
-                    renderTasks([]);
-                    showResetSuccessBanner();
-                } else {
-                    alert("重製失敗：" + (data.error || "未知錯誤"));
-                }
+                    closeResetModal(); localTasksCache = {}; renderTasks([]); showResetSuccessBanner();
+                } else { alert("重製失敗：" + (data.error || "未知錯誤")); }
             } catch (err) {
-                console.error("重製請求失敗:", err);
-                alert("無法連線至後端伺服器，請確認網路！");
+                console.error("重製請求失敗:", err); alert("無法連線至後端伺服器，請確認網路！");
             } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
+                btn.disabled = false; btn.innerHTML = originalText;
             }
         }
 
@@ -326,74 +298,58 @@
             }, 4000);
         }
 
+        // 🌟 核心修正：同步備註與狀態到後端，重整不再消失！
         async function updateTaskMeta(taskId, field, value) {
             const task = localTasksCache[taskId];
             if (task) {
-                task[field] = value;
+                task[field] = value; // 先更新本地畫面
+                try {
+                    const bodyData = {};
+                    bodyData[field] = value;
+                    await fetch(`${API_BASE_URL}/api/admin/update-meta/${taskId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(bodyData)
+                    });
+                } catch (e) { console.error("狀態同步失敗", e); }
             }
         }
 
         function downloadSourceImage(taskId) {
             const task = localTasksCache[taskId];
-            if (!task || !task.sourceImage) {
-                alert("原始客照尚未下載完成，請稍後再試！");
-                return;
-            }
+            if (!task || !task.sourceImage) { alert("原始客照尚未下載完成，請稍後再試！"); return; }
             const link = document.createElement('a');
-            link.href = task.sourceImage;
-            link.download = `雷雕客照_#${taskId}.jpg`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            link.href = task.sourceImage; link.download = `雷雕客照_#${taskId}.jpg`;
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
-        // 🌟 新增：強制直接下載圖片，不跳轉新分頁
         async function forceDownload(imageUrl, taskId, event) {
             if (!imageUrl) return alert("圖片還沒準備好喔！");
-            
-            // 讓按鈕顯示下載中，避免工作人員重複點擊
             const btn = event.currentTarget;
             const originalContent = btn.innerHTML;
-            btn.innerHTML = '⏳ 下載中...';
-            btn.disabled = true;
+            btn.innerHTML = '⏳ 下載中...'; btn.disabled = true;
 
             try {
-                // 透過 fetch 在背景把圖片抓回來轉換成 Blob 檔案格式
                 const response = await fetch(imageUrl);
                 const blob = await response.blob();
                 const blobUrl = window.URL.createObjectURL(blob);
-
-                // 建立一個隱藏的下載連結並觸發點擊
                 const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = blobUrl;
-                
-                // 自訂下載下來的檔名！
+                a.style.display = 'none'; a.href = blobUrl;
                 a.download = `客人_${taskId}_高清彩印圖.jpg`;
-
-                document.body.appendChild(a);
-                a.click();
-
-                // 點擊後清理記憶體垃圾
-                window.URL.revokeObjectURL(blobUrl);
-                document.body.removeChild(a);
+                document.body.appendChild(a); a.click();
+                window.URL.revokeObjectURL(blobUrl); document.body.removeChild(a);
             } catch (error) {
                 console.error('強制下載被瀏覽器阻擋，改用新分頁開啟:', error);
-                // 如果遇到極端的安全阻擋，自動退回原本的新分頁開啟模式，確保一定拿得到圖
                 window.open(imageUrl, '_blank');
             } finally {
-                // 恢復按鈕原本的樣子
-                btn.innerHTML = originalContent;
-                btn.disabled = false;
+                btn.innerHTML = originalContent; btn.disabled = false;
             }
         }
 
         function triggerDualUpload(taskId, targetType) {
-            currentUploadTaskId = taskId;
-            document.getElementById(`global-file-input-${targetType}`).click();
+            currentUploadTaskId = taskId; document.getElementById(`global-file-input-${targetType}`).click();
         }
 
-        // 🌟 上傳圖片實體
         async function handleImageFileInject(file, taskId, type) {
             const btn = document.getElementById(`upload-status-${type}-${taskId}`);
             if (btn) btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin text-cyan-400"></i>`;
@@ -402,12 +358,9 @@
                 const bodyData = {}; bodyData[`resultImage${type}`] = compressedBase64;
                 try {
                     const res = await fetch(`${API_BASE_URL}/api/admin/upload-result-dual/${taskId}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(bodyData)
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bodyData)
                     });
                     if ((await res.json()).success) {
-                        // 上傳成功，先將該圖手動緩存在本地，防止重複從網路下載
                         if (!localTasksCache[taskId]) localTasksCache[taskId] = {};
                         localTasksCache[taskId][`resultImage${type}`] = compressedBase64;
                         fetchAllTasks();
@@ -419,43 +372,32 @@
         ['A', 'B'].forEach(type => {
             document.getElementById(`global-file-input-${type}`).addEventListener('change', function() {
                 const taskId = currentUploadTaskId; if (!taskId || !this.files[0]) return;
-                handleImageFileInject(this.files[0], taskId, type);
-                this.value = "";
+                handleImageFileInject(this.files[0], taskId, type); this.value = "";
             });
         });
 
         async function reprintTicket(taskId, btnId) {
             const btn = document.getElementById(btnId);
             const originalHtml = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> 出票中...`;
+            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> 出票中...`;
             
             try {
-                const res = await fetch(`${API_BASE_URL}/api/admin/reprint/${taskId}`, {
-                    method: 'POST'
-                });
+                const res = await fetch(`${API_BASE_URL}/api/admin/reprint/${taskId}`, { method: 'POST' });
                 const data = await res.json();
                 if (data.success) {
                     btn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> 已出單`;
                     btn.className = "bg-emerald-950/40 border border-emerald-500/50 text-emerald-300 font-bold px-2 py-1.5 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1";
-                } else {
-                    alert("補印失敗：" + (data.error || "請確認出票機狀態！"));
-                    btn.innerHTML = originalHtml;
-                }
+                } else { alert("補印失敗：" + (data.error || "請確認出票機狀態！")); btn.innerHTML = originalHtml; }
             } catch (err) {
-                console.error("補印連線錯誤:", err);
-                alert("連線後端伺服器失敗！");
-                btn.innerHTML = originalHtml;
+                console.error("補印連線錯誤:", err); alert("連線後端伺服器失敗！"); btn.innerHTML = originalHtml;
             } finally {
                 setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = `<i class="fa-solid fa-print text-indigo-400"></i> 重新出票`;
+                    btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-print text-indigo-400"></i> 重新出票`;
                     btn.className = "bg-indigo-950/40 hover:bg-indigo-900 border border-indigo-500/50 text-indigo-300 font-bold px-2 py-1.5 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1";
                 }, 3000);
             }
         }
 
-        // 🌟 增量優化核心 1：單次背景下載客照
         async function fetchSourceImageIncrementally(taskId) {
             try {
                 const res = await fetch(`${API_BASE_URL}/api/admin/task-source-image/${taskId}`);
@@ -464,12 +406,9 @@
                     localTasksCache[taskId].sourceImage = data.sourceImage;
                     renderTasks(Object.values(localTasksCache).sort((a, b) => b.id.localeCompare(a.id)));
                 }
-            } catch (e) {
-                console.error(`增量讀取號碼牌 #${taskId} 原始照片失敗:`, e);
-            }
+            } catch (e) { console.error(`增量讀取號碼牌 #${taskId} 原始照片失敗:`, e); }
         }
 
-        // 🌟 增量優化核心 2：單次背景下載 AI 風格圖
         async function fetchResultImageIncrementally(taskId) {
             try {
                 const res = await fetch(`${API_BASE_URL}/api/admin/task-result-images/${taskId}`);
@@ -479,29 +418,22 @@
                     if (data.resultImageB) localTasksCache[taskId].resultImageB = data.resultImageB;
                     renderTasks(Object.values(localTasksCache).sort((a, b) => b.id.localeCompare(a.id)));
                 }
-            } catch (e) {
-                console.error(`增量讀取號碼牌 #${taskId} 風格圖失敗:`, e);
-            }
+            } catch (e) { console.error(`增量讀取號碼牌 #${taskId} 風格圖失敗:`, e); }
         }
 
         async function fetchAllTasks() {
             try {
-                // 🚀 發送智慧增量請求 (lightweight=true)，使資料傳輸量直接暴跌 99.9%
                 const res = await fetch(`${API_BASE_URL}/api/admin/all-tasks?lightweight=true`);
                 const data = await res.json();
                 if (data.success) {
                     let hasNewOrder = false;
-
                     data.tasks.forEach(t => { 
                         const isNewTask = !localTasksCache[t.id];
                         if (isNewTask) {
-                            if (Object.keys(localTasksCache).length > 0) {
-                                hasNewOrder = true;
-                            }
-                            t.processStatus = '製作中';
-                            t.remark = '';
+                            if (Object.keys(localTasksCache).length > 0) hasNewOrder = true;
+                            t.processStatus = t.processStatus || '製作中';
+                            t.remark = t.remark || '';
                         } else {
-                            // 繼承已被前端緩存在本地的大圖與控制參數，防範重複連線要圖
                             t.processStatus = localTasksCache[t.id].processStatus;
                             t.remark = localTasksCache[t.id].remark;
                             if (localTasksCache[t.id].sourceImage) t.sourceImage = localTasksCache[t.id].sourceImage;
@@ -511,29 +443,21 @@
                         
                         localTasksCache[t.id] = t; 
 
-                        // 🌟 增量協議：當檢測到雲端存在大圖，但本地尚未緩存，發起獨立的單次獲取
-                        if (t.hasSourceImage && !localTasksCache[t.id].sourceImage) {
-                            fetchSourceImageIncrementally(t.id);
-                        }
+                        if (t.hasSourceImage && !localTasksCache[t.id].sourceImage) fetchSourceImageIncrementally(t.id);
                         if ((t.hasResultImageA || t.hasResultImageB) && (!localTasksCache[t.id].resultImageA || !localTasksCache[t.id].resultImageB)) {
                             fetchResultImageIncrementally(t.id);
                         }
                     });
 
                     renderTasks(Object.values(localTasksCache).sort((a, b) => b.id.localeCompare(a.id)));
-                    
-                    if (hasNewOrder) {
-                        triggerNewOrderAlert();
-                    }
+                    if (hasNewOrder) triggerNewOrderAlert();
                 }
             } catch (e) {}
         }
 
         function renderTasks(tasks) {
             const activeEl = document.activeElement;
-            if (activeEl && (activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT')) {
-                return;
-            }
+            if (activeEl && (activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT')) return;
 
             const container = document.getElementById('tasks-container');
             if (tasks.length === 0) { 
@@ -573,7 +497,6 @@
 
                 return `
                 <div class="cyber-card p-4 md:p-5 rounded-2xl flex flex-col md:flex-row gap-6 items-stretch relative overflow-hidden">
-                    
                     <div class="flex flex-col items-center gap-2 w-full md:w-32 flex-shrink-0 md:border-r border-slate-700/50 md:pr-4">
                         <div class="text-center w-full">
                             <span class="text-[10px] font-mono tracking-widest text-cyan-400 block font-bold">QUEUE NO</span>
@@ -668,33 +591,20 @@
             for (let i = 0; i < items.length; i++) {
                 if (items[i].type.indexOf("image") !== -1) {
                     const file = items[i].getAsFile();
-                    handleImageFileInject(file, taskId, type);
-                    break;
+                    handleImageFileInject(file, taskId, type); break;
                 }
             }
         }
 
-        function handleDragOver(event, element) {
-            event.preventDefault();
-            element.classList.add('dragover');
-        }
-
-        function handleDragLeave(event, element) {
-            event.preventDefault();
-            element.classList.remove('dragover');
-        }
-
+        function handleDragOver(event, element) { event.preventDefault(); element.classList.add('dragover'); }
+        function handleDragLeave(event, element) { event.preventDefault(); element.classList.remove('dragover'); }
         function handleFileDrop(event, taskId, type) {
-            event.preventDefault();
-            event.currentTarget.classList.remove('dragover');
+            event.preventDefault(); event.currentTarget.classList.remove('dragover');
             const files = event.dataTransfer.files;
-            if (files.length > 0 && files[0].type.indexOf("image") !== -1) {
-                handleImageFileInject(files[0], taskId, type);
-            }
+            if (files.length > 0 && files[0].type.indexOf("image") !== -1) handleImageFileInject(files[0], taskId, type);
         }
 
         fetchAllTasks();
-        // 每 3.2 秒極速心跳連線一次，得益於增量優化，頻寬接近於 0 消耗！
         setInterval(fetchAllTasks, 3200);
     </script>
 </body>
