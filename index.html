@@ -58,18 +58,17 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start; /* 🌟 修正：從 center 改為 flex-start 靠上對齊，把拍照方框往上提 */
+            justify-content: flex-start; /* 🌟 修正：靠上對齊 */
             width: 100%;
             margin-top: 1rem;
             margin-bottom: 1rem;
-            padding-top: 1.5rem;          /* 🌟 新增：設定舒適的上方間距，緊貼智慧創新大賞標題下方 */
+            padding-top: 1.5rem;          /* 🌟 標題下方的間距 */
         }
         @media (min-height: 1100px) and (max-aspect-ratio: 10/16) {
-            /* 🌟 修正：大螢幕物理狀態下，一律維持靠上並預留 2rem 呼吸空間，防範大尺寸下的垂直置中硬傷 */
             .content-container { justify-content: flex-start; padding-top: 2rem; } 
         }
         .camera-container {
-            width: 80vw; height: 80vw; max-width: 750px; max-height: 750px; /* 從原本 500px 放大至 750px 巨幅比例 */
+            width: 80vw; height: 80vw; max-width: 750px; max-height: 750px; 
             position: relative; overflow: hidden; border-radius: 2rem;
             border: 4px solid var(--ai-cyan);
             box-shadow: 0 0 45px rgba(0, 242, 255, 0.5);
@@ -99,7 +98,7 @@
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none;
         }
         .radar-spinner {
-            position: relative; width: 240px; height: 240px; /* 從原本 160px 顯著放大 */
+            position: relative; width: 240px; height: 240px; 
             border-radius: 50%; border: 3px dashed rgba(0, 242, 255, 0.5);
             animation: spin 8s linear infinite;
         }
@@ -115,7 +114,7 @@
             background: rgba(0, 242, 255, 0.1); border: 2.5px solid var(--ai-cyan); color: var(--ai-cyan);
             letter-spacing: 3px; transition: all 0.3s; box-shadow: 0 0 20px rgba(0, 242, 255, 0.25);
             position: relative;
-            z-index: 10; /* 確保按鈕層級，不被背景遮擋 */
+            z-index: 10;
         }
         .btn-cyan:active:not(:disabled) { background: var(--ai-cyan); color: #000; box-shadow: 0 0 45px var(--ai-cyan); }
         .btn-red {
@@ -304,20 +303,18 @@
                         <div className="glow-bar"></div>
                     </div>
 
-                    {/* 互動內容控制中樞 - 已調整為頂部靠上對齊，拉高方框 */}
+                    {/* 互動內容控制中樞 */}
                     <div className="content-container">
                         
                         {step === 'home' && (
-                            <div className="text-center py-10 my-auto flex flex-col items-center justify-center w-full">
+                            /* 🌟 核心修改點：移除 'my-auto' 和 'justify-center'，新增 'mt-4 sm:mt-10' 讓內容往上提 */
+                            <div className="text-center mt-4 sm:mt-10 flex flex-col items-center justify-start w-full">
                                 <p className="text-ai-cyan text-xl sm:text-3xl md:text-4xl mb-3 tracking-[0.3em] text-glow-pulse font-light">AI 虛擬肖像</p>
                                 <p className="text-ai-pink text-xl sm:text-2xl md:text-3xl tracking-[0.5em] font-black mb-12 drop-shadow-[0_0_15px_rgba(255,0,208,0.8)]">
                                     <i className="fa-solid fa-gift mr-3 text-white/90"></i>專屬禮品兌換
                                 </p>
                                 
-                                {/* 🌟 圖片展示區塊：取代原本的 Icon */}
                                 <div className="flex flex-row items-center justify-center gap-6 sm:gap-12 mb-16 w-full max-w-[800px] px-4">
-                                    
-                                    {/* 圖片 1：拿著提袋的女孩 */}
                                     <div className="flex flex-col items-center group">
                                         <div className="w-36 h-36 sm:w-56 sm:h-56 rounded-[2rem] overflow-hidden border-2 border-ai-cyan shadow-[0_0_25px_rgba(0,242,255,0.2)] mb-4 transition-transform duration-500 group-hover:scale-105 group-hover:shadow-[0_0_35px_rgba(0,242,255,0.4)] bg-[#0f172a]/50 p-2">
                                             <img 
@@ -329,12 +326,10 @@
                                         <span className="text-ai-cyan font-black tracking-widest text-sm sm:text-xl drop-shadow-md">AI 生成頭像</span>
                                     </div>
 
-                                    {/* 動態箭頭 */}
                                     <div className="flex flex-col items-center pb-8 animate-pulse">
                                         <i className="fa-solid fa-arrow-right-long text-ai-pink text-2xl sm:text-4xl drop-shadow-[0_0_10px_rgba(255,0,208,0.6)]"></i>
                                     </div>
 
-                                    {/* 圖片 2：實體帆布袋 */}
                                     <div className="flex flex-col items-center group">
                                         <div className="w-36 h-36 sm:w-56 sm:h-56 rounded-[2rem] overflow-hidden border-2 border-white shadow-[0_0_25px_rgba(255,255,255,0.2)] mb-4 transition-transform duration-500 group-hover:scale-105 group-hover:shadow-[0_0_35px_rgba(255,255,255,0.4)] bg-[#0f172a]/50 p-2">
                                             <img 
@@ -345,7 +340,6 @@
                                         </div>
                                         <span className="text-white font-black tracking-widest text-sm sm:text-xl drop-shadow-md">現場印製提袋</span>
                                     </div>
-
                                 </div>
 
                                 <button onClick={startCamera} className="btn-cyan text-2xl sm:text-4xl md:text-5xl font-black px-16 py-8 sm:py-10 rounded-full animate-pulse shadow-[0_0_35px_rgba(0,242,255,0.4)]">開始體驗 START</button>
@@ -431,13 +425,12 @@
                                         <span>{returnCountdown} 秒後自動返回</span>
                                     </div>
                                 </div>
-                                {/* 🚀 隱藏返回按鈕：已將公開按鈕移除，改為右下角隱密點擊區 */}
                             </div>
                         )}
 
                     </div>
 
-                    {/* Footer - 🌟 隱藏重置按鈕：大螢幕上將點擊觸發區一併放大 (更方便現場人員觸碰)，外觀完全看不出 */}
+                    {/* Footer - 🌟 隱藏重置按鈕 */}
                     <div 
                         onClick={handleCancelAndGoHome}
                         className="w-full flex justify-end px-6 py-2 opacity-50 text-base sm:text-2xl font-mono text-ai-cyan tracking-widest cursor-default select-none active:text-white transition-colors duration-150"
