@@ -11,6 +11,9 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
+    <!-- 🌟 新增：導入極速且穩定的純前端 QR Code 生成函式庫 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    
     <style>
         :root {
             --ai-cyan: #00f2ff;
@@ -29,7 +32,7 @@
             overflow-x: hidden; 
             font-family: 'Noto Sans TC', sans-serif;
         }
-        /* 🌟 修改點 1：調整對齊為 top center，消除上方裁切黑邊 */
+        /* 🌟 背景圖：調整對齊為 top center，消除上方裁切黑邊 */
         .cyber-bg {
             background-image: url('https://img.shoplineapp.com/media/image_clips/6a4216a4c1e0e46c9bd9dde7/original.png?1782716067=&owner_id=66221c5c384dbb002ec45c18');
             background-size: cover;
@@ -37,7 +40,6 @@
             background-repeat: no-repeat;
             position: relative;
         }
-        /* 🌟 修改點 2：移除了前一版的 cyber-bg::before 暗色遮罩，讓原圖色彩完整呈現 */
 
         .kv-title {
             font-family: 'Orbitron', sans-serif;
@@ -145,6 +147,7 @@
 
             const videoRef = useRef(null);
             const canvasRef = useRef(null);
+            const qrCanvasRef = useRef(null); // 🌟 新增：用於綁定 QR Code 畫布
             const [countdown, setCountdown] = useState(0);
             const [textIndex, setTextIndex] = useState(0);
             const pollingRef = useRef(null);
@@ -244,6 +247,24 @@
                 setStep('home');
             };
 
+            // 🌟 新增：當進入完成畫面時，純本機端生成 QR Code，自動適配目前的 GitHub Pages 路徑
+            useEffect(() => {
+                if (step === 'completed' && taskId && qrCanvasRef.current) {
+                    // 自動取得當前網頁所在的資料夾路徑，並指向 download.html
+                    const basePath = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
+                    const downloadUrl = `${basePath}download.html?taskId=${taskId}`;
+                    
+                    new QRious({
+                        element: qrCanvasRef.current,
+                        value: downloadUrl,
+                        size: 200,
+                        background: '#ffffff',
+                        foreground: '#020617', // 暗海藍前景色，提升展館複雜燈光下的掃碼成功率
+                        level: 'H' // 高糾錯等級，保障手機相機對焦不準也能瞬間辨識
+                    });
+                }
+            }, [step, taskId]);
+
             useEffect(() => {
                 let returnTimer;
                 if (step === 'completed' && returnCountdown > 0) {
@@ -294,7 +315,6 @@
             }, [step, taskId]);
 
             return (
-                /* 🌟 修改點 3：將原本的固定 h-[100dvh] 改為 min-h-[100dvh] 並微調 pt-8，確保高度彈性不卡黑邊 */
                 <div className="flex flex-col items-center justify-between min-h-[100dvh] w-full pt-8 pb-12 px-6">
                     
                     {/* Header */}
@@ -311,7 +331,7 @@
                         <div className="glow-bar mt-2"></div>
                     </div>
 
-                    {/* 互動內容控制中樞 */}
+                    {}
                     <div className="content-container z-10">
                         
                         {step === 'home' && (
@@ -420,17 +440,36 @@
                             </div>
                         )}
 
+                        {}
                         {step === 'completed' && (
-                            <div className="flex flex-col items-center w-full max-w-[800px] px-4 text-center">
-                                <h2 className="text-3xl sm:text-5xl font-black text-ai-cyan tracking-widest mb-8 animate-pulse">選擇已送出</h2>
-                                <div className="bg-[#0f172a]/80 border-2 border-ai-cyan p-8 sm:p-10 rounded-[2.5rem] w-full mb-8 shadow-[0_0_45px_rgba(0,242,255,0.3)] flex flex-col items-center">
-                                    <img src={selectedChoice === 'A' ? imgA : imgB} className="w-56 h-56 sm:w-72 sm:h-72 object-cover rounded-3xl mb-6 border-2 border-slate-700 shadow-lg" alt="Selected Style" />
-                                    <p className="text-xs sm:text-lg text-slate-400 tracking-[0.3em] font-bold mb-2">您的專屬號碼</p>
-                                    <p className="text-7xl sm:text-9xl font-black text-white font-mono drop-shadow-[0_0_25px_#00f2ff]">#{taskId}</p>
-                                    <div className="mt-8 flex items-center justify-center gap-3 text-ai-cyan text-base sm:text-2xl font-bold tracking-widest bg-ai-cyan/10 px-8 py-4 rounded-full border border-ai-cyan/30 shadow-inner">
-                                        <i className="fa-solid fa-spinner animate-spin text-xl sm:text-2xl"></i>
-                                        <span>{returnCountdown} 秒後自動返回</span>
+                            <div className="flex flex-col items-center w-full max-w-[950px] px-4 text-center">
+                                <h2 className="text-3xl sm:text-5xl font-black text-ai-cyan tracking-widest mb-6 animate-pulse">選擇已送出</h2>
+                                
+                                <div className="bg-[#0f172a]/85 border-2 border-ai-cyan p-6 sm:p-8 rounded-[2.5rem] w-full mb-6 shadow-[0_0_45px_rgba(0,242,255,0.3)] flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12">
+                                    
+                                    {/* 左側：展示已選擇之成品 */}
+                                    <div className="flex flex-col items-center">
+                                        <img src={selectedChoice === 'A' ? imgA : imgB} className="w-48 h-48 sm:w-64 sm:h-64 object-cover rounded-3xl mb-4 border-2 border-slate-700 shadow-lg" alt="Selected Style" />
+                                        <p className="text-xs sm:text-sm text-slate-400 tracking-[0.2em] font-bold">您的專屬號碼</p>
+                                        <p className="text-5xl sm:text-7xl font-black text-white font-mono drop-shadow-[0_0_20px_#00f2ff]">#{taskId}</p>
                                     </div>
+
+                                    {/* 右側：QR Code 掃碼下載區 (具有白色襯底以確保展場複雜反射光下 100% 辨識) */}
+                                    <div className="flex flex-col items-center bg-slate-900/60 p-5 rounded-3xl border border-slate-700 w-full max-w-[280px]">
+                                        <div className="p-3 bg-white rounded-2xl shadow-[0_0_20px_rgba(255,255,255,0.15)] flex items-center justify-center mb-3">
+                                            <canvas ref={qrCanvasRef} className="w-40 h-40 object-contain"></canvas>
+                                        </div>
+                                        <span className="text-ai-cyan text-sm sm:text-base font-black tracking-widest mb-1">
+                                            <i className="fa-solid fa-mobile-screen-button mr-1.5 animate-bounce"></i> 掃碼下載頭像
+                                        </span>
+                                        <span className="text-[10px] sm:text-xs text-slate-400">請用手機相機掃描 QR Code</span>
+                                    </div>
+
+                                </div>
+
+                                <div className="flex items-center justify-center gap-3 text-ai-cyan text-base sm:text-xl font-bold tracking-widest bg-ai-cyan/10 px-6 py-3 rounded-full border border-ai-cyan/30 shadow-inner max-w-sm mx-auto">
+                                    <i className="fa-solid fa-spinner animate-spin text-lg sm:text-xl"></i>
+                                    <span>{returnCountdown} 秒後自動返回</span>
                                 </div>
                             </div>
                         )}
