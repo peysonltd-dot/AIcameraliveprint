@@ -136,7 +136,7 @@
         const { useState, useEffect, useRef } = React;
         const API_BASE_URL = "https://aicameraliveprint-back.onrender.com";
 
-        const LOADING_TEXTS_CH = ["啟動視覺網路模組", "正在萃取臉部幾何特徵", "演算極簡線條結構", "套用 AI 大賞專屬模型", "即將生成雙重對照風格"];
+        const LOADING_TEXTS_CH = ["啟動視覺網路模組", "正在繪製臉部特徵", "演算極簡線條結構", "套用 AI 大賞專屬模型", "即將生成雙重對照風格"];
         const LOADING_TEXTS_EN = ["BOOTING NEURAL...", "EXTRACTING PORTRAIT...", "VECTOR PROCESSING...", "APPLYING EXCLUSIVE LORA...", "GENERATING DUAL STYLES..."];
 
         const App = () => {
@@ -299,10 +299,10 @@
             return (
                 <div className="flex flex-col items-center justify-between h-[100dvh] w-full py-12 px-6">
                     
-                    {/* Header - 套用長條字體主視覺圖片 */}
+                    {/* Header - 替換為新提供的長條字體主視覺圖片 */}
                     <div className="text-center z-10 flex flex-col items-center flex-shrink-0 w-full pt-4">
                         <img 
-                            src="https://img.shoplineapp.com/media/image_clips/6a4205d56df54acba39f8805/original.png?1782711764=&owner_id=66221c5c384dbb002ec45c18" 
+                            src="https://img.shoplineapp.com/media/image_clips/6a420a9638f0454c89a12ea1/original.png?1782712982=&owner_id=66221c5c384dbb002ec45c18" 
                             className="w-[90%] max-w-[500px] sm:max-w-[700px] md:max-w-[800px] h-auto mb-4 filter drop-shadow-[0_0_15px_rgba(0,242,255,0.6)]" 
                             alt="Presidential Hackathon Typography" 
                         />
