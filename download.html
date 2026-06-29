@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2026 Presidential Hackathon | AI 虛擬肖像下載</title>
+    <title>2026 Presidential Hackathon | AI Portrait Download</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;900&display=swap" rel="stylesheet">
@@ -61,7 +61,7 @@
 
     <div class="cyber-bg w-full px-6 py-10 flex flex-col justify-between">
         
-        <!-- 頂部標題區 -->
+        <!-- 頂部雙語標題區 -->
         <header class="text-center w-full flex-shrink-0 mb-6">
             <span class="text-slate-300 text-[10px] tracking-widest uppercase block mb-1 font-mono">
                 2026 Presidential Hackathon
@@ -69,6 +69,9 @@
             <h1 class="text-2xl font-black tracking-widest text-white drop-shadow-[0_0_10px_rgba(0,242,255,0.4)]">
                 總統盃黑客松 肖像下載
             </h1>
+            <span class="text-slate-300 text-xs font-mono tracking-wider block mt-1">
+                Portrait Download
+            </span>
             <div class="h-[2px] w-24 bg-gradient-to-r from-transparent via-[#00f2ff] to-transparent mx-auto mt-2"></div>
         </header>
 
@@ -87,7 +90,8 @@
                     <!-- 載入中動畫 -->
                     <div id="loading-spinner" class="absolute flex flex-col items-center justify-center text-slate-400 gap-3">
                         <i class="fa-solid fa-spinner animate-spin text-3xl text-ai-cyan"></i>
-                        <span class="text-xs tracking-wider">正在為您沖印肖像...</span>
+                        <span class="text-xs tracking-wider font-bold">正在為您沖印肖像...</span>
+                        <span class="text-[10px] font-mono opacity-85">Processing your portrait...</span>
                     </div>
                     <!-- 肖像本體 -->
                     <img id="portrait-img" class="w-full h-full object-cover hidden" alt="AI Portrait" />
@@ -95,15 +99,19 @@
 
                 <!-- 手機端防呆長按引導 -->
                 <div class="mb-4 text-center">
-                    <p class="text-ai-cyan font-black text-sm tracking-widest mb-1">
+                    <p class="text-ai-cyan font-black text-sm tracking-widest mb-0.5">
                         <i class="fa-solid fa-hand-pointer mr-1 animate-bounce"></i> 長按上方圖片即可儲存
                     </p>
-                    <p class="text-[10px] text-slate-400">iOS (Safari/LINE) 與 Android 適用</p>
+                    <p class="text-slate-300 font-mono text-xs mb-1">
+                        Long-press Image to Save
+                    </p>
+                    <p class="text-[9px] text-slate-400">iOS (Safari/LINE/WeChat) & Android</p>
                 </div>
 
                 <!-- 直接下載按鈕 (備用保底) -->
-                <button id="download-btn" disabled class="glow-button w-full py-4 rounded-2xl font-bold tracking-widest text-sm flex items-center justify-center gap-2 opacity-50 cursor-not-allowed">
-                    <i class="fa-solid fa-download"></i> 一鍵下載檔案
+                <button id="download-btn" disabled class="glow-button w-full py-4 rounded-2xl font-bold tracking-widest text-sm flex flex-col items-center justify-center gap-0.5 opacity-50 cursor-not-allowed">
+                    <span><i class="fa-solid fa-download mr-1.5"></i>一鍵下載檔案</span>
+                    <span class="text-[10px] font-mono opacity-80">DOWNLOAD PORTRAIT</span>
                 </button>
 
             </div>
@@ -112,15 +120,15 @@
         <!-- 底部主辦版權資訊 -->
         <footer class="text-center w-full flex-shrink-0 pt-6 opacity-60">
             <p class="text-[9px] leading-relaxed tracking-wider text-slate-300">
-                指導單位：經濟部 <br>
-                主辦單位：經濟部產業技術司
+                指導單位：經濟部 | Advisory Organ: Ministry of Economic Affairs<br>
+                主辦單位：經濟部產業技術司 | Organizer: Department of Industrial Technology, MOEA
             </p>
             <p class="text-[8px] font-mono text-ai-cyan mt-1">2026 ALL RIGHTS RESERVED</p>
         </footer>
 
     </div>
 
-    <!-- 🌟 前端交互邏輯：秒級獲取資料並免 Render 流量阻擋 -->
+    <!-- 前端交互邏輯：秒級獲取資料並免 Render 流量阻擋 -->
     <script>
         const API_BASE_URL = "https://aicameraliveprint-back.onrender.com";
 
@@ -138,7 +146,11 @@
             fetchPortraitData();
         } else {
             displayIdEl.innerText = "#ERROR";
-            spinner.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-3xl text-rose-500"></i><span class="text-xs text-rose-400 mt-2">網址無效：查無此序號</span>`;
+            spinner.innerHTML = `
+                <i class="fa-solid fa-triangle-exclamation text-3xl text-rose-500"></i>
+                <span class="text-xs text-rose-400 mt-2 font-bold">網址無效：查無此序號</span>
+                <span class="text-[10px] text-rose-400 font-mono mt-0.5">Invalid URL: Queue ID Not Found</span>
+            `;
         }
 
         async function fetchPortraitData() {
@@ -169,7 +181,7 @@
                                 const a = document.createElement('a');
                                 a.style.display = 'none';
                                 a.href = blobUrl;
-                                a.download = `總統盃黑客松_肖像_${taskId}.jpg`;
+                                a.download = `Presidential_Hackathon_Portrait_${taskId}.jpg`;
                                 document.body.appendChild(a);
                                 a.click();
                                 window.URL.revokeObjectURL(blobUrl);
