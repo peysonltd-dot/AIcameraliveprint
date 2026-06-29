@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2026 Presidential Hackathon International Track | 總統盃黑客松</title>
+    <title>2026 Presidential Hackathon | 總統盃黑客松</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;900&display=swap" rel="stylesheet">
@@ -25,25 +25,22 @@
             font-family: 'Noto Sans TC', sans-serif;
             background-color: var(--ai-dark);
         }
-        /* 更新背景設定：套用新背景圖片並設定為 cover 以適應螢幕比例 */
         .cyber-bg {
-            background-image: url('https://img.shoplineapp.com/media/image_clips/6a42074e98a89e001272a13a/original.png?1782712141=&owner_id=66221c5c384dbb002ec45c18');
-            background-size: cover;
-            background-position: center center;
-            background-repeat: no-repeat;
+            background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
             position: relative;
         }
-        /* 為了讓文字在花俏背景上依然清晰，添加一層極輕微的暗色遮罩 (可依需求調整或移除) */
         .cyber-bg::before {
             content: "";
             position: absolute;
             inset: 0;
-            background-color: rgba(2, 6, 23, 0.4); /* 40% 的深色遮罩，讓前景內容更突出 */
+            background-image: linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
             z-index: 0;
-            pointer-events: none;
+            pointer-events: none; /* 讓背景網格事件穿透，防止阻擋按鈕點擊 */
         }
         .kv-title {
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Orbitron', 'Noto Sans TC', sans-serif;
             background: linear-gradient(to bottom, #fff 30%, var(--ai-cyan) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -51,7 +48,7 @@
         }
         .glow-bar {
             height: 4px;
-            width: 320px;
+            width: 320px; /* 大螢幕專用加寬霓虹條 */
             background: linear-gradient(90deg, transparent, var(--ai-pink), var(--ai-cyan), transparent);
             box-shadow: 0 0 16px var(--ai-pink), 0 0 28px var(--ai-cyan);
             border-radius: 50%;
@@ -61,17 +58,18 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: flex-start; /* 修正：從 center 改為 flex-start 靠上對齊，把拍照方框往上提 */
             width: 100%;
             margin-top: 1rem;
             margin-bottom: 1rem;
-            padding-top: 1.5rem;
+            padding-top: 1.5rem;          /* 設定舒適的上方間距，緊貼標題下方 */
         }
         @media (min-height: 1100px) and (max-aspect-ratio: 10/16) {
+            /* 大螢幕物理狀態下，一律維持靠上並預留 2rem 呼吸空間，防範大尺寸下的垂直置中硬傷 */
             .content-container { justify-content: flex-start; padding-top: 2rem; } 
         }
         .camera-container {
-            width: 80vw; height: 80vw; max-width: 750px; max-height: 750px; 
+            width: 80vw; height: 80vw; max-width: 750px; max-height: 750px; /* 從原本 500px 放大至 750px 巨幅比例 */
             position: relative; overflow: hidden; border-radius: 2rem;
             border: 4px solid var(--ai-cyan);
             box-shadow: 0 0 45px rgba(0, 242, 255, 0.5);
@@ -101,7 +99,7 @@
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none;
         }
         .radar-spinner {
-            position: relative; width: 240px; height: 240px; 
+            position: relative; width: 240px; height: 240px; /* 從原本 160px 顯著放大 */
             border-radius: 50%; border: 3px dashed rgba(0, 242, 255, 0.5);
             animation: spin 8s linear infinite;
         }
@@ -117,7 +115,7 @@
             background: rgba(0, 242, 255, 0.1); border: 2.5px solid var(--ai-cyan); color: var(--ai-cyan);
             letter-spacing: 3px; transition: all 0.3s; box-shadow: 0 0 20px rgba(0, 242, 255, 0.25);
             position: relative;
-            z-index: 10;
+            z-index: 10; /* 確保按鈕層級，不被背景遮擋 */
         }
         .btn-cyan:active:not(:disabled) { background: var(--ai-cyan); color: #000; box-shadow: 0 0 45px var(--ai-cyan); }
         .btn-red {
@@ -297,26 +295,22 @@
             }, [step, taskId]);
 
             return (
-                <div className="flex flex-col items-center justify-between h-[100dvh] w-full py-12 px-6">
+                <div className="flex flex-col items-center justify-between h-[100dvh] w-full py-12 px-6 cyber-bg">
                     
-                    {/* Header - 替換為新提供的長條字體主視覺圖片 */}
+                    {/* Header - 標題與霓虹燈條  */}
                     <div className="text-center z-10 flex flex-col items-center flex-shrink-0 w-full pt-4">
-                        <img 
-                            src="https://img.shoplineapp.com/media/image_clips/6a420a9638f0454c89a12ea1/original.png?1782712982=&owner_id=66221c5c384dbb002ec45c18" 
-                            className="w-[90%] max-w-[500px] sm:max-w-[700px] md:max-w-[800px] h-auto mb-4 filter drop-shadow-[0_0_15px_rgba(0,242,255,0.6)]" 
-                            alt="Presidential Hackathon Typography" 
-                        />
-                        
-                        <h1 className="kv-title text-2xl sm:text-3xl md:text-4xl font-black mb-3 tracking-widest leading-tight">
-                            總統盃黑客松國際松
-                        </h1>
-                        <div className="glow-bar mt-2"></div>
+                        <span className="text-slate-200 text-xs sm:text-sm md:text-base font-bold tracking-widest uppercase mb-3 opacity-90 font-mono">
+                            2026 Presidential Hackathon International Track
+                        </span>
+                        <h1 className="kv-title text-4xl sm:text-6xl md:text-7xl font-black mb-3 tracking-widest">總統盃黑客松</h1>
+                        <div className="glow-bar"></div>
                     </div>
 
                     {/* 互動內容控制中樞 */}
-                    <div className="content-container z-10">
+                    <div className="content-container">
                         
                         {step === 'home' && (
+                            /* 移除 'my-auto' 和 'justify-center'，新增 'mt-4 sm:mt-10' 讓內容往上提 */
                             <div className="text-center mt-4 sm:mt-10 flex flex-col items-center justify-start w-full">
                                 <p className="text-ai-cyan text-xl sm:text-3xl md:text-4xl mb-3 tracking-[0.3em] text-glow-pulse font-light">AI 虛擬肖像</p>
                                 <p className="text-ai-pink text-xl sm:text-2xl md:text-3xl tracking-[0.5em] font-black mb-12 drop-shadow-[0_0_15px_rgba(255,0,208,0.8)]">
@@ -439,9 +433,10 @@
 
                     </div>
 
+                    {/* Footer - 隱藏重置按鈕 */}
                     <div 
                         onClick={handleCancelAndGoHome}
-                        className="w-full flex justify-end px-6 py-2 opacity-50 text-base sm:text-2xl font-mono text-ai-cyan tracking-widest cursor-default select-none active:text-white transition-colors duration-150 z-10"
+                        className="w-full flex justify-end px-6 py-2 opacity-50 text-base sm:text-2xl font-mono text-ai-cyan tracking-widest cursor-default select-none active:text-white transition-colors duration-150"
                         title="工作人員專用跳轉"
                     >
                         2026
