@@ -6,12 +6,12 @@
     <title>2026 Presidential Hackathon International Track | 總統盃黑客松</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2 family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- 🌟 新增：導入極速且穩定的純前端 QR Code 生成函式庫 -->
+    <!-- 🌟 導入極速且穩定的純前端 QR Code 生成函式庫 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     
     <style>
@@ -32,11 +32,11 @@
             overflow-x: hidden; 
             font-family: 'Noto Sans TC', sans-serif;
         }
-        /* 🌟 背景圖：調整對齊為 top center，消除上方裁切黑邊 */
+        /* 🌟 背景圖：100% 置中靠上對齊，無黑邊、無網格線 */
         .cyber-bg {
             background-image: url('https://img.shoplineapp.com/media/image_clips/6a4216a4c1e0e46c9bd9dde7/original.png?1782716067=&owner_id=66221c5c384dbb002ec45c18');
             background-size: cover;
-            background-position: top center; 
+            background-position: center top; 
             background-repeat: no-repeat;
             position: relative;
         }
@@ -135,6 +135,7 @@
         const { useState, useEffect, useRef } = React;
         const API_BASE_URL = "https://aicameraliveprint-back.onrender.com";
 
+        // 🌟 中英對照載入中動畫提示詞
         const LOADING_TEXTS_CH = ["啟動視覺網路模組", "正在萃取臉部幾何特徵", "演算極簡線條結構", "套用 AI 大賞專屬模型", "即將生成雙重對照風格"];
         const LOADING_TEXTS_EN = ["BOOTING NEURAL...", "EXTRACTING PORTRAIT...", "VECTOR PROCESSING...", "APPLYING EXCLUSIVE LORA...", "GENERATING DUAL STYLES..."];
 
@@ -144,27 +145,28 @@
             const [imgA, setImgA] = useState(null);
             const [imgB, setImgB] = useState(null);
             const [selectedChoice, setSelectedChoice] = useState(null);
+            const [cameraError, setCameraError] = useState(false); // 🌟 自訂相機異常 UI (取代 Alert)
 
             const videoRef = useRef(null);
             const canvasRef = useRef(null);
-            const qrCanvasRef = useRef(null); // 🌟 新增：用於綁定 QR Code 畫布
+            const qrCanvasRef = useRef(null); // 🌟 用於綁定 QR Code 畫布
             const [countdown, setCountdown] = useState(0);
             const [textIndex, setTextIndex] = useState(0);
             const pollingRef = useRef(null);
             const [isSubmitting, setIsSubmitting] = useState(false);
             const [stream, setStream] = useState(null);
-            const [returnCountdown, setReturnCountdown] = useState(10);
+            const [returnCountdown, setReturnCountdown] = useState(15); // 🌟 變更點 1：自動返回前台時間從 10 秒改為 15 秒
 
             const startCamera = async () => {
                 try {
+                    setCameraError(false);
                     const mediaStream = await navigator.mediaDevices.getUserMedia({
                         video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }
                     });
                     setStream(mediaStream);
                     setStep('camera');
                 } catch (err) {
-                    alert("請開通相機權限！");
-                    setStep('home');
+                    setCameraError(true); // 🌟 啟動自訂相機警告 UI
                 }
             };
 
@@ -235,7 +237,7 @@
                 }
 
                 setIsSubmitting(false);
-                setReturnCountdown(10);
+                setReturnCountdown(15); // 🌟 變更點 2：提交選擇後，返回倒數重置為 15 秒
                 setStep('completed');
             };
 
@@ -244,13 +246,12 @@
                 if (stream) stream.getTracks().forEach(t => t.stop());
                 setStream(null);
                 setTaskId(null);
+                setCameraError(false);
                 setStep('home');
             };
 
-            // 🌟 新增：當進入完成畫面時，純本機端生成 QR Code，自動適配目前的 GitHub Pages 路徑
             useEffect(() => {
                 if (step === 'completed' && taskId && qrCanvasRef.current) {
-                    // 自動取得當前網頁所在的資料夾路徑，並指向 download.html
                     const basePath = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
                     const downloadUrl = `${basePath}download.html?taskId=${taskId}`;
                     
@@ -259,8 +260,8 @@
                         value: downloadUrl,
                         size: 200,
                         background: '#ffffff',
-                        foreground: '#020617', // 暗海藍前景色，提升展館複雜燈光下的掃碼成功率
-                        level: 'H' // 高糾錯等級，保障手機相機對焦不準也能瞬間辨識
+                        foreground: '#020617', // 暗海藍色前景，提高複雜光線折射下的對焦識別率
+                        level: 'H' // 高容錯等級
                     });
                 }
             }, [step, taskId]);
@@ -317,31 +318,36 @@
             return (
                 <div className="flex flex-col items-center justify-between min-h-[100dvh] w-full pt-8 pb-12 px-6">
                     
-                    {/* Header */}
+                    {/* Header - 中英雙語頂部標題 */}
                     <div className="text-center z-10 flex flex-col items-center flex-shrink-0 w-full pt-2">
-                        <img 
-                            src="https://img.shoplineapp.com/media/image_clips/6a420a9638f0454c89a12ea1/original.png?1782712982=&owner_id=66221c5c384dbb002ec45c18" 
-                            className="w-[90%] max-w-[500px] sm:max-w-[700px] md:max-w-[800px] h-auto mb-4 filter drop-shadow-[0_0_15px_rgba(0,242,255,0.6)]" 
-                            alt="Presidential Hackathon Typography" 
-                        />
+                        <span className="text-slate-300 text-[10px] tracking-widest uppercase block mb-2 font-mono">
+                            2026 Presidential Hackathon International Track
+                        </span>
                         
-                        <h1 className="kv-title text-2xl sm:text-3xl md:text-4xl font-black mb-3 tracking-widest leading-tight">
+                        <h1 className="kv-title text-2xl sm:text-3xl md:text-4xl font-black tracking-widest leading-tight">
                             總統盃黑客松
                         </h1>
                         <div className="glow-bar mt-2"></div>
                     </div>
 
-                    {}
+                    {/* 互動內容控制中樞 */}
                     <div className="content-container z-10">
                         
+                        {/* 🌟 1. 雙語首頁引導 */}
                         {step === 'home' && (
                             <div className="text-center mt-4 sm:mt-10 flex flex-col items-center justify-start w-full">
-                                <p className="text-ai-cyan text-xl sm:text-3xl md:text-4xl mb-3 tracking-[0.3em] text-glow-pulse font-light">AI 虛擬肖像</p>
-                                <p className="text-ai-pink text-xl sm:text-2xl md:text-3xl tracking-[0.5em] font-black mb-12 drop-shadow-[0_0_15px_rgba(255,0,208,0.8)]">
-                                    <i className="fa-solid fa-gift mr-3 text-white/90"></i>專屬禮品兌換
+                                <p className="text-ai-cyan text-xl sm:text-3xl md:text-4xl mb-2 tracking-[0.3em] text-glow-pulse font-light">
+                                    AI 虛擬肖像
+                                </p>
+                                <p className="text-slate-300 text-xs sm:text-base tracking-[0.2em] font-mono mb-3">
+                                    AI Virtual Portrait
+                                </p>
+                                <p className="text-ai-pink text-xl sm:text-2xl md:text-3xl tracking-[0.3em] font-black mb-12 drop-shadow-[0_0_15px_rgba(255,0,208,0.8)]">
+                                    <i className="fa-solid fa-gift mr-3 text-white/90"></i>專屬禮品兌換 / Exclusive Gift
                                 </p>
                                 
                                 <div className="flex flex-row items-center justify-center gap-6 sm:gap-12 mb-16 w-full max-w-[800px] px-4">
+                                    {/* 欄位 1: AI生成 */}
                                     <div className="flex flex-col items-center group">
                                         <div className="w-36 h-36 sm:w-56 sm:h-56 rounded-[2rem] overflow-hidden border-2 border-ai-cyan shadow-[0_0_25px_rgba(0,242,255,0.2)] mb-4 transition-transform duration-500 group-hover:scale-105 group-hover:shadow-[0_0_35px_rgba(0,242,255,0.4)] bg-[#0f172a]/50 p-2">
                                             <img 
@@ -351,12 +357,15 @@
                                             />
                                         </div>
                                         <span className="text-ai-cyan font-black tracking-widest text-sm sm:text-xl drop-shadow-md">AI 生成頭像</span>
+                                        <span className="text-[10px] sm:text-xs text-slate-400 font-mono tracking-wider mt-0.5">AI Avatar</span>
                                     </div>
 
-                                    <div className="flex flex-col items-center pb-8 animate-pulse">
+                                    {/* 指向箭頭 */}
+                                    <div className="flex flex-col items-center pb-12 animate-pulse">
                                         <i className="fa-solid fa-arrow-right-long text-ai-pink text-2xl sm:text-4xl drop-shadow-[0_0_10px_rgba(255,0,208,0.6)]"></i>
                                     </div>
 
+                                    {/* 欄位 2: 現場彩印 */}
                                     <div className="flex flex-col items-center group">
                                         <div className="w-36 h-36 sm:w-56 sm:h-56 rounded-[2rem] overflow-hidden border-2 border-white shadow-[0_0_25px_rgba(255,255,255,0.2)] mb-4 transition-transform duration-500 group-hover:scale-105 group-hover:shadow-[0_0_35px_rgba(255,255,255,0.4)] bg-[#0f172a]/50 p-2">
                                             <img 
@@ -366,13 +375,18 @@
                                             />
                                         </div>
                                         <span className="text-white font-black tracking-widest text-sm sm:text-xl drop-shadow-md">現場印製提袋</span>
+                                        <span className="text-[10px] sm:text-xs text-slate-400 font-mono tracking-wider mt-0.5">Live Bag Printing</span>
                                     </div>
                                 </div>
 
-                                <button onClick={startCamera} className="btn-cyan text-2xl sm:text-4xl md:text-5xl font-black px-16 py-8 sm:py-10 rounded-full animate-pulse shadow-[0_0_35px_rgba(0,242,255,0.4)]">開始體驗 START</button>
+                                <button onClick={startCamera} className="btn-cyan text-xl sm:text-3xl md:text-4xl font-black px-12 py-6 sm:py-8 rounded-full animate-pulse shadow-[0_0_35px_rgba(0,242,255,0.4)] flex flex-col items-center gap-1">
+                                    <span>開始體驗 START</span>
+                                    <span className="text-xs sm:text-base font-bold font-mono tracking-widest opacity-80">CLICK HERE TO START</span>
+                                </button>
                             </div>
                         )}
 
+                        {/* 🌟 2. 雙語拍照步驟 */}
                         {step === 'camera' && (
                             <div className="flex flex-col items-center w-full">
                                 <div className="camera-container">
@@ -385,65 +399,86 @@
                                     )}
                                 </div>
                                 <div className="mt-8 flex gap-6 w-[85vw] sm:w-[80vw] max-w-[500px] sm:max-w-[750px] px-2">
-                                    <button onClick={handleCancelAndGoHome} className="btn-cyan flex-1 py-5 rounded-2xl text-lg sm:text-2xl font-bold">返回首頁</button>
-                                    <button onClick={takePhoto} className="btn-cyan flex-[2.5] py-5 rounded-2xl text-2xl sm:text-3.5xl font-black bg-ai-cyan/20 shadow-[0_0_20px_rgba(0,242,255,0.3)]">拍攝照片 PHOTO</button>
-                                </div>
-                            </div>
-                        )}
-
-                        {step === 'loading' && (
-                            <div className="flex flex-col items-center justify-center">
-                                <div className="relative flex items-center justify-center mb-8">
-                                    <div className="radar-spinner"></div>
-                                </div>
-                                <div className="h-28 text-center mb-6">
-                                    <h2 className="text-2xl sm:text-4xl font-bold text-white tracking-wider mb-2 text-glow-pulse">{LOADING_TEXTS_CH[textIndex]}</h2>
-                                    <p className="text-ai-cyan text-sm sm:text-lg font-mono opacity-80 tracking-widest">{LOADING_TEXTS_EN[textIndex]}</p>
-                                </div>
-                                {taskId && (
-                                    <div className="bg-black/40 p-6 rounded-3xl border-2 border-ai-cyan text-center w-72 shadow-[0_0_30px_rgba(0,242,255,0.2)] mb-6">
-                                        <p className="text-[12px] text-slate-400 font-mono tracking-wider">PROGRESS ID</p>
-                                        <p className="text-5xl font-mono font-black text-ai-cyan">#{taskId}</p>
-                                    </div>
-                                )}
-                                <button onClick={handleCancelAndGoHome} className="btn-red px-8 py-3.5 rounded-2xl text-sm sm:text-base font-bold">取消返回首頁</button>
-                            </div>
-                        )}
-
-                        {step === 'choice' && (
-                            <div className="flex flex-col items-center w-full max-w-[1000px] px-4">
-                                <p className="text-ai-cyan text-lg sm:text-2xl font-bold tracking-widest mb-6 animate-pulse">✨ 請挑選您最喜愛的款式 ✨</p>
-                                <div className="grid grid-cols-2 gap-6 w-full mb-8">
-                                    <div onClick={() => setSelectedChoice('A')} className={`choice-card p-3 rounded-3xl text-center ${selectedChoice === 'A' ? 'selected' : ''}`}>
-                                        <img src={imgA} className="w-full aspect-square object-cover rounded-2xl mb-3 border border-slate-800" alt="Style A" />
-                                        <span className="text-sm sm:text-2xl font-black tracking-wider block">【 風格 A 款 】</span>
-                                    </div>
-                                    <div onClick={() => setSelectedChoice('B')} className={`choice-card p-3 rounded-3xl text-center ${selectedChoice === 'B' ? 'selected' : ''}`}>
-                                        <img src={imgB} className="w-full aspect-square object-cover rounded-2xl mb-3 border border-slate-800" alt="Style B" />
-                                        <span className="text-sm sm:text-2xl font-black tracking-wider block">【 風格 B 款 】</span>
-                                    </div>
-                                </div>
-                                <div className="flex gap-6 w-full sm:max-w-[700px]">
-                                    <button onClick={handleCancelAndGoHome} className="btn-cyan flex-1 py-5 rounded-2xl text-sm sm:text-xl font-bold">放棄</button>
-                                    <button 
-                                        disabled={!selectedChoice || isSubmitting} 
-                                        onClick={finalizeChoice} 
-                                        className={`flex-[2.5] py-5 rounded-2xl text-lg sm:text-2xl font-black transition-all duration-300 ${
-                                            selectedChoice 
-                                                ? 'btn-cyan bg-cyan-400 text-slate-950 shadow-[0_0_35px_rgba(0,242,255,0.5)]' 
-                                                : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
-                                        }`}
-                                    >
-                                        <i className="fa-solid fa-check mr-2"></i>{isSubmitting ? "處理中..." : "確定"}
+                                    <button onClick={handleCancelAndGoHome} className="btn-cyan flex-1 py-4 sm:py-5 rounded-2xl text-base sm:text-xl font-bold flex flex-col items-center justify-center leading-tight">
+                                        <span>返回首頁</span>
+                                        <span className="text-[10px] sm:text-xs font-mono font-bold opacity-80 mt-1">HOME</span>
+                                    </button>
+                                    <button onClick={takePhoto} className="btn-cyan flex-[2.5] py-4 sm:py-5 rounded-2xl text-xl sm:text-3xl font-black bg-ai-cyan/20 shadow-[0_0_20px_rgba(0,242,255,0.3)] flex flex-col items-center justify-center leading-tight">
+                                        <span>拍攝照片 PHOTO</span>
+                                        <span className="text-xs sm:text-sm font-mono font-bold opacity-90 mt-1">TAKE PHOTO</span>
                                     </button>
                                 </div>
                             </div>
                         )}
 
-                        {}
+                        {/* 🌟 3. 雙語加載步驟 */}
+                        {step === 'loading' && (
+                            <div className="flex flex-col items-center justify-center">
+                                <div className="relative flex items-center justify-center mb-8">
+                                    <div className="radar-spinner"></div>
+                                </div>
+                                <div className="h-32 text-center mb-6">
+                                    <h2 className="text-2xl sm:text-4xl font-bold text-white tracking-wider mb-2 text-glow-pulse">{LOADING_TEXTS_CH[textIndex]}</h2>
+                                    <p className="text-ai-cyan text-sm sm:text-lg font-mono opacity-80 tracking-widest">{LOADING_TEXTS_EN[textIndex]}</p>
+                                </div>
+                                {taskId && (
+                                    <div className="bg-black/40 p-5 sm:p-6 rounded-3xl border-2 border-ai-cyan text-center w-72 shadow-[0_0_30px_rgba(0,242,255,0.2)] mb-6">
+                                        <p className="text-[10px] sm:text-[12px] text-slate-400 font-mono tracking-wider">PROGRESS ID</p>
+                                        <p className="text-4xl sm:text-5xl font-mono font-black text-ai-cyan">#{taskId}</p>
+                                    </div>
+                                )}
+                                <button onClick={handleCancelAndGoHome} className="btn-red px-8 py-3.5 rounded-2xl text-xs sm:text-base font-bold flex flex-col items-center justify-center">
+                                    <span>取消返回首頁</span>
+                                    <span className="text-[10px] font-mono opacity-80 mt-0.5">CANCEL AND RETURN</span>
+                                </button>
+                            </div>
+                        )}
+
+                        {/* 🌟 4. 雙語風格二選一 */}
+                        {step === 'choice' && (
+                            <div className="flex flex-col items-center w-full max-w-[1000px] px-4">
+                                <div className="text-center mb-6">
+                                    <p className="text-ai-cyan text-lg sm:text-2xl font-bold tracking-widest animate-pulse">✨ 請挑選您最喜愛的款式 ✨</p>
+                                    <p className="text-slate-300 text-xs sm:text-base font-mono tracking-widest mt-1">Please Select Your Favorite Style</p>
+                                </div>
+                                <div className="grid grid-cols-2 gap-6 w-full mb-8">
+                                    <div onClick={() => setSelectedChoice('A')} className={`choice-card p-3 rounded-3xl text-center ${selectedChoice === 'A' ? 'selected' : ''}`}>
+                                        <img src={imgA} className="w-full aspect-square object-cover rounded-2xl mb-3 border border-slate-800" alt="Style A" />
+                                        <span className="text-sm sm:text-2xl font-black tracking-wider block">【 風格 A 款 】</span>
+                                        <span className="text-[10px] sm:text-sm font-mono opacity-80 mt-1 block">Style A</span>
+                                    </div>
+                                    <div onClick={() => setSelectedChoice('B')} className={`choice-card p-3 rounded-3xl text-center ${selectedChoice === 'B' ? 'selected' : ''}`}>
+                                        <img src={imgB} className="w-full aspect-square object-cover rounded-2xl mb-3 border border-slate-800" alt="Style B" />
+                                        <span className="text-sm sm:text-2xl font-black tracking-wider block">【 風格 B 款 】</span>
+                                        <span className="text-[10px] sm:text-sm font-mono opacity-80 mt-1 block">Style B</span>
+                                    </div>
+                                </div>
+                                <div className="flex gap-6 w-full sm:max-w-[700px]">
+                                    <button onClick={handleCancelAndGoHome} className="btn-cyan flex-1 py-4 rounded-2xl text-xs sm:text-xl font-bold flex flex-col items-center justify-center">
+                                        <span>放棄</span>
+                                        <span className="text-[10px] sm:text-xs font-mono mt-0.5">CANCEL</span>
+                                    </button>
+                                    <button 
+                                        disabled={!selectedChoice || isSubmitting} 
+                                        onClick={finalizeChoice} 
+                                        className={`flex-[2.5] py-4 rounded-2xl text-base sm:text-2xl font-black transition-all duration-300 flex flex-col items-center justify-center ${
+                                            selectedChoice 
+                                                ? 'btn-cyan bg-cyan-400 text-slate-950 shadow-[0_0_35px_rgba(0,242,255,0.5)]' 
+                                                : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
+                                        }`}
+                                    >
+                                        <span><i className="fa-solid fa-check mr-2"></i>{isSubmitting ? "處理中..." : "確定"}</span>
+                                        <span className="text-[10px] sm:text-sm font-mono mt-0.5">{isSubmitting ? "Processing..." : "CONFIRM"}</span>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 🌟 5. 雙語成功與二維碼下載 */}
                         {step === 'completed' && (
-                            <div className="flex flex-col items-center w-full max-w-[950px] px-4 text-center">
-                                <h2 className="text-3xl sm:text-5xl font-black text-ai-cyan tracking-widest mb-6 animate-pulse">選擇已送出</h2>
+                            <div className="flex flex-col items-center w-full max-w-[850px] px-4 text-center">
+                                <h2 className="text-3xl sm:text-5xl font-black text-ai-cyan tracking-widest mb-1 animate-pulse">選擇已送出</h2>
+                                <p className="text-slate-300 text-sm sm:text-xl font-mono tracking-widest mb-6">Selection Submitted</p>
                                 
                                 <div className="bg-[#0f172a]/85 border-2 border-ai-cyan p-6 sm:p-8 rounded-[2.5rem] w-full mb-6 shadow-[0_0_45px_rgba(0,242,255,0.3)] flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12">
                                     
@@ -451,35 +486,60 @@
                                     <div className="flex flex-col items-center">
                                         <img src={selectedChoice === 'A' ? imgA : imgB} className="w-48 h-48 sm:w-64 sm:h-64 object-cover rounded-3xl mb-4 border-2 border-slate-700 shadow-lg" alt="Selected Style" />
                                         <p className="text-xs sm:text-sm text-slate-400 tracking-[0.2em] font-bold">您的專屬號碼</p>
+                                        <p className="text-[10px] text-slate-500 font-mono tracking-wider mb-1">YOUR QUEUE NUMBER</p>
                                         <p className="text-5xl sm:text-7xl font-black text-white font-mono drop-shadow-[0_0_20px_#00f2ff]">#{taskId}</p>
                                     </div>
 
-                                    {/* 右側：QR Code 掃碼下載區 (具有白色襯底以確保展場複雜反射光下 100% 辨識) */}
+                                    {/* 右側：QR Code 掃碼下載區 (高對比白底，外國來賓掃碼取圖專用) */}
                                     <div className="flex flex-col items-center bg-slate-900/60 p-5 rounded-3xl border border-slate-700 w-full max-w-[280px]">
                                         <div className="p-3 bg-white rounded-2xl shadow-[0_0_20px_rgba(255,255,255,0.15)] flex items-center justify-center mb-3">
                                             <canvas ref={qrCanvasRef} className="w-40 h-40 object-contain"></canvas>
                                         </div>
-                                        <span className="text-ai-cyan text-sm sm:text-base font-black tracking-widest mb-1">
+                                        <span className="text-ai-cyan text-sm sm:text-base font-black tracking-widest mb-0.5">
                                             <i className="fa-solid fa-mobile-screen-button mr-1.5 animate-bounce"></i> 掃碼下載頭像
                                         </span>
-                                        <span className="text-[10px] sm:text-xs text-slate-400">請用手機相機掃描 QR Code</span>
+                                        <span className="text-slate-300 text-xs font-mono font-bold tracking-wider mb-1">
+                                            Scan to Download
+                                        </span>
+                                        <span className="text-[9px] sm:text-[10px] text-slate-400">請用手機相機掃描 QR Code</span>
+                                        <span className="text-[8px] sm:text-[9px] text-slate-500 font-mono">Use your Phone Camera</span>
                                     </div>
 
                                 </div>
 
-                                <div className="flex items-center justify-center gap-3 text-ai-cyan text-base sm:text-xl font-bold tracking-widest bg-ai-cyan/10 px-6 py-3 rounded-full border border-ai-cyan/30 shadow-inner max-w-sm mx-auto">
+                                <div className="flex items-center justify-center gap-3 text-ai-cyan text-sm sm:text-xl font-bold tracking-widest bg-ai-cyan/10 px-6 py-3.5 rounded-full border border-ai-cyan/30 shadow-inner max-w-md mx-auto">
                                     <i className="fa-solid fa-spinner animate-spin text-lg sm:text-xl"></i>
                                     <span>{returnCountdown} 秒後自動返回</span>
+                                    <span className="text-xs sm:text-base font-mono opacity-80">({returnCountdown}s Auto-Return)</span>
                                 </div>
                             </div>
                         )}
 
                     </div>
 
+                    {/* 🌟 自訂相機異常警告彈窗 (取代 alert) */}
+                    {cameraError && (
+                        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+                            <div className="bg-slate-900 border-2 border-rose-500 rounded-3xl p-8 max-w-md w-full text-center shadow-[0_0_45px_rgba(239,68,68,0.5)]">
+                                <div className="w-20 h-20 rounded-full bg-rose-500/10 border-2 border-rose-500 flex items-center justify-center mx-auto mb-6 text-rose-500 text-4xl animate-bounce">
+                                    <i className="fa-solid fa-camera"></i>
+                                </div>
+                                <h3 className="text-2xl font-black text-white mb-2">請開通相機權限</h3>
+                                <p className="text-slate-400 text-sm leading-relaxed mb-6">
+                                    機台偵測不到視訊鏡頭。請點擊瀏覽器網址列旁的「鎖頭」圖示，並將相機存取權限設為「允許」。<br/>
+                                    <span class="text-xs font-mono text-rose-400 block mt-2">Please enable camera permissions in your browser settings.</span>
+                                </p>
+                                <button onClick={() => setCameraError(false)} className="btn-cyan w-full py-4 rounded-2xl font-black text-lg">
+                                    確認 / CONFIRM
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     <div 
                         onClick={handleCancelAndGoHome}
                         className="w-full flex justify-end px-6 py-2 opacity-50 text-base sm:text-2xl font-mono text-ai-cyan tracking-widest cursor-default select-none active:text-white transition-colors duration-150 z-10"
-                        title="工作人員專用跳轉"
+                        title="工作人員專用跳轉 / Staff Reset"
                     >
                         2026
                     </div>
