@@ -199,7 +199,7 @@
                 bagLabel: "現場トートバッグ印刷",
                 startBtn: "體驗開始",
                 startSub: "タップしてスタート",
-                homeBtn: "トップへ",
+                homeBtn: "トップへ戻る",
                 takePhotoBtn: "撮影する",
                 cancelBtn: "キャンセル",
                 cancelSub: "トップへ戻る",
@@ -237,7 +237,7 @@
                 bagLabel: "Live Printing Bag",
                 startBtn: "START EXPERIENCE",
                 startSub: "CLICK HERE TO START",
-                homeBtn: "HOME",
+                homeBtn: "RETURN TO HOME",
                 takePhotoBtn: "TAKE PHOTO",
                 cancelBtn: "CANCEL",
                 cancelSub: "RETURN TO HOME",
@@ -289,7 +289,6 @@
             const pollingRef = useRef(null);
             const [isSubmitting, setIsSubmitting] = useState(false);
             const [stream, setStream] = useState(null);
-            const [returnCountdown, setReturnCountdown] = useState(15);
 
             const startCamera = async () => {
                 try {
@@ -399,18 +398,6 @@
                     });
                 }
             }, [step, taskId, lang]);
-
-            useEffect(() => {
-                let returnTimer;
-                if (step === 'completed' && returnCountdown > 0) {
-                    returnTimer = setTimeout(() => {
-                        setReturnCountdown(prev => prev - 1);
-                    }, 1000);
-                } else if (step === 'completed' && returnCountdown === 0) {
-                    handleCancelAndGoHome();
-                }
-                return () => clearTimeout(returnTimer);
-            }, [step, returnCountdown]);
 
             useEffect(() => {
                 let textInterval;
@@ -610,10 +597,13 @@
 
                                 </div>
 
-                                <div className="flex items-center justify-center gap-3 text-ai-cyan text-sm sm:text-xl font-bold tracking-widest bg-ai-cyan/10 px-6 py-3.5 rounded-full border border-ai-cyan/30 shadow-inner max-w-md mx-auto">
-                                    <i className="fa-solid fa-spinner animate-spin text-lg sm:text-xl"></i>
-                                    <span>{returnCountdown} {t.autoReturn}</span>
-                                </div>
+                                <button 
+                                    onClick={handleCancelAndGoHome} 
+                                    className="btn-cyan px-10 py-4 rounded-full text-base sm:text-2xl font-black shadow-[0_0_25px_rgba(0,242,255,0.3)] flex items-center justify-center gap-2 max-w-md mx-auto cursor-pointer active:scale-95 transition-transform"
+                                >
+                                    <i className="fa-solid fa-house"></i>
+                                    <span>{t.homeBtn}</span>
+                                </button>
                             </div>
                         )}
 
