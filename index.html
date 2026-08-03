@@ -272,7 +272,7 @@
 
         const App = () => {
             const [step, setStep] = useState('home');
-            const [lang, setLang] = useState('jp'); // 預設語言改為日文 'jp'
+            const [lang, setLang] = useState('zh'); // 🌟 預設語言改為繁體中文 'zh'
             const [taskId, setTaskId] = useState(null);
             const [imgA, setImgA] = useState(null);
             const [imgB, setImgB] = useState(null);
@@ -639,10 +639,8 @@
 
                     {/* 🌟 Footer 合作單位 LOGO 區塊 */}
                     <div className="w-full flex flex-col items-center justify-center gap-2 pt-2 z-10">
-                        <div className="flex items-center justify-center gap-3 sm:gap-5 bg-white/95 px-5 py-2 rounded-2xl shadow-[0_0_20px_rgba(255,255,255,0.3)] backdrop-blur-md">
-                            <img src="https://img.shoplineapp.com/media/image_clips/6a607d669e55e27ece023d03/original.png?1784708454=&owner_id=66221c5c384dbb002ec45c18" alt="TCA 台北市電腦商業同業公會" className="h-6 sm:h-8 object-contain" />
-                            <div className="h-5 sm:h-6 w-[1.5px] bg-slate-300"></div>
-                            <img src="https://img.shoplineapp.com/media/image_clips/6a607d662a733964446d360a/original.png?1784708454=&owner_id=66221c5c384dbb002ec45c18" alt="TAIWAN AI ALLIANCE 台灣AI大聯盟" className="h-6 sm:h-8 object-contain" />
+                        <div className="flex items-center justify-center bg-white/95 px-5 py-2 rounded-2xl shadow-[0_0_20px_rgba(255,255,255,0.3)] backdrop-blur-md">
+                            <img src="https://img.shoplineapp.com/media/image_clips/6a70274247e08ca4d6740eca/original.png?1785734978=&owner_id=66221c5c384dbb002ec45c18" alt="合作單位 LOGO" className="h-6 sm:h-8 object-contain" />
                         </div>
                         <div 
                             onClick={handleCancelAndGoHome}
