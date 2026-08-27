@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI Virtual Portrait | 掃碼上傳體驗</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <style>
+        :root { --ai-cyan:#00f2ff; --ai-pink:#ff00d0; --ai-dark:#020617; }
+        * { box-sizing:border-box; }
+        html,body { margin:0; min-height:100%; background:var(--ai-dark); }
+        body {
+            font-family:'Noto Sans TC',sans-serif; touch-action:manipulation; user-select:none; overflow-x:hidden;
+            background-image:
+                radial-gradient(circle at 18% 15%,rgba(0,242,255,.10),transparent 30%),
+                radial-gradient(circle at 82% 72%,rgba(255,0,208,.08),transparent 34%);
+        }
+        .orbitron { font-family:'Orbitron',sans-serif; }
+        .glass { background:rgba(15,23,42,.78); border:1px solid rgba(0,242,255,.20); backdrop-filter:blur(14px); }
+        .primary { background:rgba(0,242,255,.12); border:2px solid var(--ai-cyan); color:var(--ai-cyan); box-shadow:0 0 24px rgba(0,242,255,.18); }
+        .primary:active:not(:disabled) { background:var(--ai-cyan); color:#020617; }
+        .primary:disabled { opacity:.38; box-shadow:none; }
+        .secondary { background:rgba(15,23,42,.8); border:1px solid #475569; color:#cbd5e1; }
+        .choice { border:3px solid #334155; background:rgba(15,23,42,.84); transition:.2s; }
+        .choice.selected { border-color:var(--ai-cyan); box-shadow:0 0 32px rgba(0,242,255,.35); transform:translateY(-3px); }
+        .spinner { width:150px; height:150px; border:3px dashed rgba(0,242,255,.45); border-radius:50%; animation:spin 5s linear infinite; position:relative; }
+        .spinner:after { content:""; position:absolute; inset:18px; border:6px solid transparent; border-top-color:var(--ai-cyan); border-bottom-color:var(--ai-pink); border-radius:50%; animation:spin 1.6s linear infinite reverse; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .hidden { display:none !important; }
+    </style>
+</head>
+<body class="text-white min-h-[100dvh]">
+    <div class="min-h-[100dvh] flex flex-col px-5 sm:px-8 py-5">
+        <header class="text-center flex-shrink-0">
+            <div class="h-[3px] max-w-sm mx-auto bg-gradient-to-r from-transparent via-cyan-300 to-transparent shadow-[0_0_18px_#00f2ff]"></div>
+            <div class="orbitron text-cyan-300 tracking-[.22em] text-sm mt-4">AI VIRTUAL PORTRAIT</div>
+        </header>
+
+        <main class="flex-1 flex items-center justify-center w-full max-w-5xl mx-auto py-5">
+            <section id="home-step" class="step text-center w-full max-w-3xl">
+                <i class="fa-solid fa-mobile-screen-button text-6xl sm:text-8xl text-cyan-300 drop-shadow-[0_0_22px_rgba(0,242,255,.5)]"></i>
+                <h1 class="text-3xl sm:text-5xl font-black tracking-widest mt-8">手機照片 AI 風格化</h1>
+                <p class="text-slate-300 text-lg sm:text-2xl mt-5">掃描QR Code，將手機相簿照片傳到這台機台</p>
+                <button id="start-btn" class="primary rounded-full px-12 sm:px-20 py-5 sm:py-7 text-2xl sm:text-4xl font-black mt-12">
+                    開始體驗
+                </button>
+                <button onclick="location.href='kiosk.html'" class="block mx-auto mt-8 text-slate-600 text-xs">重新讀取前台模式</button>
+            </section>
+
+            <section id="scan-step" class="step hidden w-full">
+                <div class="grid md:grid-cols-[1fr_1.15fr] gap-6 items-center">
+                    <div class="text-center">
+                        <h2 class="text-2xl sm:text-4xl font-black tracking-wider text-cyan-300">請用手機掃描</h2>
+                        <p class="text-slate-300 mt-3 text-base sm:text-xl">從手機相簿選擇一張照片上傳</p>
+                        <div class="inline-flex bg-white p-4 rounded-3xl mt-6 shadow-[0_0_32px_rgba(255,255,255,.2)]">
+                            <canvas id="upload-qr" width="300" height="300" class="w-[240px] h-[240px] sm:w-[300px] sm:h-[300px]"></canvas>
+                        </div>
+                        <div class="mt-4 text-slate-500 text-sm">QR Code將於 <span id="expire-count" class="text-cyan-300 font-black">05:00</span> 後失效</div>
+                    </div>
+                    <div class="glass rounded-[2rem] p-7 sm:p-10 text-center">
+                        <div id="waiting-icon" class="w-24 h-24 rounded-full border-2 border-cyan-400/60 flex items-center justify-center mx-auto">
+                            <i class="fa-solid fa-satellite-dish text-4xl text-cyan-300 animate-pulse"></i>
+                        </div>
+                        <h3 id="scan-title" class="text-2xl sm:text-3xl font-black mt-6">等待手機上傳照片</h3>
+                        <p id="scan-status" class="text-slate-400 mt-3">上傳完成後，照片會自動出現在這裡</p>
+                        <div class="mt-8 flex gap-4">
+                            <button id="cancel-scan-btn" class="secondary flex-1 rounded-2xl py-4 font-bold">取消</button>
+                            <button id="new-qr-btn" class="secondary flex-1 rounded-2xl py-4 font-bold">重新產生QR</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="preview-step" class="step hidden w-full max-w-4xl">
+                <div class="grid md:grid-cols-[1.2fr_.8fr] gap-7 items-center">
+                    <div class="glass rounded-[2rem] p-4">
+                        <img id="source-preview" class="w-full max-h-[62vh] object-contain rounded-[1.4rem] bg-black" alt="上傳照片">
+                    </div>
+                    <div class="text-center">
+                        <div class="w-16 h-16 rounded-full bg-emerald-500/10 border-2 border-emerald-400 flex items-center justify-center mx-auto"><i class="fa-solid fa-check text-3xl text-emerald-300"></i></div>
+                        <h2 class="text-3xl sm:text-4xl font-black mt-5">照片已收到</h2>
+                        <p class="text-slate-400 mt-3">請確認人物清楚、照片方向正確</p>
+                        <button id="generate-btn" class="primary w-full rounded-2xl py-5 text-xl sm:text-2xl font-black mt-8"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>開始AI生成</button>
+                        <button id="replace-btn" class="secondary w-full rounded-2xl py-4 font-bold mt-4">重新上傳照片</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="generating-step" class="step hidden text-center w-full max-w-2xl">
+                <div class="spinner mx-auto"></div>
+                <h2 class="text-3xl sm:text-5xl font-black text-cyan-300 mt-9">AI正在生成肖像</h2>
+                <p id="generation-status" class="text-slate-300 text-lg mt-4">任務已加入佇列，請稍候…</p>
+                <div id="task-number-box" class="hidden glass rounded-2xl px-7 py-5 mt-7 inline-block">
+                    <div class="text-slate-500 text-xs tracking-widest">QUEUE NO.</div>
+                    <div id="task-number" class="orbitron text-4xl font-black text-cyan-300 mt-1">#---</div>
+                </div>
+                <button id="generation-home-btn" class="secondary block mx-auto rounded-xl px-7 py-3 mt-8 text-sm">取消並返回首頁</button>
+            </section>
+
+            <section id="choice-step" class="step hidden w-full max-w-5xl">
+                <h2 class="text-center text-2xl sm:text-4xl font-black text-cyan-300 mb-6">請選擇喜歡的AI風格</h2>
+                <div class="grid grid-cols-2 gap-4 sm:gap-7">
+                    <button class="choice rounded-3xl p-3 sm:p-4 text-center" data-choice="A">
+                        <img id="result-a" class="w-full aspect-square object-cover rounded-2xl bg-black" alt="風格A">
+                        <span class="block font-black text-lg sm:text-2xl mt-3">風格 A</span>
+                    </button>
+                    <button class="choice rounded-3xl p-3 sm:p-4 text-center" data-choice="B">
+                        <img id="result-b" class="w-full aspect-square object-cover rounded-2xl bg-black" alt="風格B">
+                        <span class="block font-black text-lg sm:text-2xl mt-3">風格 B</span>
+                    </button>
+                </div>
+                <div class="flex gap-4 sm:gap-6 max-w-2xl mx-auto mt-7">
+                    <button id="discard-btn" class="secondary flex-1 rounded-2xl py-4 font-bold">放棄</button>
+                    <button id="submit-choice-btn" disabled class="primary flex-[2] rounded-2xl py-4 text-xl font-black">確定送出</button>
+                </div>
+            </section>
+
+            <section id="completed-step" class="step hidden text-center w-full max-w-3xl">
+                <h2 class="text-3xl sm:text-5xl font-black text-cyan-300">選擇已送出</h2>
+                <div class="glass rounded-[2rem] p-6 sm:p-8 mt-7 flex flex-col sm:flex-row gap-7 items-center justify-center">
+                    <img id="final-image" class="w-56 h-56 sm:w-72 sm:h-72 object-cover rounded-3xl border-2 border-cyan-400" alt="完成圖片">
+                    <div>
+                        <div class="text-slate-400 tracking-widest">您的專屬號碼</div>
+                        <div id="final-task-number" class="orbitron text-6xl sm:text-8xl font-black text-white mt-2">#---</div>
+                        <p class="text-cyan-300 font-bold mt-5">請依現場工作人員指示領取</p>
+                    </div>
+                </div>
+                <div class="mt-6 text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i><span id="return-count">15</span>秒後自動返回首頁</div>
+            </section>
+
+            <section id="error-step" class="step hidden text-center glass rounded-[2rem] p-9 w-full max-w-xl">
+                <i class="fa-solid fa-triangle-exclamation text-6xl text-rose-400"></i>
+                <h2 class="text-2xl font-black mt-6">目前無法完成操作</h2>
+                <p id="error-message" class="text-slate-400 mt-3 leading-relaxed">請確認網路或請工作人員協助。</p>
+                <button id="error-home-btn" class="primary rounded-2xl px-10 py-4 font-black mt-7">返回首頁</button>
+            </section>
+        </main>
+
+        <footer class="text-center text-[10px] orbitron tracking-[.25em] text-cyan-900 flex-shrink-0">PEYSON LIVE EXPERIENCE</footer>
+    </div>
+
+    <script>
+        const API_BASE_URL = "https://aicameraliveprint-back.onrender.com";
+        const state = { sessionId:null, taskId:null, selectedChoice:null, resultA:null, resultB:null, pollTimer:null, expireTimer:null, expiresAt:0, isSubmitting:false };
+        const steps = ["home","scan","preview","generating","choice","completed","error"];
+
+        function showStep(name) {
+            steps.forEach(step => document.getElementById(`${step}-step`).classList.toggle("hidden", step !== name));
+        }
+        function clearTimers() {
+            if (state.pollTimer) clearInterval(state.pollTimer);
+            if (state.expireTimer) clearInterval(state.expireTimer);
+            state.pollTimer = null; state.expireTimer = null;
+        }
+        function resetState() {
+            clearTimers();
+            state.sessionId = null; state.taskId = null; state.selectedChoice = null; state.resultA = null; state.resultB = null; state.isSubmitting = false;
+            document.querySelectorAll(".choice").forEach(el => el.classList.remove("selected"));
+            document.getElementById("generate-btn").disabled = false;
+            document.getElementById("task-number-box").classList.add("hidden");
+            document.getElementById("submit-choice-btn").disabled = true;
+            document.getElementById("submit-choice-btn").textContent = "確定送出";
+            showStep("home");
+        }
+        function showError(message) {
+            clearTimers();
+            document.getElementById("error-message").textContent = message;
+            showStep("error");
+        }
+        async function api(path, options = {}) {
+            const response = await fetch(`${API_BASE_URL}${path}`, { cache:"no-store", ...options });
+            let data = {};
+            try { data = await response.json(); } catch (_) {}
+            if (!response.ok || data.success === false) throw new Error(data.error || `連線失敗（${response.status}）`);
+            return data;
+        }
+        function uploadPageUrl(sessionId) {
+            const basePath = location.origin + location.pathname.replace(/\/[^\/]*$/, "/");
+            return `${basePath}upload.html?session=${encodeURIComponent(sessionId)}`;
+        }
+        function updateExpireCountdown() {
+            const remaining = Math.max(0, state.expiresAt - Date.now());
+            const seconds = Math.ceil(remaining / 1000);
+            const mm = String(Math.floor(seconds / 60)).padStart(2,"0");
+            const ss = String(seconds % 60).padStart(2,"0");
+            document.getElementById("expire-count").textContent = `${mm}:${ss}`;
+            if (remaining <= 0) {
+                clearTimers();
+                showError("QR Code已過期，請返回首頁重新開始。");
+            }
+        }
+        async function createSession() {
+            clearTimers();
+            showStep("scan");
+            document.getElementById("scan-title").textContent = "正在建立上傳連結…";
+            document.getElementById("scan-status").textContent = "請稍候";
+            try {
+                const data = await api("/api/qr-session", { method:"POST", headers:{"Content-Type":"application/json"}, body:"{}" });
+                state.sessionId = data.sessionId;
+                state.expiresAt = data.expiresAt;
+                new QRious({ element:document.getElementById("upload-qr"), value:uploadPageUrl(state.sessionId), size:300, background:"#ffffff", foreground:"#020617", level:"H" });
+                document.getElementById("scan-title").textContent = "等待手機上傳照片";
+                document.getElementById("scan-status").textContent = "上傳完成後，照片會自動出現在這裡";
+                updateExpireCountdown();
+                state.expireTimer = setInterval(updateExpireCountdown, 1000);
+                state.pollTimer = setInterval(checkSession, 1200);
+                checkSession();
+            } catch (error) { showError(`建立QR Code失敗：${error.message}`); }
+        }
+        async function checkSession() {
+            if (!state.sessionId) return;
+            try {
+                const data = await api(`/api/qr-session/${encodeURIComponent(state.sessionId)}?includeImage=1`);
+                if (data.status === "photo_ready" && data.sourceImage) {
+                    clearTimers();
+                    document.getElementById("source-preview").src = data.sourceImage;
+                    showStep("preview");
+                } else if (data.status === "expired") {
+                    showError("QR Code已過期，請重新開始。");
+                }
+            } catch (error) {
+                document.getElementById("scan-status").textContent = "網路暫時不穩，正在重新連線…";
+            }
+        }
+        async function startGeneration() {
+            const btn = document.getElementById("generate-btn");
+            btn.disabled = true;
+            showStep("generating");
+            document.getElementById("generation-status").textContent = "正在建立AI任務…";
+            try {
+                const data = await api(`/api/qr-session/${encodeURIComponent(state.sessionId)}/generate`, { method:"POST", headers:{"Content-Type":"application/json"}, body:"{}" });
+                state.taskId = data.taskId;
+                document.getElementById("task-number").textContent = `#${state.taskId}`;
+                document.getElementById("task-number-box").classList.remove("hidden");
+                document.getElementById("generation-status").textContent = data.status === "queued" ? "任務已加入佇列，請稍候…" : "AI正在處理照片…";
+                state.pollTimer = setInterval(checkTask, 2500);
+                checkTask();
+            } catch (error) {
+                btn.disabled = false;
+                showError(`無法開始AI生成：${error.message}`);
+            }
+        }
+        async function checkTask() {
+            if (!state.taskId) return;
+            try {
+                const data = await api(`/api/status/${encodeURIComponent(state.taskId)}`);
+                const labels = { queued:"前方尚有任務，正在排隊…", pending:"準備AI模型中…", generating:"AI正在生成兩款風格…" };
+                document.getElementById("generation-status").textContent = labels[data.status] || "AI正在處理照片…";
+                if (data.status === "completed" && data.resultImageA && data.resultImageB) {
+                    clearTimers();
+                    state.resultA = data.resultImageA; state.resultB = data.resultImageB;
+                    document.getElementById("result-a").src = state.resultA;
+                    document.getElementById("result-b").src = state.resultB;
+                    showStep("choice");
+                } else if (data.status === "failed") {
+                    showError(data.remark || "AI生成失敗，請通知工作人員從後台重試或上傳替代圖片。");
+                }
+            } catch (error) {
+                document.getElementById("generation-status").textContent = "網路暫時不穩，生成任務仍會繼續…";
+            }
+        }
+        async function submitChoice() {
+            if (!state.selectedChoice || state.isSubmitting) return;
+            state.isSubmitting = true;
+            const btn = document.getElementById("submit-choice-btn");
+            btn.disabled = true; btn.textContent = "正在送出…";
+            try {
+                await api(`/api/choice/${encodeURIComponent(state.taskId)}`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ choice:state.selectedChoice }) });
+                document.getElementById("final-image").src = state.selectedChoice === "A" ? state.resultA : state.resultB;
+                document.getElementById("final-task-number").textContent = `#${state.taskId}`;
+                showStep("completed");
+                let count = 15;
+                document.getElementById("return-count").textContent = count;
+                const timer = setInterval(() => {
+                    count -= 1; document.getElementById("return-count").textContent = count;
+                    if (count <= 0) { clearInterval(timer); resetState(); }
+                }, 1000);
+            } catch (error) {
+                state.isSubmitting = false; btn.disabled = false; btn.textContent = "確定送出";
+                alert(`送出失敗：${error.message}`);
+            }
+        }
+
+        document.getElementById("start-btn").addEventListener("click", createSession);
+        document.getElementById("cancel-scan-btn").addEventListener("click", resetState);
+        document.getElementById("new-qr-btn").addEventListener("click", createSession);
+        document.getElementById("replace-btn").addEventListener("click", createSession);
+        document.getElementById("generate-btn").addEventListener("click", startGeneration);
+        document.getElementById("generation-home-btn").addEventListener("click", resetState);
+        document.getElementById("discard-btn").addEventListener("click", resetState);
+        document.getElementById("error-home-btn").addEventListener("click", resetState);
+        document.getElementById("submit-choice-btn").addEventListener("click", submitChoice);
+        document.querySelectorAll(".choice").forEach(button => button.addEventListener("click", () => {
+            state.selectedChoice = button.dataset.choice;
+            document.querySelectorAll(".choice").forEach(el => el.classList.toggle("selected", el === button));
+            document.getElementById("submit-choice-btn").disabled = false;
+        }));
+    </script>
+</body>
+</html>
