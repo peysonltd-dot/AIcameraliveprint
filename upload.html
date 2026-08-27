@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>上傳照片 | AI Virtual Portrait</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --ai-cyan:#00f2ff; --ai-pink:#ff00d0; --ai-dark:#020617; }
+        html,body { margin:0; min-height:100%; background:var(--ai-dark); }
+        body {
+            font-family:'Noto Sans TC',sans-serif;
+            background-image:radial-gradient(circle at 50% 0%,rgba(0,242,255,.13),transparent 35%);
+        }
+        .orbitron { font-family:'Orbitron',sans-serif; }
+        .glass { background:rgba(15,23,42,.86); border:1px solid rgba(0,242,255,.24); backdrop-filter:blur(16px); }
+        .primary { background:linear-gradient(90deg,#00f2ff,#38bdf8); color:#020617; box-shadow:0 0 24px rgba(0,242,255,.26); }
+        .primary:disabled { opacity:.42; box-shadow:none; }
+    </style>
+</head>
+<body class="text-white min-h-[100dvh] px-5 py-6">
+    <main class="max-w-md mx-auto">
+        <header class="text-center mb-5">
+            <div class="orbitron text-cyan-300 tracking-[.18em] text-sm">AI PORTRAIT</div>
+            <h1 class="text-2xl font-black mt-2">上傳您的照片</h1>
+            <p class="text-slate-400 text-sm mt-2">手機只用於傳送照片，完成後請回到機台操作</p>
+        </header>
+
+        <section id="loading-card" class="glass rounded-3xl p-8 text-center">
+            <i class="fa-solid fa-spinner fa-spin text-3xl text-cyan-300"></i>
+            <p class="mt-4 text-slate-300">正在確認上傳連結…</p>
+        </section>
+
+        <section id="upload-card" class="glass rounded-3xl p-5 hidden">
+            <label for="photo-input" id="photo-picker" class="block rounded-2xl border-2 border-dashed border-cyan-400/40 bg-slate-950/50 overflow-hidden cursor-pointer active:border-cyan-300">
+                <div id="picker-placeholder" class="aspect-square flex flex-col items-center justify-center p-8 text-center">
+                    <i class="fa-regular fa-images text-5xl text-cyan-300 mb-4"></i>
+                    <span class="font-black text-lg">從手機相簿選擇照片</span>
+                    <span class="text-slate-400 text-xs mt-2 leading-relaxed">建議選擇人物清楚、光線充足、沒有遮住臉部的照片</span>
+                </div>
+                <img id="preview" class="hidden w-full aspect-square object-contain bg-black" alt="照片預覽">
+            </label>
+            <input id="photo-input" class="hidden" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/*">
+
+            <div id="file-info" class="hidden mt-3 text-center text-xs text-slate-400"></div>
+            <div id="progress-wrap" class="hidden mt-4">
+                <div class="flex justify-between text-xs text-slate-400 mb-2"><span id="progress-label">正在處理照片…</span><span id="progress-percent">0%</span></div>
+                <div class="h-2 rounded-full bg-slate-800 overflow-hidden"><div id="progress-bar" class="h-full bg-cyan-400 transition-all duration-300" style="width:0%"></div></div>
+            </div>
+
+            <button id="upload-btn" disabled class="primary w-full rounded-2xl py-4 mt-5 font-black text-lg">
+                <i class="fa-solid fa-cloud-arrow-up mr-2"></i>確認上傳
+            </button>
+            <button id="change-btn" class="hidden w-full rounded-2xl py-3 mt-3 border border-slate-700 text-slate-300 font-bold">重新選擇</button>
+            <p class="text-[11px] text-slate-500 leading-relaxed mt-4 text-center">照片僅供本次AI風格化及現場製作使用。請勿關閉此頁，直到顯示上傳成功。</p>
+        </section>
+
+        <section id="success-card" class="glass rounded-3xl p-8 text-center hidden">
+            <div class="w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-400 flex items-center justify-center mx-auto">
+                <i class="fa-solid fa-check text-4xl text-emerald-300"></i>
+            </div>
+            <h2 class="text-2xl font-black mt-5">照片上傳成功</h2>
+            <p class="text-cyan-300 font-bold mt-3">請回到機台繼續操作</p>
+            <p class="text-slate-500 text-xs mt-5">此頁面現在可以關閉</p>
+        </section>
+
+        <section id="error-card" class="glass rounded-3xl p-8 text-center hidden">
+            <i class="fa-solid fa-triangle-exclamation text-5xl text-rose-400"></i>
+            <h2 id="error-title" class="text-xl font-black mt-5">上傳連結無效</h2>
+            <p id="error-message" class="text-slate-400 text-sm mt-3 leading-relaxed">請回到機台重新產生QR Code。</p>
+            <button onclick="location.reload()" class="mt-6 px-6 py-3 rounded-xl border border-slate-600 text-slate-300"><i class="fa-solid fa-rotate-right mr-2"></i>重新檢查</button>
+        </section>
+    </main>
+
+    <script>
+        const API_BASE_URL = "https://aicameraliveprint-back.onrender.com";
+        const sessionId = new URLSearchParams(location.search).get("session");
+        const els = {
+            loading:document.getElementById("loading-card"), upload:document.getElementById("upload-card"), success:document.getElementById("success-card"), error:document.getElementById("error-card"),
+            input:document.getElementById("photo-input"), preview:document.getElementById("preview"), placeholder:document.getElementById("picker-placeholder"), info:document.getElementById("file-info"),
+            uploadBtn:document.getElementById("upload-btn"), changeBtn:document.getElementById("change-btn"), progressWrap:document.getElementById("progress-wrap"), progressBar:document.getElementById("progress-bar"), progressLabel:document.getElementById("progress-label"), progressPercent:document.getElementById("progress-percent")
+        };
+        let preparedImage = null;
+        let previewUrl = null;
+        let uploading = false;
+
+        function showOnly(name) {
+            ["loading","upload","success","error"].forEach(key => els[key].classList.toggle("hidden", key !== name));
+        }
+        function showError(title, message) {
+            document.getElementById("error-title").textContent = title;
+            document.getElementById("error-message").textContent = message;
+            showOnly("error");
+        }
+        function setProgress(percent, label) {
+            els.progressWrap.classList.remove("hidden");
+            els.progressBar.style.width = `${percent}%`;
+            els.progressPercent.textContent = `${percent}%`;
+            els.progressLabel.textContent = label;
+        }
+        function estimateBytes(dataUrl) {
+            const base64 = dataUrl.split(",")[1] || "";
+            return Math.ceil(base64.length * 0.75);
+        }
+        function formatBytes(bytes) {
+            return bytes < 1024 * 1024 ? `${Math.round(bytes / 1024)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+        }
+
+        async function loadBitmap(file) {
+            if ("createImageBitmap" in window) {
+                try { return await createImageBitmap(file, { imageOrientation:"from-image" }); } catch (_) {}
+            }
+            return await new Promise((resolve, reject) => {
+                const img = new Image();
+                const url = URL.createObjectURL(file);
+                img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+                img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("IMAGE_DECODE_FAILED")); };
+                img.src = url;
+            });
+        }
+
+        async function compressImage(file) {
+            if (!file.type.startsWith("image/") && !/\.(heic|heif)$/i.test(file.name)) throw new Error("NOT_IMAGE");
+            if (file.size > 30 * 1024 * 1024) throw new Error("FILE_TOO_LARGE");
+            const bitmap = await loadBitmap(file);
+            const maxSide = 1200;
+            const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+            const width = Math.max(1, Math.round(bitmap.width * scale));
+            const height = Math.max(1, Math.round(bitmap.height * scale));
+            const canvas = document.createElement("canvas");
+            canvas.width = width; canvas.height = height;
+            const ctx = canvas.getContext("2d", { alpha:false });
+            ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, width, height);
+            ctx.drawImage(bitmap, 0, 0, width, height);
+            if (bitmap.close) bitmap.close();
+
+            let quality = 0.84;
+            let dataUrl = canvas.toDataURL("image/jpeg", quality);
+            while (estimateBytes(dataUrl) > 650 * 1024 && quality > 0.48) {
+                quality -= 0.08;
+                dataUrl = canvas.toDataURL("image/jpeg", quality);
+            }
+            if (estimateBytes(dataUrl) > 850 * 1024) throw new Error("COMPRESSED_TOO_LARGE");
+            return { dataUrl, width, height, bytes:estimateBytes(dataUrl) };
+        }
+
+        async function verifySession() {
+            if (!sessionId || !/^[a-f0-9]{16,32}$/i.test(sessionId)) return showError("QR Code無效", "請回到機台重新產生QR Code。");
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/qr-session/${encodeURIComponent(sessionId)}`, { cache:"no-store" });
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.error || "SESSION_INVALID");
+                if (["photo_ready","generating","completed","submitted"].includes(data.status)) return showOnly("success");
+                if (data.status === "expired") return showError("QR Code已過期", "請回到機台重新產生QR Code。");
+                showOnly("upload");
+            } catch (error) {
+                showError("目前無法連線", "請確認手機網路後重新檢查；若仍無法使用，請回到機台請工作人員協助。");
+            }
+        }
+
+        els.input.addEventListener("change", async event => {
+            const file = event.target.files && event.target.files[0];
+            if (!file || uploading) return;
+            preparedImage = null;
+            els.uploadBtn.disabled = true;
+            setProgress(15, "正在讀取照片…");
+            try {
+                const result = await compressImage(file);
+                preparedImage = result.dataUrl;
+                if (previewUrl) URL.revokeObjectURL(previewUrl);
+                els.preview.src = preparedImage;
+                els.preview.classList.remove("hidden");
+                els.placeholder.classList.add("hidden");
+                els.info.textContent = `已最佳化為 ${result.width} × ${result.height}｜${formatBytes(result.bytes)}`;
+                els.info.classList.remove("hidden");
+                els.changeBtn.classList.remove("hidden");
+                els.uploadBtn.disabled = false;
+                setProgress(100, "照片處理完成");
+                setTimeout(() => els.progressWrap.classList.add("hidden"), 800);
+            } catch (error) {
+                console.error(error);
+                els.progressWrap.classList.add("hidden");
+                els.input.value = "";
+                const message = error.message === "FILE_TOO_LARGE" ? "照片檔案超過30MB，請選擇較小的照片。" : "這張照片無法讀取，請改選JPEG、PNG或手機可正常開啟的照片。";
+                alert(message);
+            }
+        });
+
+        els.changeBtn.addEventListener("click", () => { if (!uploading) els.input.click(); });
+        els.uploadBtn.addEventListener("click", async () => {
+            if (!preparedImage || uploading) return;
+            uploading = true;
+            els.uploadBtn.disabled = true;
+            els.changeBtn.disabled = true;
+            setProgress(35, "正在上傳照片，請勿關閉頁面…");
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/qr-session/${encodeURIComponent(sessionId)}/photo`, {
+                    method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify({ image:preparedImage })
+                });
+                setProgress(90, "正在通知機台…");
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.error || "UPLOAD_FAILED");
+                setProgress(100, "上傳成功");
+                setTimeout(() => showOnly("success"), 350);
+            } catch (error) {
+                console.error(error);
+                uploading = false;
+                els.uploadBtn.disabled = false;
+                els.changeBtn.disabled = false;
+                els.progressWrap.classList.add("hidden");
+                alert(error.message === "QR Code已過期" ? "QR Code已過期，請回機台重新產生。" : "上傳失敗，請確認手機網路後再試一次。");
+            }
+        });
+
+        verifySession();
+    </script>
+</body>
+</html>
