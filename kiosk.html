@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI Virtual Portrait | 機台入口</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --ai-cyan:#00f2ff; --ai-pink:#ff00d0; --ai-dark:#020617; }
+        html, body { margin:0; min-height:100%; background:var(--ai-dark); }
+        body {
+            font-family:'Noto Sans TC',sans-serif;
+            background-image:
+                radial-gradient(circle at 20% 20%, rgba(0,242,255,.12), transparent 32%),
+                radial-gradient(circle at 80% 70%, rgba(255,0,208,.10), transparent 34%);
+        }
+        .orbitron { font-family:'Orbitron',sans-serif; }
+        .loader { width:70px; height:70px; border:4px solid rgba(0,242,255,.18); border-top-color:var(--ai-cyan); border-radius:50%; animation:spin 1s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+    </style>
+</head>
+<body class="text-white min-h-[100dvh] flex items-center justify-center p-6">
+    <main class="w-full max-w-2xl text-center">
+        <div id="loading-view" class="flex flex-col items-center gap-6">
+            <div class="loader"></div>
+            <div>
+                <h1 class="orbitron text-2xl sm:text-4xl font-black tracking-widest text-cyan-300">AI PORTRAIT</h1>
+                <p id="status-text" class="mt-3 text-slate-400 tracking-wider">正在讀取活動設定…</p>
+            </div>
+        </div>
+
+        <div id="maintenance-view" class="hidden rounded-[2rem] border border-cyan-400/30 bg-slate-900/75 backdrop-blur-xl p-8 sm:p-12 shadow-[0_0_45px_rgba(0,242,255,.15)]">
+            <i class="fa-solid fa-screwdriver-wrench text-5xl text-cyan-300 mb-6"></i>
+            <h1 class="text-3xl sm:text-5xl font-black tracking-widest">系統準備中</h1>
+            <p class="mt-5 text-slate-300 text-lg">請稍候工作人員協助</p>
+            <p class="mt-2 orbitron text-xs tracking-[.28em] text-cyan-400">PLEASE WAIT</p>
+            <button onclick="loadMode(true)" class="mt-10 px-6 py-3 rounded-xl border border-slate-700 text-slate-500 active:text-cyan-300 active:border-cyan-400/60">
+                <i class="fa-solid fa-rotate-right mr-2"></i>重新讀取
+            </button>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE_URL = "https://aicameraliveprint-back.onrender.com";
+        const MODE_CACHE_KEY = "peyson-ai-front-mode";
+
+        function targetFor(mode) {
+            if (mode === "qr_upload") return "qr-kiosk.html";
+            if (mode === "camera") return "index.html";
+            return null;
+        }
+
+        async function fetchWithTimeout(url, timeoutMs = 8000) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            try { return await fetch(url, { cache:"no-store", signal:controller.signal }); }
+            finally { clearTimeout(timer); }
+        }
+
+        async function loadMode(force = false) {
+            const loading = document.getElementById("loading-view");
+            const maintenance = document.getElementById("maintenance-view");
+            const status = document.getElementById("status-text");
+            loading.classList.remove("hidden");
+            maintenance.classList.add("hidden");
+            status.textContent = force ? "正在重新讀取活動設定…" : "正在讀取活動設定…";
+
+            let mode = null;
+            try {
+                const response = await fetchWithTimeout(`${API_BASE_URL}/api/config`);
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.error || "讀取失敗");
+                mode = data.frontMode;
+                localStorage.setItem(MODE_CACHE_KEY, mode);
+            } catch (error) {
+                mode = localStorage.getItem(MODE_CACHE_KEY) || "camera";
+                status.textContent = "網路暫時不穩，正在使用上次設定…";
+                await new Promise(resolve => setTimeout(resolve, 900));
+            }
+
+            const target = targetFor(mode);
+            if (target) {
+                window.location.replace(target);
+                return;
+            }
+            loading.classList.add("hidden");
+            maintenance.classList.remove("hidden");
+        }
+
+        loadMode();
+    </script>
+</body>
+</html>
