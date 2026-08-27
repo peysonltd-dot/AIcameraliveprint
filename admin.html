@@ -84,6 +84,30 @@
         </div>
     </header>
 
+    <section class="max-w-7xl mx-auto mb-6 cyber-card rounded-2xl p-4 md:p-5">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+                <div class="text-xs font-mono tracking-[0.18em] text-cyan-400">KIOSK FRONT MODE</div>
+                <h2 class="text-lg font-black text-white mt-1">機台前台模式</h2>
+                <p class="text-xs text-slate-400 mt-1">儲存後，請在活動機台重新整理 <span class="text-cyan-400 font-mono">kiosk.html</span></p>
+            </div>
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 min-w-0 lg:min-w-[560px]">
+                <select id="front-mode-select" class="cyber-select flex-1 py-2.5">
+                    <option value="camera">📷 原本機台拍照</option>
+                    <option value="qr_upload">📱 手機掃碼上傳</option>
+                    <option value="maintenance">🛠 維護／暫停使用</option>
+                </select>
+                <button id="save-front-mode-btn" onclick="saveFrontMode()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black px-5 py-2.5 rounded-lg text-sm transition">
+                    儲存前台模式
+                </button>
+                <a id="kiosk-link" href="kiosk.html" target="_blank" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold px-4 py-2.5 rounded-lg text-sm text-center">
+                    <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>開啟機台入口
+                </a>
+            </div>
+        </div>
+        <div id="front-mode-status" class="mt-3 text-xs text-slate-500">正在讀取目前設定…</div>
+    </section>
+
     <main class="max-w-7xl mx-auto">
         <div id="tasks-container" class="grid grid-cols-1 gap-6 transition-all duration-500"></div>
     </main>
@@ -94,6 +118,66 @@
         let currentUploadTaskId = null;
         let globalAudioCtx = null;
         let soundEnabled = false;
+
+        const FRONT_MODE_LABELS = {
+            camera: '原本機台拍照',
+            qr_upload: '手機掃碼上傳',
+            maintenance: '維護／暫停使用'
+        };
+
+        async function loadFrontMode() {
+            const status = document.getElementById('front-mode-status');
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/admin/front-mode`, { cache: 'no-store' });
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.error || '讀取失敗');
+                document.getElementById('front-mode-select').value = data.frontMode;
+                status.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i>目前模式：<span class="text-cyan-400 font-bold">${FRONT_MODE_LABELS[data.frontMode] || data.frontMode}</span>`;
+            } catch (error) {
+                status.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-400 mr-1"></i>無法讀取前台模式：${error.message}`;
+            }
+        }
+
+        async function saveFrontMode() {
+            const btn = document.getElementById('save-front-mode-btn');
+            const status = document.getElementById('front-mode-status');
+            const mode = document.getElementById('front-mode-select').value;
+            const original = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1"></i>儲存中…`;
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/admin/front-mode`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mode })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.error || '儲存失敗');
+                status.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i>已切換為：<span class="text-cyan-400 font-bold">${FRONT_MODE_LABELS[mode]}</span>。請重新整理活動機台。`;
+            } catch (error) {
+                status.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-400 mr-1"></i>儲存失敗：${error.message}`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = original;
+            }
+        }
+
+        async function retryAiTask(taskId, button) {
+            if (!confirm(`確定重新生成 #${taskId} 的AI圖片嗎？此操作會再次使用Leonardo點數。`)) return;
+            const original = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> 排隊中`;
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/admin/retry/${taskId}`, { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.error || '重試失敗');
+                await fetchAllTasks();
+            } catch (error) {
+                alert(`重新生成失敗：${error.message}`);
+                button.disabled = false;
+                button.innerHTML = original;
+            }
+        }
 
         function playDingDong() {
             if (!soundEnabled) return;
@@ -502,6 +586,7 @@
                             <span class="text-[10px] font-mono tracking-widest text-cyan-400 block font-bold">QUEUE NO</span>
                             <span class="text-4xl font-black text-white font-mono glow-text">#${task.id}</span>
                             <div class="text-[9px] text-slate-500 font-mono mt-1">${task.createdAt || '--:--'}</div>
+                            <div class="mt-1 text-[9px] font-bold ${task.entryMode === 'qr_upload' ? 'text-fuchsia-400' : 'text-cyan-500'}">${task.entryMode === 'qr_upload' ? '手機上傳' : '機台拍照'}</div>
                         </div>
                         <div class="text-center relative w-full mt-1">
                             ${task.sourceImage ? `
@@ -574,9 +659,16 @@
                         </div>
                         
                         <div class="mt-2 flex items-center justify-between border-t border-slate-800 pt-2.5 gap-2">
-                            <button id="reprint-btn-${task.id}" onclick="reprintTicket('${task.id}', 'reprint-btn-${task.id}')" class="bg-indigo-950/40 hover:bg-indigo-900 border border-indigo-500/50 text-indigo-300 font-bold px-2 py-1.5 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1">
-                                <i class="fa-solid fa-print text-indigo-400"></i> 重新出票
-                            </button>
+                            <div class="flex gap-2">
+                                <button id="reprint-btn-${task.id}" onclick="reprintTicket('${task.id}', 'reprint-btn-${task.id}')" class="bg-indigo-950/40 hover:bg-indigo-900 border border-indigo-500/50 text-indigo-300 font-bold px-2 py-1.5 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-print text-indigo-400"></i> 重新出票
+                                </button>
+                                ${task.status === 'failed' ? `
+                                    <button onclick="retryAiTask('${task.id}', this)" class="bg-rose-950/40 hover:bg-rose-900 border border-rose-500/50 text-rose-300 font-bold px-2 py-1.5 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1">
+                                        <i class="fa-solid fa-rotate-right"></i> 重新生成
+                                    </button>
+                                ` : ''}
+                            </div>
                             <div class="text-xs text-right">${userChoiceHtml}</div>
                         </div>
                     </div>
@@ -604,6 +696,9 @@
             if (files.length > 0 && files[0].type.indexOf("image") !== -1) handleImageFileInject(files[0], taskId, type);
         }
 
+        const kioskBasePath = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
+        document.getElementById('kiosk-link').href = `${kioskBasePath}kiosk.html`;
+        loadFrontMode();
         fetchAllTasks();
         setInterval(fetchAllTasks, 3200);
     </script>
