@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI Portrait Download | 肖像下載</title>
+    <title>Save Your AI Character | 角色圖片下載</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;900&display=swap" rel="stylesheet">
@@ -57,7 +57,7 @@
             50% { border-color: rgba(255, 107, 33, 0.6); box-shadow: 0 0 35px rgba(255, 107, 33, 0.3); }
         }
     </style>
-    <link rel="stylesheet" href="tourism-theme.css?v=20260907-animated4">
+    <link rel="stylesheet" href="tourism-theme.css?v=20260907-character7">
 </head>
 <body class="text-white">
 
@@ -67,10 +67,10 @@
         <header class="text-center w-full flex-shrink-0 mb-4 flex flex-col items-center">
             <div class="tourism-brand"><img src="assets/taiwan-logo.jpg" alt="Taiwan — Waves of Wonder"></div>
             <h1 id="header-title" class="text-2xl font-black tracking-widest text-white drop-shadow-[0_0_10px_rgba(255,107,33,0.4)] pt-2">
-                肖像下載
+                角色圖片下載
             </h1>
             <span class="text-slate-300 text-xs font-mono tracking-wider block mt-1">
-                Portrait Download
+                Save Your Picture
             </span>
             <div class="h-[2px] w-24 bg-gradient-to-r from-transparent via-[#ff6b21] to-transparent mx-auto mt-2"></div>
         </header>
@@ -80,17 +80,17 @@
             <div class="glass-card rounded-[2.5rem] p-6 w-full text-center flex flex-col items-center relative overflow-hidden">
 
                 <div class="mb-5">
-                    <span class="text-[10px] font-mono tracking-widest text-ai-cyan block">PORTRAIT NO</span>
+                    <span class="text-[10px] font-mono tracking-widest text-ai-cyan block">YOUR NUMBER</span>
                     <span id="display-task-id" class="text-4xl font-black font-mono tracking-wider text-white">#---</span>
                 </div>
 
                 <div class="relative w-56 h-56 sm:w-64 sm:h-64 mb-6 rounded-3xl overflow-hidden border-2 shimmer-pulse flex items-center justify-center bg-black/40">
                     <div id="loading-spinner" class="absolute flex flex-col items-center justify-center text-slate-400 gap-3">
                         <i class="fa-solid fa-spinner animate-spin text-3xl text-ai-cyan"></i>
-                        <span id="spinner-text-zh" class="text-xs tracking-wider font-bold">正在為您沖印肖像...</span>
-                        <span id="spinner-text-en" class="text-[10px] font-mono opacity-85">Processing your portrait...</span>
+                        <span id="spinner-text-zh" class="text-xs tracking-wider font-bold">正在載入您的角色圖片…</span>
+                        <span id="spinner-text-en" class="text-[10px] font-mono opacity-85">Loading your picture…</span>
                     </div>
-                    <img id="portrait-img" class="w-full h-full object-cover hidden" alt="AI Portrait" />
+                    <img id="portrait-img" class="w-full h-full object-cover hidden" alt="AI Character" />
                 </div>
 
                 <div class="mb-4 text-center">
@@ -98,14 +98,14 @@
                         <i class="fa-solid fa-hand-pointer mr-1 animate-bounce"></i> 長按上方圖片即可儲存
                     </p>
                     <p id="guide-text-2" class="text-slate-300 font-mono text-xs mb-1">
-                        Long-press Image to Save / 画像長押し保存
+                        Touch and hold the picture to save it / 画像を長押しして保存
                     </p>
                     <p class="text-[9px] text-slate-400">iOS (Safari/LINE/WeChat) & Android</p>
                 </div>
 
                 <button id="download-btn" disabled class="glow-button w-full py-4 rounded-2xl font-bold tracking-widest text-sm flex flex-col items-center justify-center gap-0.5 opacity-50 cursor-not-allowed">
                     <span id="btn-text-main"><i class="fa-solid fa-download mr-1.5"></i>一鍵下載檔案</span>
-                    <span class="text-[10px] font-mono opacity-80">DOWNLOAD PORTRAIT</span>
+                    <span class="text-[10px] font-mono opacity-80">SAVE PICTURE</span>
                 </button>
 
             </div>
@@ -129,11 +129,24 @@
         const langParam = urlParams.get('lang');
 
         // 自動檢測手機語系是否為日文
-        const isJapanese = langParam === 'jp' || navigator.language.startsWith('ja');
+        const isJapanese = langParam ? langParam === 'jp' : navigator.language.startsWith('ja');
+        const isEnglish = langParam ? langParam === 'en' : navigator.language.startsWith('en');
+        if (isEnglish) {
+            document.documentElement.lang = 'en';
+            document.getElementById('header-title').innerText = 'Save Your Picture';
+            document.getElementById('spinner-text-zh').innerText = 'Loading your picture…';
+            document.getElementById('spinner-text-en').hidden = true;
+            document.getElementById('guide-text-1').innerText = 'Touch and hold the picture to save it.';
+            document.getElementById('guide-text-2').innerText = 'Or tap the button below.';
+            document.getElementById('btn-text-main').innerText = 'Save Picture';
+        }
 
         if (isJapanese) {
-            document.getElementById('header-title').innerText = "画像ダウンロード";
-            document.getElementById('spinner-text-zh').innerText = "画像を処理中...";
+            document.documentElement.lang = "ja";
+            document.getElementById('spinner-text-en').hidden = true;
+            document.getElementById('guide-text-2').innerText = "下のボタンからも保存できます。";
+            document.getElementById('header-title').innerText = "キャラクターを保存";
+            document.getElementById('spinner-text-zh').innerText = "キャラクターを読み込んでいます…";
             document.getElementById('guide-text-1').innerHTML = `<i class="fa-solid fa-hand-pointer mr-1 animate-bounce"></i> 上の画像を長押しして保存`;
             document.getElementById('btn-text-main').innerHTML = `<i class="fa-solid fa-download mr-1.5"></i> 画像を保存する`;
         }
@@ -150,7 +163,7 @@
             displayIdEl.innerText = "#ERROR";
             spinner.innerHTML = `
                 <i class="fa-solid fa-triangle-exclamation text-3xl text-rose-500"></i>
-                <span class="text-xs text-rose-400 mt-2 font-bold">網址無效：查無此序號</span>
+                <span class="text-xs text-rose-400 mt-2 font-bold">${isEnglish ? 'This link is not valid. Please scan the QR code again.' : isJapanese ? 'このリンクは使えません。QRコードをもう一度読み取ってください。' : '網址無效：查無此序號'}</span>
                 <span class="text-[10px] text-rose-400 font-mono mt-0.5">Invalid URL / 番号が見つかりません</span>
             `;
         }

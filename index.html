@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI Virtual Portrait | AI 虛擬肖像體驗</title>
+    <title>Your AI Character | AI 專屬角色體驗</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;700;900&display=swap" rel="stylesheet">
@@ -170,8 +170,8 @@
         .bg-ai-cyan\/10 { background-color: rgba(255, 107, 33, 0.10) !important; }
         .bg-ai-cyan\/20 { background-color: rgba(255, 107, 33, 0.20) !important; }
     </style>
-    <link rel="stylesheet" href="tourism-theme.css?v=20260907-animated4">
-    <script src="tourism-progress.js?v=20260907-animated4"></script>
+    <link rel="stylesheet" href="tourism-theme.css?v=20260907-character7">
+    <script src="tourism-progress.js?v=20260907-character7"></script>
 </head>
 <body class="cyber-bg text-white min-h-[100dvh] w-screen flex flex-col">
     <div id="root" class="h-full w-full relative z-10 flex-grow flex flex-col"></div>
@@ -199,9 +199,9 @@
         // 多語系字典 (Traditional Chinese, English, Japanese)
         const TRANSLATIONS = {
             zh: {
-                title: "AI 虛擬肖像",
+                title: "AI 專屬角色",
                 giftTitle: "專屬禮品兌換",
-                avatarLabel: "AI 生成頭像",
+                avatarLabel: "AI 專屬角色",
                 bagLabel: "現場印製提袋",
                 startBtn: "開始體驗",
                 startSub: "點擊下方按鈕開始體驗",
@@ -209,7 +209,7 @@
                 takePhotoBtn: "拍攝照片",
                 cancelBtn: "取消返回首頁",
                 cancelSub: "返回首頁",
-                pickStyleTitle: "✨ 請挑選您最喜愛的款式 ✨",
+                pickStyleTitle: "✨ 選擇您喜歡的角色造型 ✨",
                 styleA: "【 風格 A 款 】",
                 styleB: "【 風格 B 款 】",
                 discardBtn: "放棄",
@@ -218,7 +218,7 @@
                 submittedTitle: "選擇已送出",
                 submittedSub: "選擇已送出",
                 queueLabel: "您的專屬號碼",
-                scanLabel: "掃碼下載頭像",
+                scanLabel: "掃碼下載角色圖片",
                 scanGuide: "請用手機相機掃描 QR Code",
                 autoReturn: "秒後自動返回",
                 loadingTexts: [
@@ -237,79 +237,79 @@
                 ]
             },
             jp: {
-                title: "AI アバター肖像画",
-                giftTitle: "特典引き換え",
-                avatarLabel: "AI生成アバター",
-                bagLabel: "現場トートバッグ印刷",
-                startBtn: "體驗開始",
+                title: "あなたのAIキャラクター",
+                giftTitle: "あなただけのオリジナルグッズ",
+                avatarLabel: "あなたのキャラクター",
+                bagLabel: "その場でバッグにプリント",
+                startBtn: "はじめる",
                 startSub: "タップしてスタート",
-                homeBtn: "トップへ",
+                homeBtn: "ホームへ",
                 takePhotoBtn: "撮影する",
                 cancelBtn: "キャンセル",
-                cancelSub: "トップへ戻る",
-                pickStyleTitle: "✨ お気に入りのスタイルをお選びください ✨",
+                cancelSub: "ホームへ戻る",
+                pickStyleTitle: "✨ お好きなキャラクターを選んでください ✨",
                 styleA: "【 スタイル A 】",
                 styleB: "【 スタイル B 】",
-                discardBtn: "やめる",
-                confirmBtn: "確定する",
-                processing: "処理中...",
-                submittedTitle: "送信が完了しました",
+                discardBtn: "キャンセル",
+                confirmBtn: "このキャラクターにする",
+                processing: "お待ちください…",
+                submittedTitle: "受付が完了しました！",
                 submittedSub: "選択が完了しました",
-                queueLabel: "お客様の受付番号",
-                scanLabel: "QRコードで保存",
-                scanGuide: "スマホのカメラで読み取ってください",
-                autoReturn: "秒後に自動で戻ります",
+                queueLabel: "受付番号",
+                scanLabel: "QRコードから画像を保存",
+                scanGuide: "スマホのカメラでQRコードを読み取ってください",
+                autoReturn: "秒後にホームに戻ります",
                 loadingTexts: [
-                    "ビジュアルネット起動中",
-                    "顔の特徴データを抽出中",
-                    "ベクターライン計算中",
-                    "AI専用モデル適用中",
-                    "2つのスタイルを生成中"
+                    "準備しています…",
+                    "写真を確認しています…",
+                    "キャラクターを作っています…",
+                    "細かい部分を仕上げています…",
+                    "2種類のキャラクターを作っています…"
                 ],
                 loadingSubTexts: [
-                    "処理中...",
-                    "抽出中...",
-                    "計算中...",
-                    "適用中...",
-                    "生成中..."
+                    "お待ちください…",
+                    "写真を確認しています…",
+                    "キャラクターを作っています…",
+                    "色をつけています…",
+                    "仕上げています…"
                 ]
             },
             en: {
-                title: "AI Virtual Portrait",
-                giftTitle: "Exclusive Gift",
-                avatarLabel: "AI Avatar",
-                bagLabel: "Live Printing Bag",
-                startBtn: "START EXPERIENCE",
-                startSub: "CLICK HERE TO START",
-                homeBtn: "HOME",
-                takePhotoBtn: "TAKE PHOTO",
-                cancelBtn: "CANCEL",
-                cancelSub: "RETURN TO HOME",
-                pickStyleTitle: "✨ Please Select Your Favorite Style ✨",
+                title: "Your AI Character",
+                giftTitle: "Your Special Gift",
+                avatarLabel: "Your AI Character",
+                bagLabel: "Your Printed Bag",
+                startBtn: "Get Started",
+                startSub: "Tap to start",
+                homeBtn: "Home",
+                takePhotoBtn: "Take a Photo",
+                cancelBtn: "Cancel",
+                cancelSub: "Back to Home",
+                pickStyleTitle: "✨ Choose Your Favorite Look ✨",
                 styleA: "【 Style A 】",
                 styleB: "【 Style B 】",
-                discardBtn: "CANCEL",
-                confirmBtn: "CONFIRM",
-                processing: "Processing...",
-                submittedTitle: "Selection Submitted",
-                submittedSub: "Selection Completed",
-                queueLabel: "YOUR QUEUE NUMBER",
-                scanLabel: "Scan to Download",
-                scanGuide: "Use your Phone Camera to Scan",
-                autoReturn: "s Auto-Return",
+                discardBtn: "Cancel",
+                confirmBtn: "Choose This Look",
+                processing: "Please wait…",
+                submittedTitle: "All Done!",
+                submittedSub: "Picture selected",
+                queueLabel: "YOUR NUMBER",
+                scanLabel: "Scan to Save Your Picture",
+                scanGuide: "Open your phone camera and scan the QR code.",
+                autoReturn: "seconds until the home screen",
                 loadingTexts: [
-                    "BOOTING NEURAL NETWORK",
-                    "EXTRACTING FACIAL FEATURES",
-                    "PROCESSING VECTOR LINES",
-                    "APPLYING EXCLUSIVE LORA",
-                    "GENERATING DUAL STYLES"
+                    "Getting ready…",
+                    "Checking your photo…",
+                    "Creating your character…",
+                    "Adding the details…",
+                    "Making two styles…"
                 ],
                 loadingSubTexts: [
-                    "PLEASE WAIT...",
-                    "PROCESSING...",
-                    "ANALYZING...",
-                    "APPLYING MODEL...",
-                    "FINALIZING..."
+                    "Please wait…",
+                    "Working on your picture…",
+                    "Checking your photo…",
+                    "Creating your character…",
+                    "Adding the final touches…"
                 ]
             }
         };
@@ -526,7 +526,7 @@
                                             <img
                                                 src="https://img.shoplineapp.com/media/image_clips/6a1ef28ef1bda7070f35eecc/original.png?1780413070=&owner_id=66221c5c384dbb002ec45c18"
                                                 className="w-full h-full object-contain"
-                                                alt="AI Avatar"
+                                                alt="Your AI Character"
                                             />
                                         </div>
                                         <span className="text-ai-cyan font-black tracking-wider text-sm sm:text-xl drop-shadow-md">{t.avatarLabel}</span>
@@ -584,7 +584,7 @@
                                 <WaitingPortrait lang={lang} progress={progress} />
                                 {taskId && (
                                     <div className="bg-black/40 p-5 sm:p-6 rounded-3xl border-2 border-ai-cyan text-center w-72 shadow-[0_0_30px_rgba(255,107,33,0.2)] mb-6">
-                                        <p className="text-[10px] sm:text-[12px] text-slate-400 font-mono tracking-wider">PROGRESS ID</p>
+                                        <p className="text-[10px] sm:text-[12px] text-slate-400 font-mono tracking-wider">YOUR NUMBER</p>
                                         <p className="text-4xl sm:text-5xl font-mono font-black text-ai-cyan">#{taskId}</p>
                                     </div>
                                 )}
@@ -667,13 +667,13 @@
                                 <div className="w-20 h-20 rounded-full bg-rose-500/10 border-2 border-rose-500 flex items-center justify-center mx-auto mb-6 text-rose-500 text-4xl animate-bounce">
                                     <i className="fa-solid fa-camera"></i>
                                 </div>
-                                <h3 className="text-2xl font-black text-white mb-2">請開通相機權限</h3>
+                                <h3 className="text-2xl font-black text-white mb-2">{lang === 'en' ? 'Please Allow Camera Access' : lang === 'jp' ? 'カメラの使用を許可してください' : '請開通相機權限'}</h3>
                                 <p className="text-slate-400 text-sm leading-relaxed mb-6">
-                                    機台偵測不到視訊鏡頭。請點擊瀏覽器網址列旁的「鎖頭」圖示，並將相機存取權限設為「允許」。<br/>
-                                    <span className="text-xs font-mono text-rose-400 block mt-2">Please enable camera permissions in browser settings.</span>
+                                    {lang === 'zh' && <>機台偵測不到視訊鏡頭。請點擊瀏覽器網址列旁的「鎖頭」圖示，並將相機存取權限設為「允許」。<br/></>}
+                                    <span className="text-xs font-mono text-rose-400 block mt-2">{lang === 'jp' ? 'ブラウザの設定でカメラの使用を許可してください。お困りの場合はスタッフにお声がけください。' : 'Allow camera access in your browser settings, or ask our staff for help.'}</span>
                                 </p>
                                 <button onClick={() => setCameraError(false)} className="btn-cyan w-full py-4 rounded-2xl font-black text-lg">
-                                    確認 / CONFIRM
+                                    {lang === 'en' || lang === 'jp' ? 'OK' : '確認 / OK'}
                                 </button>
                             </div>
                         </div>
