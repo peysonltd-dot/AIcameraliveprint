@@ -31,8 +31,8 @@
         @keyframes spin { to { transform:rotate(360deg); } }
         .hidden { display:none !important; }
     </style>
-    <link rel="stylesheet" href="tourism-theme.css?v=20260907-bright2">
-    <script src="tourism-progress.js?v=20260907"></script>
+    <link rel="stylesheet" href="tourism-theme.css?v=20260907-animated3">
+    <script src="tourism-progress.js?v=20260907-animated3"></script>
 </head>
 <body class="text-white min-h-[100dvh]">
     <div class="min-h-[100dvh] flex flex-col px-5 sm:px-8 py-5">
@@ -238,7 +238,7 @@
             btn.disabled = true;
             showStep("generating");
             clearTimers();
-            progressUI.update({phase:'uploading', percent:0});
+            progressUI.reset();
             try {
                 const data = await api(`/api/qr-session/${encodeURIComponent(state.sessionId)}/generate`, { method:"POST", headers:{"Content-Type":"application/json"}, body:"{}" });
                 if (epoch !== generationEpoch) return;
