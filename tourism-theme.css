@@ -1,0 +1,33 @@
+:root { --ai-cyan:#ff6b21; --ai-pink:#ffc400; --ai-dark:#17130f; --tourism-orange:#ff6b21; }
+body, .cyber-bg { background-color:#17130f; background-image:radial-gradient(ellipse at 80% 5%,#7c321f 0,transparent 50%),linear-gradient(160deg,#17130f,#362015); background-position:center; background-size:cover; color:#fff; }
+.text-ai-cyan, [class*="text-cyan-"] { color:#ffae81 !important; }
+.text-ai-pink { color:#ffd478 !important; }
+[class*="border-cyan-"],.border-ai-cyan { border-color:#ff6b21 !important; }
+[class*="bg-cyan-"],.primary,.glow-button { background:#ff6b21 !important; color:#25150e !important; }
+.btn-cyan { color:#ffb48d; }
+.glass,.glass-card,.choice,.choice-card { background:rgba(37,26,20,.92); border-color:#8b6451; }
+[class*="bg-slate-900"], [class*="bg-[#0f172a]"] { background-color:rgba(37,26,20,.92) !important; }
+.orbitron { font-family:'Noto Sans TC',sans-serif; }
+.tourism-brand { display:flex; justify-content:center; margin:0 auto 1rem; width:fit-content; max-width:100%; background:#fff; padding:1rem 1.5rem; border-radius:1rem; }
+.tourism-brand img { display:block; width:min(52vw,270px); height:auto; object-fit:contain; }
+.tourism-wait { width:min(100%,650px); margin:auto; text-align:center; }
+.tourism-progress-heading { display:flex; justify-content:space-between; align-items:baseline; gap:1rem; }
+.tourism-progress-label { font-size:1.15rem; font-weight:700; }
+.tourism-percent { font:900 clamp(2.8rem,7vw,4rem)/1.2 'Noto Sans TC',sans-serif; color:#ffae81; font-variant-numeric:tabular-nums; }
+.tourism-track { height:22px; border:2px solid #ff9c65; background:#2a1b15; border-radius:99px; overflow:hidden; margin:.75rem 0 1rem; }
+.tourism-fill { height:100%; width:0; background:#ff6b21; transition:width .35s ease; }
+.tourism-milestones { list-style:none; padding:0; display:grid; grid-template-columns:repeat(4,1fr); gap:.4rem; font-size:.875rem; color:#c1aea4; }
+.tourism-milestones li { border-top:3px solid #75584a; padding-top:.5rem; }
+.tourism-milestones li.is-done { color:#fff; border-color:#ff6b21; }
+.tourism-status { font-size:clamp(1rem,2.4vw,1.35rem); line-height:1.6; min-height:3.2em; margin:1.25rem 0 .2rem; }
+.tourism-progress-note { font-size:.875rem; color:#cbb3a6; }
+.tourism-character-stage { display:flex; justify-content:center; padding:1.5rem 0; overflow:hidden; background:radial-gradient(ellipse at center,#fff2e7 0%,#ffcfad 35%,transparent 65%); }
+.tourism-character { display:block; width:clamp(170px,34vw,310px); height:auto; object-fit:contain; animation:tourism-sway 2.8s ease-in-out infinite; transform-origin:50% 90%; }
+.tourism-wait-title { font-size:1.125rem; font-weight:700; color:#ffd6be; margin:0 0 1rem; }
+.tourism-wait[data-phase="ready"] .tourism-character { animation:tourism-cheer .65s ease both; }
+.tourism-wait[data-phase="failed"] .tourism-character { animation:none; }
+.tourism-wait[data-phase="failed"] .tourism-status { color:#ffb9b9; }
+@keyframes tourism-sway { 0%,100% { transform:translateY(0) rotate(-4deg); } 50% { transform:translateY(-12px) rotate(4deg); } }
+@keyframes tourism-cheer { 0%,100% { transform:translateY(0); } 45% { transform:translateY(-25px) rotate(6deg); } }
+@media(max-width:600px) { .tourism-language { position:static !important; order:-1; align-self:flex-end; margin-bottom:1rem; } .glow-bar { max-width:75vw; } .tourism-home-examples { gap:.65rem !important; padding:0 !important; margin-bottom:2rem !important; } .tourism-home-examples>div { min-width:0; } .tourism-home-examples img { max-width:100%; } .tourism-example-image { width:30vw !important; height:30vw !important; } }
+@media(prefers-reduced-motion:reduce) { .tourism-character,.radar-spinner,.text-glow-pulse,.animate-pulse,.cyber-bg::before,.cyber-bg::after { animation:none !important; } .tourism-fill { transition:none; } }

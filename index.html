@@ -6,19 +6,22 @@
     <title>AI Virtual Portrait | AI 虛擬肖像體驗</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;700;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
+
     <!-- 純前端 QR Code 生成函式庫 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
-    
+
     <style>
         :root {
-            --ai-cyan: #00f2ff;
-            --ai-pink: #ff00d0;
-            --ai-dark: #020617;
+            --ai-cyan: #ff6b21;
+            --ai-pink: #ffc400;
+            --ai-dark: #17130f;
+            --tourism-orange: #ff6b21;
+            --tourism-cream: #fff8ef;
+            --tourism-ink: #221a14;
         }
         html, body {
             margin: 0;
@@ -27,32 +30,45 @@
         }
         body {
             touch-action: pan-x pan-y;
-            user-select: none; 
+            user-select: none;
             -webkit-user-select: none;
-            overflow-x: hidden; 
+            overflow-x: hidden;
             font-family: 'Noto Sans TC', 'Noto Sans JP', sans-serif;
         }
-        /* 🌟 向上偏移 45px 完美裁切移除背景圖頂部的黑色邊條 */
         .cyber-bg {
-            background-image: url('https://img.shoplineapp.com/media/image_clips/6a4216a4c1e0e46c9bd9dde7/original.png?1782716067=&owner_id=66221c5c384dbb002ec45c18');
-            background-size: cover;
-            background-position: center -45px; 
-            background-repeat: no-repeat;
+            background:
+                radial-gradient(circle at 12% 12%, rgba(255, 196, 0, 0.24), transparent 25%),
+                radial-gradient(circle at 88% 20%, rgba(255, 107, 33, 0.32), transparent 28%),
+                linear-gradient(155deg, #17130f 0%, #2a180e 48%, #4a210f 100%);
             position: relative;
         }
+        .cyber-bg::before,
+        .cyber-bg::after {
+            content: '';
+            position: fixed;
+            left: -15vw;
+            width: 130vw;
+            height: 22vw;
+            min-height: 150px;
+            border: 2px solid rgba(255, 107, 33, 0.2);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .cyber-bg::before { bottom: 8vh; transform: rotate(-7deg); }
+        .cyber-bg::after { bottom: -2vh; transform: rotate(5deg); border-color: rgba(255, 196, 0, 0.13); }
 
         .kv-title {
-            font-family: 'Orbitron', sans-serif;
-            background: linear-gradient(to bottom, #fff 30%, var(--ai-cyan) 100%);
+            font-family: 'Noto Sans TC', 'Noto Sans JP', sans-serif;
+            background: linear-gradient(to bottom, #fff 30%, #ffd6be 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 15px rgba(0, 242, 255, 0.6));
+            filter: drop-shadow(0 0 15px rgba(255, 107, 33, 0.45));
         }
         .glow-bar {
             height: 4px;
             width: 320px;
-            background: linear-gradient(90deg, transparent, var(--ai-pink), var(--ai-cyan), transparent);
-            box-shadow: 0 0 16px var(--ai-pink), 0 0 28px var(--ai-cyan);
+            background: linear-gradient(90deg, transparent, #ffc400, var(--tourism-orange), transparent);
+            box-shadow: 0 0 16px rgba(255, 196, 0, 0.28), 0 0 28px rgba(255, 107, 33, 0.36);
             border-radius: 50%;
         }
         .content-container {
@@ -67,13 +83,13 @@
             padding-top: 0.5rem;
         }
         @media (min-height: 1100px) and (max-aspect-ratio: 10/16) {
-            .content-container { justify-content: flex-start; padding-top: 1.5rem; } 
+            .content-container { justify-content: flex-start; padding-top: 1.5rem; }
         }
         .camera-container {
-            width: 80vw; height: 80vw; max-width: 750px; max-height: 750px; 
+            width: 80vw; height: 80vw; max-width: 750px; max-height: 750px;
             position: relative; overflow: hidden; border-radius: 2rem;
             border: 4px solid var(--ai-cyan);
-            box-shadow: 0 0 45px rgba(0, 242, 255, 0.5);
+            box-shadow: 0 0 45px rgba(255, 107, 33, 0.38);
             background-color: #000; transition: all 0.3s ease-in-out;
         }
         @media (min-height: 1100px) {
@@ -81,7 +97,7 @@
         }
         .choice-card {
             border: 4px solid #1e293b;
-            background: rgba(15, 23, 42, 0.7);
+            background: rgba(34, 26, 20, 0.78);
             transition: all 0.25s ease;
             cursor: pointer;
             position: relative;
@@ -89,19 +105,19 @@
         }
         .choice-card.selected {
             border-color: var(--ai-cyan);
-            box-shadow: 0 0 45px rgba(0, 242, 255, 0.6);
-            background: rgba(0, 242, 255, 0.15);
+            box-shadow: 0 0 45px rgba(255, 107, 33, 0.44);
+            background: rgba(255, 107, 33, 0.15);
             transform: scale(1.04);
         }
         .face-guide {
             width: 55%; aspect-ratio: 1 / 1.35; border-radius: 50%;
             border: 4px solid var(--ai-cyan);
-            box-shadow: 0 0 25px var(--ai-cyan), 0 0 0 9999px rgba(2, 6, 23, 0.6);
+            box-shadow: 0 0 25px var(--ai-cyan), 0 0 0 9999px rgba(23, 19, 15, 0.62);
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none;
         }
         .radar-spinner {
-            position: relative; width: 240px; height: 240px; 
-            border-radius: 50%; border: 3px dashed rgba(0, 242, 255, 0.5);
+            position: relative; width: 240px; height: 240px;
+            border-radius: 50%; border: 3px dashed rgba(255, 107, 33, 0.5);
             animation: spin 8s linear infinite;
         }
         .radar-spinner::before {
@@ -113,24 +129,24 @@
         .text-glow-pulse { animation: pulse-glow 2s ease-in-out infinite; }
         @keyframes pulse-glow { 0%, 100% { opacity: 1; text-shadow: 0 0 25px var(--ai-cyan); } 50% { opacity: 0.6; text-shadow: 0 0 10px var(--ai-cyan); } }
         .btn-cyan {
-            background: rgba(0, 242, 255, 0.1); border: 2.5px solid var(--ai-cyan); color: var(--ai-cyan);
-            letter-spacing: 2px; transition: all 0.3s; box-shadow: 0 0 20px rgba(0, 242, 255, 0.25);
+            background: rgba(255, 107, 33, 0.12); border: 2.5px solid var(--ai-cyan); color: #ff9b68;
+            letter-spacing: 2px; transition: all 0.3s; box-shadow: 0 0 20px rgba(255, 107, 33, 0.22);
             position: relative;
             z-index: 10;
         }
-        .btn-cyan:active:not(:disabled) { background: var(--ai-cyan); color: #000; box-shadow: 0 0 45px var(--ai-cyan); }
+        .btn-cyan:active:not(:disabled) { background: var(--ai-cyan); color: #fff; box-shadow: 0 0 45px rgba(255, 107, 33, 0.65); }
         .btn-red {
-            background: rgba(255, 0, 208, 0.1); border: 2.5px solid var(--ai-pink); color: var(--ai-pink);
+            background: rgba(255, 255, 255, 0.05); border: 2.5px solid rgba(255,255,255,.5); color: #fff;
             letter-spacing: 2px; transition: all 0.3s;
             position: relative;
             z-index: 10;
         }
-        .btn-red:active { background: var(--ai-pink); color: #000; }
-        
+        .btn-red:active { background: #fff; color: var(--tourism-ink); }
+
         .lang-btn {
-            background: rgba(15, 23, 42, 0.7);
-            border: 1.5px solid rgba(0, 242, 255, 0.3);
-            color: #94a3b8;
+            background: rgba(34, 26, 20, 0.72);
+            border: 1.5px solid rgba(255, 107, 33, 0.34);
+            color: #d6c6bb;
             font-size: 0.75rem;
             font-weight: 700;
             padding: 0.25rem 0.65rem;
@@ -139,18 +155,44 @@
         }
         .lang-btn.active {
             background: var(--ai-cyan);
-            color: #020617;
+            color: #fff;
             border-color: var(--ai-cyan);
-            box-shadow: 0 0 12px rgba(0, 242, 255, 0.6);
+            box-shadow: 0 0 12px rgba(255, 107, 33, 0.5);
         }
+        .tourism-logo {
+            width: min(44vw, 300px);
+            height: auto;
+            display: block;
+        }
+        .text-ai-cyan { color: #ff8a4d !important; }
+        .text-ai-pink { color: #ffc400 !important; }
+        .border-ai-cyan { border-color: var(--tourism-orange) !important; }
+        .bg-ai-cyan\/10 { background-color: rgba(255, 107, 33, 0.10) !important; }
+        .bg-ai-cyan\/20 { background-color: rgba(255, 107, 33, 0.20) !important; }
     </style>
+    <link rel="stylesheet" href="tourism-theme.css?v=20260907">
+    <script src="tourism-progress.js?v=20260907"></script>
 </head>
 <body class="cyber-bg text-white min-h-[100dvh] w-screen flex flex-col">
     <div id="root" class="h-full w-full relative z-10 flex-grow flex flex-col"></div>
 
-    <script type="text/babel">
+    <script>
+        Babel.registerPreset('tourism-react', {presets:[[Babel.availablePresets.react, {runtime:'classic'}]]});
+    </script>
+    <script type="text/babel" data-presets="tourism-react">
         const { useState, useEffect, useRef } = React;
         const API_BASE_URL = "https://aicameraliveprint-back.onrender.com";
+
+        function WaitingPortrait({lang, progress}) {
+            const host = useRef(null);
+            const ui = useRef(null);
+            useEffect(() => {
+                ui.current = TourismProgress.mount(host.current, lang);
+                return () => ui.current.dispose();
+            }, [lang]);
+            useEffect(() => { ui.current.update(progress); }, [progress, lang]);
+            return <div ref={host} className="w-full" />;
+        }
 
         // 多語系字典 (Traditional Chinese, English, Japanese)
         const TRANSLATIONS = {
@@ -285,22 +327,27 @@
             const canvasRef = useRef(null);
             const qrCanvasRef = useRef(null);
             const [countdown, setCountdown] = useState(0);
-            const [textIndex, setTextIndex] = useState(0);
-            const pollingRef = useRef(null);
+            const [progress, setProgress] = useState({phase:'uploading', percent:0});
+            const monitorRef = useRef(null);
+            const requestRef = useRef(null);
+            const captureTimerRef = useRef(null);
+            const cameraAttemptRef = useRef(0);
             const [isSubmitting, setIsSubmitting] = useState(false);
             const [stream, setStream] = useState(null);
             const [returnCountdown, setReturnCountdown] = useState(15);
 
             const startCamera = async () => {
+                const attempt = ++cameraAttemptRef.current;
                 try {
                     setCameraError(false);
                     const mediaStream = await navigator.mediaDevices.getUserMedia({
                         video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }
                     });
+                    if (attempt !== cameraAttemptRef.current) { mediaStream.getTracks().forEach(track => track.stop()); return; }
                     setStream(mediaStream);
                     setStep('camera');
                 } catch (err) {
-                    setCameraError(true);
+                    if (attempt === cameraAttemptRef.current) setCameraError(true);
                 }
             };
 
@@ -312,14 +359,15 @@
             }, [step, stream]);
 
             const takePhoto = () => {
-                if (countdown > 0) return;
+                if (countdown > 0 || captureTimerRef.current) return;
                 setCountdown(3);
                 let count = 3;
-                const timer = setInterval(() => {
+                captureTimerRef.current = setInterval(() => {
                     count -= 1;
                     setCountdown(count);
                     if (count === 0) {
-                        clearInterval(timer);
+                        clearInterval(captureTimerRef.current);
+                        captureTimerRef.current = null;
                         capture();
                     }
                 }, 1000);
@@ -331,34 +379,44 @@
                 if (!video || !canvas) return;
                 const ctx = canvas.getContext('2d');
                 const size = Math.min(video.videoWidth, video.videoHeight);
-                
+
                 canvas.width = size; canvas.height = size;
                 ctx.translate(size, 0); ctx.scale(-1, 1);
                 ctx.drawImage(video, (video.videoWidth - size) / 2, (video.videoHeight - size) / 2, size, size, 0, 0, size, size);
-                
+
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
                 if (stream) stream.getTracks().forEach(t => t.stop());
                 setStream(null);
                 setStep('loading');
+                setTaskId(null);
+                setProgress({phase:'uploading', percent:0});
                 setSelectedChoice(null);
-
+                const request = new AbortController();
+                requestRef.current = request;
+                const timeout = setTimeout(() => request.abort(), 60000);
                 try {
                     const res = await fetch(API_BASE_URL + "/api/upload", {
-                        method: 'POST',
+                        method: 'POST', signal:request.signal,
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ image: dataUrl })
                     });
                     const data = await res.json();
-                    if (data.success) setTaskId(data.taskId);
+                    if (!res.ok || !data.success || !data.taskId) throw new Error('Upload not confirmed');
+                    if (requestRef.current !== request) return;
+                    setTaskId(data.taskId);
+                    setProgress({phase:'pending', percent:25});
                 } catch (err) {
-                    setTimeout(() => { setTaskId("007"); }, 1500);
+                    if (requestRef.current === request) setProgress({phase:'failed', percent:0});
+                } finally {
+                    clearTimeout(timeout);
+                    if (requestRef.current === request) requestRef.current = null;
                 }
             };
 
             const finalizeChoice = async () => {
                 if (!selectedChoice) return;
                 setIsSubmitting(true);
-                
+
                 try {
                     const response = await fetch(API_BASE_URL + "/api/choice/" + taskId, {
                         method: 'POST',
@@ -366,8 +424,8 @@
                         body: JSON.stringify({ choice: selectedChoice })
                     });
                     await response.json();
-                } catch(e) { 
-                    console.error("回傳選擇失敗", e); 
+                } catch(e) {
+                    console.error("回傳選擇失敗", e);
                 }
 
                 setIsSubmitting(false);
@@ -376,7 +434,12 @@
             };
 
             const handleCancelAndGoHome = () => {
-                if (pollingRef.current) clearInterval(pollingRef.current);
+                cameraAttemptRef.current++;
+                if (monitorRef.current) monitorRef.current.stop();
+                if (requestRef.current) { requestRef.current.abort(); requestRef.current = null; }
+                clearInterval(captureTimerRef.current);
+                captureTimerRef.current = null;
+                setCountdown(0);
                 if (stream) stream.getTracks().forEach(t => t.stop());
                 setStream(null);
                 setTaskId(null);
@@ -388,7 +451,7 @@
                 if (step === 'completed' && taskId && qrCanvasRef.current) {
                     const basePath = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
                     const downloadUrl = `${basePath}download.html?taskId=${taskId}&lang=${lang}`;
-                    
+
                     new QRious({
                         element: qrCanvasRef.current,
                         value: downloadUrl,
@@ -413,51 +476,36 @@
             }, [step, returnCountdown]);
 
             useEffect(() => {
-                let textInterval;
-                if (step === 'loading') {
-                    textInterval = setInterval(() => { setTextIndex(p => (p + 1) % t.loadingTexts.length); }, 1500);
-
-                    if (taskId) {
-                        pollingRef.current = setInterval(async () => {
-                            try {
-                                const res = await fetch(API_BASE_URL + "/api/status/" + taskId);
-                                const data = await res.json();
-                                if (data.status === 'completed' && data.resultImageA && data.resultImageB) {
-                                    setImgA(data.resultImageA);
-                                    setImgB(data.resultImageB);
-                                    setStep('choice');
-                                    clearInterval(pollingRef.current);
-                                }
-                            } catch (err) {
-                                if (taskId === "007") {
-                                    setTimeout(() => {
-                                        if (canvasRef.current) {
-                                            const mockUrl = canvasRef.current.toDataURL();
-                                            setImgA(mockUrl); setImgB(mockUrl);
-                                            setStep('choice');
-                                        }
-                                        clearInterval(pollingRef.current);
-                                    }, 4000);
-                                }
-                            }
-                        }, 3000);
+                if (step !== 'loading' || !taskId) return;
+                const monitor = TourismProgress.monitor({
+                    apiBase:API_BASE_URL, taskId,
+                    onProgress:setProgress,
+                    onFailure:() => {},
+                    onReady:data => {
+                        setImgA(data.resultImageA); setImgB(data.resultImageB);
+                        setStep('choice');
                     }
-                }
-                return () => { 
-                    clearInterval(textInterval); 
-                    if(pollingRef.current) clearInterval(pollingRef.current); 
-                };
-            }, [step, taskId, lang]);
+                });
+                monitorRef.current = monitor;
+                return () => monitor.stop();
+            }, [step, taskId]);
 
             return (
                 <div className="flex flex-col items-center justify-between min-h-[100dvh] w-full pt-3 pb-8 px-6">
-                    
-                    {/* Header - 頂部霓虹線條與多國語言切換鈕 */}
+
+                    {/* Header - 臺灣觀光品牌識別與多國語言切換 */}
                     <div className="text-center z-20 flex flex-col items-center flex-shrink-0 w-full pt-1 relative">
-                        <div className="glow-bar mt-1"></div>
-                        
+                        <div className="bg-white px-5 py-3 rounded-2xl shadow-[0_8px_28px_rgba(0,0,0,0.22)]">
+                            <img
+                                src="assets/taiwan-logo.jpg"
+                                alt="Taiwan — Waves of Wonder"
+                                className="tourism-logo"
+                            />
+                        </div>
+                        <div className="glow-bar mt-4"></div>
+
                         {/* 🌐 多國語言切換 (切換繁中 / 日本語 / English) */}
-                        <div className="absolute right-0 top-0 flex items-center gap-1.5 bg-slate-900/80 p-1 rounded-full border border-ai-cyan/30 shadow-lg backdrop-blur-md">
+                        <div className="tourism-language absolute right-0 top-0 flex items-center gap-1.5 bg-stone-950/80 p-1 rounded-full border border-orange-400/30 shadow-lg backdrop-blur-md">
                             <button onClick={() => setLang('zh')} className={`lang-btn ${lang === 'zh' ? 'active' : ''}`}>繁中</button>
                             <button onClick={() => setLang('jp')} className={`lang-btn ${lang === 'jp' ? 'active' : ''}`}>日本語</button>
                             <button onClick={() => setLang('en')} className={`lang-btn ${lang === 'en' ? 'active' : ''}`}>EN</button>
@@ -466,45 +514,45 @@
 
                     {/* 互動內容控制中樞 */}
                     <div className="content-container z-10">
-                        
+
                         {step === 'home' && (
                             <div className="text-center mt-2 sm:mt-6 flex flex-col items-center justify-start w-full">
                                 <p className="text-ai-cyan text-xl sm:text-3xl md:text-4xl mb-3 tracking-[0.2em] text-glow-pulse font-bold">
                                     {t.title}
                                 </p>
-                                <p className="text-ai-pink text-xl sm:text-2xl md:text-3xl tracking-[0.2em] font-black mb-12 drop-shadow-[0_0_15px_rgba(255,0,208,0.8)]">
+                                <p className="text-ai-pink text-xl sm:text-2xl md:text-3xl tracking-[0.2em] font-black mb-12 drop-shadow-[0_0_15px_rgba(255,196,0,0.8)]">
                                     <i className="fa-solid fa-gift mr-3 text-white/90"></i>{t.giftTitle}
                                 </p>
-                                
-                                <div className="flex flex-row items-center justify-center gap-6 sm:gap-12 mb-16 w-full max-w-[800px] px-4">
+
+                                <div className="tourism-home-examples flex flex-row items-center justify-center gap-6 sm:gap-12 mb-16 w-full max-w-[800px] px-4">
                                     <div className="flex flex-col items-center">
-                                        <div className="w-36 h-36 sm:w-56 sm:h-56 rounded-[2rem] overflow-hidden border-2 border-ai-cyan shadow-[0_0_25px_rgba(0,242,255,0.2)] mb-4 bg-[#0f172a]/50 p-2">
-                                            <img 
-                                                src="https://img.shoplineapp.com/media/image_clips/6a1ef28ef1bda7070f35eecc/original.png?1780413070=&owner_id=66221c5c384dbb002ec45c18" 
-                                                className="w-full h-full object-contain" 
-                                                alt="AI Avatar" 
+                                        <div className="tourism-example-image w-36 h-36 sm:w-56 sm:h-56 rounded-[2rem] overflow-hidden border-2 border-ai-cyan shadow-[0_0_25px_rgba(255,107,33,0.2)] mb-4 bg-[#0f172a]/50 p-2">
+                                            <img
+                                                src="https://img.shoplineapp.com/media/image_clips/6a1ef28ef1bda7070f35eecc/original.png?1780413070=&owner_id=66221c5c384dbb002ec45c18"
+                                                className="w-full h-full object-contain"
+                                                alt="AI Avatar"
                                             />
                                         </div>
                                         <span className="text-ai-cyan font-black tracking-wider text-sm sm:text-xl drop-shadow-md">{t.avatarLabel}</span>
                                     </div>
 
                                     <div className="flex flex-col items-center pb-8 animate-pulse">
-                                        <i className="fa-solid fa-arrow-right-long text-ai-pink text-2xl sm:text-4xl drop-shadow-[0_0_10px_rgba(255,0,208,0.6)]"></i>
+                                        <i className="fa-solid fa-arrow-right-long text-ai-pink text-2xl sm:text-4xl drop-shadow-[0_0_10px_rgba(255,196,0,0.6)]"></i>
                                     </div>
 
                                     <div className="flex flex-col items-center">
-                                        <div className="w-36 h-36 sm:w-56 sm:h-56 rounded-[2rem] overflow-hidden border-2 border-white shadow-[0_0_25px_rgba(255,255,255,0.2)] mb-4 bg-[#0f172a]/50 p-2">
-                                            <img 
-                                                src="https://img.shoplineapp.com/media/image_clips/6a1ef3c33ce472c30e346dac/original.png?1780413379=&owner_id=66221c5c384dbb002ec45c18" 
-                                                className="w-full h-full object-contain" 
-                                                alt="Live Bag Printing" 
+                                        <div className="tourism-example-image w-36 h-36 sm:w-56 sm:h-56 rounded-[2rem] overflow-hidden border-2 border-white shadow-[0_0_25px_rgba(255,255,255,0.2)] mb-4 bg-[#0f172a]/50 p-2">
+                                            <img
+                                                src="https://img.shoplineapp.com/media/image_clips/6a1ef3c33ce472c30e346dac/original.png?1780413379=&owner_id=66221c5c384dbb002ec45c18"
+                                                className="w-full h-full object-contain"
+                                                alt="Live Bag Printing"
                                             />
                                         </div>
                                         <span className="text-white font-black tracking-wider text-sm sm:text-xl drop-shadow-md">{t.bagLabel}</span>
                                     </div>
                                 </div>
 
-                                <button onClick={startCamera} className="btn-cyan text-xl sm:text-3xl md:text-4xl font-black px-12 py-6 sm:py-8 rounded-full animate-pulse shadow-[0_0_35px_rgba(0,242,255,0.4)] flex flex-col items-center gap-1">
+                                <button onClick={startCamera} className="btn-cyan text-xl sm:text-3xl md:text-4xl font-black px-12 py-6 sm:py-8 rounded-full animate-pulse shadow-[0_0_35px_rgba(255,107,33,0.4)] flex flex-col items-center gap-1">
                                     <span>{t.startBtn}</span>
                                 </button>
                             </div>
@@ -516,7 +564,7 @@
                                     <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover absolute inset-0" style={{ transform: 'rotateY(180deg)' }} />
                                     <div className="face-guide"></div>
                                     {countdown > 0 && (
-                                        <div className="absolute top-6 right-6 w-24 h-24 rounded-2xl border-2 border-ai-cyan bg-[#020617]/95 flex flex-col items-center justify-center shadow-[0_0_20px_rgba(0,242,255,0.4)]">
+                                        <div className="absolute top-6 right-6 w-24 h-24 rounded-2xl border-2 border-ai-cyan bg-[#020617]/95 flex flex-col items-center justify-center shadow-[0_0_20px_rgba(255,107,33,0.4)]">
                                             <span className="text-[44px] font-black text-white font-mono">{countdown}</span>
                                         </div>
                                     )}
@@ -525,7 +573,7 @@
                                     <button onClick={handleCancelAndGoHome} className="btn-cyan flex-1 py-4 sm:py-5 rounded-2xl text-base sm:text-xl font-bold flex flex-col items-center justify-center leading-tight">
                                         <span>{t.homeBtn}</span>
                                     </button>
-                                    <button onClick={takePhoto} className="btn-cyan flex-[2.5] py-4 sm:py-5 rounded-2xl text-xl sm:text-3xl font-black bg-ai-cyan/20 shadow-[0_0_20px_rgba(0,242,255,0.3)] flex flex-col items-center justify-center leading-tight">
+                                    <button onClick={takePhoto} className="btn-cyan flex-[2.5] py-4 sm:py-5 rounded-2xl text-xl sm:text-3xl font-black bg-ai-cyan/20 shadow-[0_0_20px_rgba(255,107,33,0.3)] flex flex-col items-center justify-center leading-tight">
                                         <span>{t.takePhotoBtn}</span>
                                     </button>
                                 </div>
@@ -533,15 +581,10 @@
                         )}
 
                         {step === 'loading' && (
-                            <div className="flex flex-col items-center justify-center">
-                                <div className="relative flex items-center justify-center mb-8">
-                                    <div className="radar-spinner"></div>
-                                </div>
-                                <div className="h-32 text-center mb-6">
-                                    <h2 className="text-2xl sm:text-4xl font-bold text-white tracking-wider mb-2 text-glow-pulse">{t.loadingTexts[textIndex]}</h2>
-                                </div>
+                            <div className="flex flex-col items-center justify-center w-full max-w-2xl">
+                                <WaitingPortrait lang={lang} progress={progress} />
                                 {taskId && (
-                                    <div className="bg-black/40 p-5 sm:p-6 rounded-3xl border-2 border-ai-cyan text-center w-72 shadow-[0_0_30px_rgba(0,242,255,0.2)] mb-6">
+                                    <div className="bg-black/40 p-5 sm:p-6 rounded-3xl border-2 border-ai-cyan text-center w-72 shadow-[0_0_30px_rgba(255,107,33,0.2)] mb-6">
                                         <p className="text-[10px] sm:text-[12px] text-slate-400 font-mono tracking-wider">PROGRESS ID</p>
                                         <p className="text-4xl sm:text-5xl font-mono font-black text-ai-cyan">#{taskId}</p>
                                     </div>
@@ -571,12 +614,12 @@
                                     <button onClick={handleCancelAndGoHome} className="btn-cyan flex-1 py-4 rounded-2xl text-xs sm:text-xl font-bold flex flex-col items-center justify-center">
                                         <span>{t.discardBtn}</span>
                                     </button>
-                                    <button 
-                                        disabled={!selectedChoice || isSubmitting} 
-                                        onClick={finalizeChoice} 
+                                    <button
+                                        disabled={!selectedChoice || isSubmitting}
+                                        onClick={finalizeChoice}
                                         className={`flex-[2.5] py-4 rounded-2xl text-base sm:text-2xl font-black transition-all duration-300 flex flex-col items-center justify-center ${
-                                            selectedChoice 
-                                                ? 'btn-cyan bg-cyan-400 text-slate-950 shadow-[0_0_35px_rgba(0,242,255,0.5)]' 
+                                            selectedChoice
+                                                ? 'btn-cyan bg-cyan-400 text-slate-950 shadow-[0_0_35px_rgba(255,107,33,0.5)]'
                                                 : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
                                         }`}
                                     >
@@ -589,13 +632,13 @@
                         {step === 'completed' && (
                             <div className="flex flex-col items-center w-full max-w-[850px] px-4 text-center">
                                 <h2 className="text-3xl sm:text-5xl font-black text-ai-cyan tracking-widest mb-6 animate-pulse">{t.submittedTitle}</h2>
-                                
-                                <div className="bg-[#0f172a]/85 border-2 border-ai-cyan p-6 sm:p-8 rounded-[2.5rem] w-full mb-6 shadow-[0_0_45px_rgba(0,242,255,0.3)] flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12">
-                                    
+
+                                <div className="bg-[#0f172a]/85 border-2 border-ai-cyan p-6 sm:p-8 rounded-[2.5rem] w-full mb-6 shadow-[0_0_45px_rgba(255,107,33,0.3)] flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12">
+
                                     <div className="flex flex-col items-center">
                                         <img src={selectedChoice === 'A' ? imgA : imgB} className="w-48 h-48 sm:w-64 sm:h-64 object-cover rounded-3xl mb-4 border-2 border-slate-700 shadow-lg" alt="Selected Style" />
                                         <p className="text-xs sm:text-sm text-slate-400 tracking-[0.2em] font-bold">{t.queueLabel}</p>
-                                        <p className="text-5xl sm:text-7xl font-black text-white font-mono drop-shadow-[0_0_20px_#00f2ff]">#{taskId}</p>
+                                        <p className="text-5xl sm:text-7xl font-black text-white font-mono drop-shadow-[0_0_20px_#ff6b21]">#{taskId}</p>
                                     </div>
 
                                     <div className="flex flex-col items-center bg-slate-900/60 p-5 rounded-3xl border border-slate-700 w-full max-w-[280px]">
@@ -637,12 +680,9 @@
                         </div>
                     )}
 
-                    {/* 🌟 Footer 合作單位 LOGO 區塊 */}
+                    {/* Footer */}
                     <div className="w-full flex flex-col items-center justify-center gap-2 pt-2 z-10">
-                        <div className="flex items-center justify-center bg-white/95 px-5 py-2 rounded-2xl shadow-[0_0_20px_rgba(255,255,255,0.3)] backdrop-blur-md">
-                            <img src="https://img.shoplineapp.com/media/image_clips/6a70274247e08ca4d6740eca/original.png?1785734978=&owner_id=66221c5c384dbb002ec45c18" alt="合作單位 LOGO" className="h-6 sm:h-8 object-contain" />
-                        </div>
-                        <div 
+                        <div
                             onClick={handleCancelAndGoHome}
                             className="w-full text-center opacity-40 text-xs sm:text-sm font-mono text-ai-cyan tracking-widest cursor-default select-none active:text-white transition-colors duration-150"
                             title="工作人員專用跳轉 / Staff Reset"

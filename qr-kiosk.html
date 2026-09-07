@@ -9,39 +9,42 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <style>
-        :root { --ai-cyan:#00f2ff; --ai-pink:#ff00d0; --ai-dark:#020617; }
+        :root { --ai-cyan:#ff6b21; --ai-pink:#ffc400; --ai-dark:#020617; }
         * { box-sizing:border-box; }
         html,body { margin:0; min-height:100%; background:var(--ai-dark); }
         body {
             font-family:'Noto Sans TC',sans-serif; touch-action:manipulation; user-select:none; overflow-x:hidden;
             background-image:
-                radial-gradient(circle at 18% 15%,rgba(0,242,255,.10),transparent 30%),
-                radial-gradient(circle at 82% 72%,rgba(255,0,208,.08),transparent 34%);
+                radial-gradient(circle at 18% 15%,rgba(255,107,33,.10),transparent 30%),
+                radial-gradient(circle at 82% 72%,rgba(255,196,0,.08),transparent 34%);
         }
         .orbitron { font-family:'Orbitron',sans-serif; }
-        .glass { background:rgba(15,23,42,.78); border:1px solid rgba(0,242,255,.20); backdrop-filter:blur(14px); }
-        .primary { background:rgba(0,242,255,.12); border:2px solid var(--ai-cyan); color:var(--ai-cyan); box-shadow:0 0 24px rgba(0,242,255,.18); }
+        .glass { background:rgba(15,23,42,.78); border:1px solid rgba(255,107,33,.20); backdrop-filter:blur(14px); }
+        .primary { background:rgba(255,107,33,.12); border:2px solid var(--ai-cyan); color:var(--ai-cyan); box-shadow:0 0 24px rgba(255,107,33,.18); }
         .primary:active:not(:disabled) { background:var(--ai-cyan); color:#020617; }
         .primary:disabled { opacity:.38; box-shadow:none; }
         .secondary { background:rgba(15,23,42,.8); border:1px solid #475569; color:#cbd5e1; }
         .choice { border:3px solid #334155; background:rgba(15,23,42,.84); transition:.2s; }
-        .choice.selected { border-color:var(--ai-cyan); box-shadow:0 0 32px rgba(0,242,255,.35); transform:translateY(-3px); }
-        .spinner { width:150px; height:150px; border:3px dashed rgba(0,242,255,.45); border-radius:50%; animation:spin 5s linear infinite; position:relative; }
+        .choice.selected { border-color:var(--ai-cyan); box-shadow:0 0 32px rgba(255,107,33,.35); transform:translateY(-3px); }
+        .spinner { width:150px; height:150px; border:3px dashed rgba(255,107,33,.45); border-radius:50%; animation:spin 5s linear infinite; position:relative; }
         .spinner:after { content:""; position:absolute; inset:18px; border:6px solid transparent; border-top-color:var(--ai-cyan); border-bottom-color:var(--ai-pink); border-radius:50%; animation:spin 1.6s linear infinite reverse; }
         @keyframes spin { to { transform:rotate(360deg); } }
         .hidden { display:none !important; }
     </style>
+    <link rel="stylesheet" href="tourism-theme.css?v=20260907">
+    <script src="tourism-progress.js?v=20260907"></script>
 </head>
 <body class="text-white min-h-[100dvh]">
     <div class="min-h-[100dvh] flex flex-col px-5 sm:px-8 py-5">
         <header class="text-center flex-shrink-0">
-            <div class="h-[3px] max-w-sm mx-auto bg-gradient-to-r from-transparent via-cyan-300 to-transparent shadow-[0_0_18px_#00f2ff]"></div>
+            <div class="tourism-brand"><img src="assets/taiwan-logo.jpg" alt="Taiwan — Waves of Wonder"></div>
+            <div class="h-[3px] max-w-sm mx-auto bg-gradient-to-r from-transparent via-cyan-300 to-transparent shadow-[0_0_18px_#ff6b21]"></div>
             <div class="orbitron text-cyan-300 tracking-[.22em] text-sm mt-4">AI VIRTUAL PORTRAIT</div>
         </header>
 
         <main class="flex-1 flex items-center justify-center w-full max-w-5xl mx-auto py-5">
             <section id="home-step" class="step text-center w-full max-w-3xl">
-                <i class="fa-solid fa-mobile-screen-button text-6xl sm:text-8xl text-cyan-300 drop-shadow-[0_0_22px_rgba(0,242,255,.5)]"></i>
+                <i class="fa-solid fa-mobile-screen-button text-6xl sm:text-8xl text-cyan-300 drop-shadow-[0_0_22px_rgba(255,107,33,.5)]"></i>
                 <h1 class="text-3xl sm:text-5xl font-black tracking-widest mt-8">手機照片 AI 風格化</h1>
                 <p class="text-slate-300 text-lg sm:text-2xl mt-5">掃描QR Code，將手機相簿照片傳到這台機台</p>
                 <button id="start-btn" class="primary rounded-full px-12 sm:px-20 py-5 sm:py-7 text-2xl sm:text-4xl font-black mt-12">
@@ -90,9 +93,7 @@
             </section>
 
             <section id="generating-step" class="step hidden text-center w-full max-w-2xl">
-                <div class="spinner mx-auto"></div>
-                <h2 class="text-3xl sm:text-5xl font-black text-cyan-300 mt-9">AI正在生成肖像</h2>
-                <p id="generation-status" class="text-slate-300 text-lg mt-4">任務已加入佇列，請稍候…</p>
+                <div id="tourism-progress"></div>
                 <div id="task-number-box" class="hidden glass rounded-2xl px-7 py-5 mt-7 inline-block">
                     <div class="text-slate-500 text-xs tracking-widest">QUEUE NO.</div>
                     <div id="task-number" class="orbitron text-4xl font-black text-cyan-300 mt-1">#---</div>
@@ -145,17 +146,22 @@
     <script>
         const API_BASE_URL = "https://aicameraliveprint-back.onrender.com";
         const state = { sessionId:null, taskId:null, selectedChoice:null, resultA:null, resultB:null, pollTimer:null, expireTimer:null, expiresAt:0, isSubmitting:false };
+        const progressUI = TourismProgress.mount(document.getElementById('tourism-progress'));
+        let generationMonitor = null;
+        let generationEpoch = 0;
         const steps = ["home","scan","preview","generating","choice","completed","error"];
 
         function showStep(name) {
             steps.forEach(step => document.getElementById(`${step}-step`).classList.toggle("hidden", step !== name));
         }
         function clearTimers() {
+            if (generationMonitor) { generationMonitor.stop(); generationMonitor = null; }
             if (state.pollTimer) clearInterval(state.pollTimer);
             if (state.expireTimer) clearInterval(state.expireTimer);
             state.pollTimer = null; state.expireTimer = null;
         }
         function resetState() {
+            generationEpoch++;
             clearTimers();
             state.sessionId = null; state.taskId = null; state.selectedChoice = null; state.resultA = null; state.resultB = null; state.isSubmitting = false;
             document.querySelectorAll(".choice").forEach(el => el.classList.remove("selected"));
@@ -226,40 +232,36 @@
             }
         }
         async function startGeneration() {
+            if (document.getElementById('generate-btn').disabled) return;
+            const epoch = ++generationEpoch;
             const btn = document.getElementById("generate-btn");
             btn.disabled = true;
             showStep("generating");
-            document.getElementById("generation-status").textContent = "正在建立AI任務…";
+            clearTimers();
+            progressUI.update({phase:'uploading', percent:0});
             try {
                 const data = await api(`/api/qr-session/${encodeURIComponent(state.sessionId)}/generate`, { method:"POST", headers:{"Content-Type":"application/json"}, body:"{}" });
+                if (epoch !== generationEpoch) return;
+                if (!data.taskId) throw new Error('未取得任務號碼，請通知工作人員確認，勿重複送出。');
                 state.taskId = data.taskId;
                 document.getElementById("task-number").textContent = `#${state.taskId}`;
                 document.getElementById("task-number-box").classList.remove("hidden");
-                document.getElementById("generation-status").textContent = data.status === "queued" ? "任務已加入佇列，請稍候…" : "AI正在處理照片…";
-                state.pollTimer = setInterval(checkTask, 2500);
-                checkTask();
+                generationMonitor = TourismProgress.monitor({
+                    apiBase:API_BASE_URL, taskId:state.taskId,
+                    onProgress:progressUI.update,
+                    onFailure:() => showError('AI生成未完成，請通知工作人員。'),
+                    onReady:result => {
+                        if (epoch !== generationEpoch) return;
+                        state.resultA = result.resultImageA; state.resultB = result.resultImageB;
+                        document.getElementById('result-a').src = state.resultA;
+                        document.getElementById('result-b').src = state.resultB;
+                        showStep('choice');
+                    }
+                });
             } catch (error) {
+                if (epoch !== generationEpoch) return;
                 btn.disabled = false;
                 showError(`無法開始AI生成：${error.message}`);
-            }
-        }
-        async function checkTask() {
-            if (!state.taskId) return;
-            try {
-                const data = await api(`/api/status/${encodeURIComponent(state.taskId)}`);
-                const labels = { queued:"前方尚有任務，正在排隊…", pending:"準備AI模型中…", generating:"AI正在生成兩款風格…" };
-                document.getElementById("generation-status").textContent = labels[data.status] || "AI正在處理照片…";
-                if (data.status === "completed" && data.resultImageA && data.resultImageB) {
-                    clearTimers();
-                    state.resultA = data.resultImageA; state.resultB = data.resultImageB;
-                    document.getElementById("result-a").src = state.resultA;
-                    document.getElementById("result-b").src = state.resultB;
-                    showStep("choice");
-                } else if (data.status === "failed") {
-                    showError(data.remark || "AI生成失敗，請通知工作人員從後台重試或上傳替代圖片。");
-                }
-            } catch (error) {
-                document.getElementById("generation-status").textContent = "網路暫時不穩，生成任務仍會繼續…";
             }
         }
         async function submitChoice() {

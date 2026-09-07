@@ -7,11 +7,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;900&display=swap" rel="stylesheet">
-    
+
     <style>
         :root {
-            --ai-cyan: #00f2ff;
-            --ai-pink: #ff00d0;
+            --ai-cyan: #ff6b21;
+            --ai-pink: #ffc400;
             --ai-dark: #020617;
         }
         body {
@@ -35,14 +35,14 @@
         }
         .glass-card {
             background: rgba(15, 23, 42, 0.75);
-            border: 1.5px solid rgba(0, 242, 255, 0.2);
+            border: 1.5px solid rgba(255, 107, 33, 0.2);
             backdrop-filter: blur(12px);
-            box-shadow: 0 0 40px rgba(0, 242, 255, 0.15);
+            box-shadow: 0 0 40px rgba(255, 107, 33, 0.15);
         }
         .glow-button {
-            background: linear-gradient(90deg, var(--ai-cyan), #00aaff);
+            background: linear-gradient(90deg, var(--ai-cyan), #ff9b55);
             color: #020617;
-            box-shadow: 0 0 25px rgba(0, 242, 255, 0.4);
+            box-shadow: 0 0 25px rgba(255, 107, 33, 0.4);
             transition: all 0.3s ease;
         }
         .glow-button:active {
@@ -53,30 +53,32 @@
             animation: pulse-glow 2.5s ease-in-out infinite;
         }
         @keyframes pulse-glow {
-            0%, 100% { border-color: rgba(0, 242, 255, 0.2); box-shadow: 0 0 20px rgba(0, 242, 255, 0.1); }
-            50% { border-color: rgba(0, 242, 255, 0.6); box-shadow: 0 0 35px rgba(0, 242, 255, 0.3); }
+            0%, 100% { border-color: rgba(255, 107, 33, 0.2); box-shadow: 0 0 20px rgba(255, 107, 33, 0.1); }
+            50% { border-color: rgba(255, 107, 33, 0.6); box-shadow: 0 0 35px rgba(255, 107, 33, 0.3); }
         }
     </style>
+    <link rel="stylesheet" href="tourism-theme.css?v=20260907">
 </head>
 <body class="text-white">
 
     <div class="cyber-bg w-full px-6 py-6 flex flex-col justify-between">
-        
+
         <!-- 頂部霓虹光條標題區 -->
         <header class="text-center w-full flex-shrink-0 mb-4 flex flex-col items-center">
-            <h1 id="header-title" class="text-2xl font-black tracking-widest text-white drop-shadow-[0_0_10px_rgba(0,242,255,0.4)] pt-2">
+            <div class="tourism-brand"><img src="assets/taiwan-logo.jpg" alt="Taiwan — Waves of Wonder"></div>
+            <h1 id="header-title" class="text-2xl font-black tracking-widest text-white drop-shadow-[0_0_10px_rgba(255,107,33,0.4)] pt-2">
                 肖像下載
             </h1>
             <span class="text-slate-300 text-xs font-mono tracking-wider block mt-1">
                 Portrait Download
             </span>
-            <div class="h-[2px] w-24 bg-gradient-to-r from-transparent via-[#00f2ff] to-transparent mx-auto mt-2"></div>
+            <div class="h-[2px] w-24 bg-gradient-to-r from-transparent via-[#ff6b21] to-transparent mx-auto mt-2"></div>
         </header>
 
         <!-- 核心內容展示區 -->
         <main class="flex-grow flex flex-col items-center justify-center my-auto w-full max-w-sm mx-auto">
             <div class="glass-card rounded-[2.5rem] p-6 w-full text-center flex flex-col items-center relative overflow-hidden">
-                
+
                 <div class="mb-5">
                     <span class="text-[10px] font-mono tracking-widest text-ai-cyan block">PORTRAIT NO</span>
                     <span id="display-task-id" class="text-4xl font-black font-mono tracking-wider text-white">#---</span>
@@ -112,9 +114,7 @@
         <!-- 底部合作單位 LOGO -->
         <footer class="text-center w-full flex-shrink-0 pt-4 flex flex-col items-center gap-3">
             <div class="flex items-center justify-center gap-3 bg-white/95 px-4 py-1.5 rounded-2xl shadow-[0_0_20px_rgba(255,255,255,0.3)] backdrop-blur-md">
-                <img src="https://img.shoplineapp.com/media/image_clips/6a607d669e55e27ece023d03/original.png?1784708454=&owner_id=66221c5c384dbb002ec45c18" alt="TCA 台北市電腦商業同業公會" class="h-5 sm:h-6 object-contain" />
-                <div class="h-4 w-[1.5px] bg-slate-300"></div>
-                <img src="https://img.shoplineapp.com/media/image_clips/6a607d662a733964446d360a/original.png?1784708454=&owner_id=66221c5c384dbb002ec45c18" alt="TAIWAN AI ALLIANCE 台灣AI大聯盟" class="h-5 sm:h-6 object-contain" />
+                <span class="text-stone-800 text-sm">PEYSON LIVE PRINT</span>
             </div>
             <p class="text-[8px] font-mono text-ai-cyan">2026 ALL RIGHTS RESERVED</p>
         </footer>
@@ -159,18 +159,18 @@
             try {
                 const res = await fetch(`${API_BASE_URL}/api/status/${taskId}`);
                 const data = await res.json();
-                
+
                 if (data.success && data.chosenDesign) {
                     const finalImage = data.chosenDesign === 'A' ? data.resultImageA : data.resultImageB;
-                    
+
                     if (finalImage) {
                         portraitImg.src = finalImage;
                         portraitImg.classList.remove('hidden');
                         spinner.classList.add('hidden');
-                        
+
                         downloadBtn.disabled = false;
                         downloadBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                        
+
                         downloadBtn.addEventListener('click', async () => {
                             try {
                                 const response = await fetch(finalImage);

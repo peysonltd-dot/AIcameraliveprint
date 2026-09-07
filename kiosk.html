@@ -8,21 +8,23 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --ai-cyan:#00f2ff; --ai-pink:#ff00d0; --ai-dark:#020617; }
+        :root { --ai-cyan:#ff6b21; --ai-pink:#ffc400; --ai-dark:#020617; }
         html, body { margin:0; min-height:100%; background:var(--ai-dark); }
         body {
             font-family:'Noto Sans TC',sans-serif;
             background-image:
-                radial-gradient(circle at 20% 20%, rgba(0,242,255,.12), transparent 32%),
-                radial-gradient(circle at 80% 70%, rgba(255,0,208,.10), transparent 34%);
+                radial-gradient(circle at 20% 20%, rgba(255,107,33,.12), transparent 32%),
+                radial-gradient(circle at 80% 70%, rgba(255,196,0,.10), transparent 34%);
         }
         .orbitron { font-family:'Orbitron',sans-serif; }
-        .loader { width:70px; height:70px; border:4px solid rgba(0,242,255,.18); border-top-color:var(--ai-cyan); border-radius:50%; animation:spin 1s linear infinite; }
+        .loader { width:70px; height:70px; border:4px solid rgba(255,107,33,.18); border-top-color:var(--ai-cyan); border-radius:50%; animation:spin 1s linear infinite; }
         @keyframes spin { to { transform:rotate(360deg); } }
     </style>
+    <link rel="stylesheet" href="tourism-theme.css?v=20260907">
 </head>
 <body class="text-white min-h-[100dvh] flex items-center justify-center p-6">
     <main class="w-full max-w-2xl text-center">
+        <div class="tourism-brand"><img src="assets/taiwan-logo.jpg" alt="Taiwan — Waves of Wonder"></div>
         <div id="loading-view" class="flex flex-col items-center gap-6">
             <div class="loader"></div>
             <div>
@@ -31,7 +33,7 @@
             </div>
         </div>
 
-        <div id="maintenance-view" class="hidden rounded-[2rem] border border-cyan-400/30 bg-slate-900/75 backdrop-blur-xl p-8 sm:p-12 shadow-[0_0_45px_rgba(0,242,255,.15)]">
+        <div id="maintenance-view" class="hidden rounded-[2rem] border border-cyan-400/30 bg-slate-900/75 backdrop-blur-xl p-8 sm:p-12 shadow-[0_0_45px_rgba(255,107,33,.15)]">
             <i class="fa-solid fa-screwdriver-wrench text-5xl text-cyan-300 mb-6"></i>
             <h1 class="text-3xl sm:text-5xl font-black tracking-widest">系統準備中</h1>
             <p class="mt-5 text-slate-300 text-lg">請稍候工作人員協助</p>

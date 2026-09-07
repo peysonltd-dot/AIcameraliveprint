@@ -8,21 +8,23 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --ai-cyan:#00f2ff; --ai-pink:#ff00d0; --ai-dark:#020617; }
+        :root { --ai-cyan:#ff6b21; --ai-pink:#ffc400; --ai-dark:#020617; }
         html,body { margin:0; min-height:100%; background:var(--ai-dark); }
         body {
             font-family:'Noto Sans TC',sans-serif;
-            background-image:radial-gradient(circle at 50% 0%,rgba(0,242,255,.13),transparent 35%);
+            background-image:radial-gradient(circle at 50% 0%,rgba(255,107,33,.13),transparent 35%);
         }
         .orbitron { font-family:'Orbitron',sans-serif; }
-        .glass { background:rgba(15,23,42,.86); border:1px solid rgba(0,242,255,.24); backdrop-filter:blur(16px); }
-        .primary { background:linear-gradient(90deg,#00f2ff,#38bdf8); color:#020617; box-shadow:0 0 24px rgba(0,242,255,.26); }
+        .glass { background:rgba(15,23,42,.86); border:1px solid rgba(255,107,33,.24); backdrop-filter:blur(16px); }
+        .primary { background:linear-gradient(90deg,#ff6b21,#38bdf8); color:#020617; box-shadow:0 0 24px rgba(255,107,33,.26); }
         .primary:disabled { opacity:.42; box-shadow:none; }
     </style>
+    <link rel="stylesheet" href="tourism-theme.css?v=20260907">
 </head>
 <body class="text-white min-h-[100dvh] px-5 py-6">
     <main class="max-w-md mx-auto">
         <header class="text-center mb-5">
+            <div class="tourism-brand"><img src="assets/taiwan-logo.jpg" alt="Taiwan — Waves of Wonder"></div>
             <div class="orbitron text-cyan-300 tracking-[.18em] text-sm">AI PORTRAIT</div>
             <h1 class="text-2xl font-black mt-2">上傳您的照片</h1>
             <p class="text-slate-400 text-sm mt-2">手機只用於傳送照片，完成後請回到機台操作</p>
