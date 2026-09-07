@@ -34,20 +34,20 @@ body, .cyber-bg { background-color:#17130f; background-image:radial-gradient(ell
 
 /* Soft event edition: a calm warm canvas with saturated KV colours used as accents. */
 :root {
-  --ai-dark:#fff4e9;
+  --ai-dark:#f2a36f;
   --ai-cyan:#211d80;
   --ai-pink:#fff128;
   --tourism-orange:#e8400f;
   --tourism-orange-soft:#ff7959;
-  --tourism-cream:#fff4e9;
+  --tourism-cream:#f2a36f;
   --tourism-blue:#087fbd;
 }
 html, body, .cyber-bg {
   background-color:var(--tourism-cream);
   background-image:
-    radial-gradient(circle at 8% 12%,rgba(255,241,40,.28) 0,transparent 24%),
-    radial-gradient(circle at 92% 82%,rgba(8,127,189,.10) 0,transparent 28%),
-    linear-gradient(145deg,#fff9f3 0%,#fff0e4 54%,#ffeadd 100%);
+    radial-gradient(circle at 8% 10%,rgba(248,228,66,.22) 0,transparent 25%),
+    radial-gradient(circle at 92% 86%,rgba(255,255,255,.14) 0,transparent 30%),
+    linear-gradient(145deg,#f6b47e 0%,#f2a06b 48%,#ef8f58 100%);
   background-attachment:fixed;
   color:#211d80;
 }
@@ -127,26 +127,8 @@ button:disabled { background:#e9e6ee !important; color:#6a6476 !important; borde
 .tourism-sprite[data-action="chicken"].is-active { animation-duration:1.8s; }
 .tourism-action-caption { margin:0 0 .4rem; color:#211d80; font-weight:900; font-size:1.25rem; }
 .tourism-character-stage { min-height:220px; }
-.tourism-kv-scenery { position:fixed; z-index:0; left:0; right:0; bottom:0; height:clamp(105px,16vh,175px); display:grid; grid-template-columns:repeat(6,1fr); overflow:hidden; pointer-events:none; border-top:7px solid #fff; box-shadow:0 -7px 0 #130f44; }
-.kv-tile { position:relative; overflow:hidden; min-width:0; }
-.kv-sun { background:#e8400f; }
-.kv-sun::before { content:""; position:absolute; width:84%; aspect-ratio:1; left:8%; top:18%; border-radius:50%; background:repeating-conic-gradient(#f8e442 0 12deg,transparent 12deg 25deg); }
-.kv-sun::after { content:""; position:absolute; width:34%; aspect-ratio:1; left:33%; top:43%; background:#fff; border-radius:50%; }
-.kv-mountain { background:#f8e442; }
-.kv-mountain::before { content:""; position:absolute; inset:12% 2% 0; background:#18a83b; clip-path:polygon(0 100%,40% 25%,53% 50%,65% 34%,100% 100%); }
-.kv-mountain::after { content:""; position:absolute; inset:41% -10% -12%; background:#fff; clip-path:polygon(0 62%,30% 35%,53% 48%,71% 20%,100% 50%,100% 100%,0 100%); }
-.kv-waves { background:#046bbe; }
-.kv-waves::before { content:""; position:absolute; inset:20% 7%; background:repeating-radial-gradient(ellipse at 50% 105%,transparent 0 15px,#fff 16px 20px,transparent 21px 31px); }
-.kv-bridge { background:#e8400f; }
-.kv-bridge::before { content:""; position:absolute; left:48%; top:8%; width:9%; height:92%; background:#f8e442; clip-path:polygon(38% 0,62% 0,100% 100%,0 100%); }
-.kv-bridge::after { content:""; position:absolute; inset:18% 4% 0; background:repeating-linear-gradient(64deg,transparent 0 17px,#fff 18px 21px,transparent 22px 34px); clip-path:polygon(50% 0,100% 100%,0 100%); }
-.kv-tower { background:#130f44; }
-.kv-tower::before { content:""; position:absolute; left:30%; right:30%; bottom:-8%; height:98%; background:repeating-linear-gradient(to bottom,#18a83b 0 12%,#130f44 12% 15%,#f8e442 15% 27%,#130f44 27% 30%,#e8400f 30% 42%,#130f44 42% 45%); clip-path:polygon(42% 0,58% 0,58% 15%,78% 15%,70% 100%,30% 100%,22% 15%,42% 15%); }
-.kv-moon { background:#130f44; }
-.kv-moon::before { content:""; position:absolute; width:62%; aspect-ratio:1; left:18%; top:18%; background:#f8e442; border-radius:50%; }
-.kv-moon::after { content:""; position:absolute; width:61%; aspect-ratio:1; left:5%; top:4%; background:#130f44; border-radius:50%; }
 .tourism-wait[data-phase="ready"] .tourism-sprite.is-active { animation:bear-frames 1.6s step-end infinite, tourism-cheer .65s ease both; }
 .tourism-wait[data-phase="failed"] .tourism-sprite { animation-play-state:paused; }
 @keyframes bear-frames { 0%,100% { background-position:0 0; } 25% { background-position:100% 0; } 50% { background-position:0 100%; } 75% { background-position:100% 100%; } }
 @media(prefers-reduced-motion:reduce) { .tourism-sprite.is-active,.tourism-wait[data-phase="ready"] .tourism-sprite.is-active { animation:none; } .tourism-fill { transition:none; } }
-@media(max-width:600px) { .tourism-event-title { margin-top:0; padding:.5rem 1rem; } .tourism-home-examples { gap:12px !important; } .tourism-example-image { width:29vw !important; height:29vw !important; min-width:0; } .tourism-language { margin-bottom:10px; } .tourism-kv-scenery { grid-template-columns:repeat(4,1fr); height:130px; } .tourism-kv-scenery .kv-mountain,.tourism-kv-scenery .kv-moon { display:none; } .tourism-home-logo { margin-top:26px; } }
+@media(max-width:600px) { .tourism-event-title { margin-top:0; padding:.5rem 1rem; } .tourism-home-examples { gap:12px !important; } .tourism-example-image { width:29vw !important; height:29vw !important; min-width:0; } .tourism-language { margin-bottom:10px; } .tourism-home-logo { margin-top:26px; } }
