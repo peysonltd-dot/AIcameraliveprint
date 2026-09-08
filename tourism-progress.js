@@ -56,9 +56,6 @@
         const stage = element.querySelector('.tourism-character-stage');
         const fallback = element.querySelector('.tourism-character');
         fallback.classList.add('tourism-character-fallback');
-        const actionCaption = document.createElement('p');
-        actionCaption.className = 'tourism-action-caption';
-        stage.after(actionCaption);
         const sheets = ['boba','wave','noodles','chicken','bag'];
         let alive = true, action = -1;
         const sprites = [];
@@ -83,7 +80,6 @@
             action = index;
             sprites.forEach((sprite, i) => sprite.classList.toggle('is-active', i === index));
             fallback.hidden = true;
-            actionCaption.textContent = t.actions[index];
         }
         // Sprite timing is decorative; it has no influence on actual completion.
         const actionTimer = setInterval(() => {
