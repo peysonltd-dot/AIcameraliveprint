@@ -201,14 +201,7 @@
         compositeCtx.drawImage(character, characterX, characterY, SPEC.characterSize, SPEC.characterSize);
         compositeCtx.drawImage(frameImage, 0, 0, SPEC.width, SPEC.height);
 
-        const mirrored = document.createElement('canvas');
-        mirrored.width = SPEC.width;
-        mirrored.height = SPEC.height;
-        const mirroredCtx = mirrored.getContext('2d');
-        mirroredCtx.translate(SPEC.width, 0);
-        mirroredCtx.scale(-1, 1);
-        mirroredCtx.drawImage(composite, 0, 0);
-        return addPngResolution(await canvasToBlob(mirrored));
+        return addPngResolution(await canvasToBlob(composite));
     }
 
     root.PrintComposer = { SPEC, compose, removeConnectedWhiteBackground, addPngResolution };

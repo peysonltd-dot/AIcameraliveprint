@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;700;900&display=swap" rel="stylesheet">
-    <script src="print-composer.js?v=print8"></script>
+    <script src="print-composer.js?v=print9"></script>
     
     <style>
         :root { --ai-cyan: #00f2ff; --ai-pink: #ff00d0; }
@@ -444,7 +444,7 @@
                 .tools { position: fixed; z-index: 2; top: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; padding: 10px; border-radius: 12px; background: rgba(15,23,42,.92); }
                 .tools button, .tools a { border: 0; border-radius: 8px; padding: 10px 16px; color: #fff; background: #ea580c; font: 700 14px sans-serif; text-decoration: none; cursor: pointer; }
                 @media print { .tools { display: none; } }
-            </style></head><body><div class="loading">正在自動去背、合成邊框與水平反轉…</div></body></html>`);
+            </style></head><body><div class="loading">正在自動去背並合成指定邊框…</div></body></html>`);
             printWindow.document.close();
             return printWindow;
         }
@@ -462,7 +462,7 @@
             try {
                 const printableBlob = await PrintComposer.compose(imageUrl);
                 const printableUrl = URL.createObjectURL(printableBlob);
-                printWindow.document.body.innerHTML = `<div class="tools"><button type="button" onclick="window.print()">列印</button><a download="客人_${taskId}_20x24.8cm_300dpi_已反轉.png">下載 PNG</a></div><img class="print-image" alt="可印製合成圖">`;
+                printWindow.document.body.innerHTML = `<div class="tools"><button type="button" onclick="window.print()">列印</button><a download="客人_${taskId}_20x24.8cm_300dpi_直接印製.png">下載 PNG</a></div><img class="print-image" alt="可印製合成圖">`;
                 const link = printWindow.document.querySelector('.tools a');
                 const image = printWindow.document.querySelector('.print-image');
                 link.href = printableUrl;

@@ -1,4 +1,12 @@
-# AI 拍貼機：柔和橘底主視覺 v11＋五種黑熊動作
+# AI 拍貼機：2026 觀光主視覺＋官方喔熊 v13
+
+## v13 客戶識別更新
+
+- 首頁活動名稱下方新增英文 `TAIWAN TOUR TECH WONDERLAND`。
+- 「開始體驗」下方改用觀光署官網提供的「TAIWAN × 交通部觀光署」橫式識別。
+- 等待畫面改用客戶主視覺中的官方喔熊，中文保留「喔熊陪你，等一張驚喜」，英文名稱統一為 `OhBear`。
+- 喔熊每 4 秒切換一次揮動、跳躍、搖擺、漂浮與歡呼節奏；不顯示各動作名稱，且動畫不影響實際進度判定。
+- 客戶後續提供正式 AI／透明 PNG 素材時，只需替換 `assets/ohbear-official.jpg`，程式流程不必重做。
 
 ## v11 柔和橘底
 
@@ -45,7 +53,8 @@
 
 ## 素材
 
-- assets/taiwan-logo.jpg：觀光署官方原檔，未重畫、變形或加濾鏡。來源：https://admin.taiwan.net.tw/UserFiles/cis/LogoLockup-Orange.jpg
+- assets/tourism-administration-logo.jpg：觀光署官方「TAIWAN × 交通部觀光署」橫式識別，未重畫、變形或加濾鏡。來源：https://admin.taiwan.net.tw/UserFiles/cis/Logo_Cobranding_horizontal_page-0001.jpg
+- assets/ohbear-official.jpg：由客戶提供的 2026 活動主視覺裁切，保留官方喔熊、「早安／晚安」與「AI 台灣」文字組合。
 - 官方 CIS 與使用聲明：https://admin.taiwan.net.tw/Organize/Articles?a=199 。請由活動主辦確認相關使用程序。
 - assets/taiwan-bear-boba.png：原創黑熊插圖；逐格圖載入前的備用角色。
 - assets/bear-boba-sheet.png、bear-wave-sheet.png、bear-noodles-sheet.png、bear-chicken-sheet.png、bear-bag-sheet.png：五種原創動作的 2×2 逐格圖，透過 CSS 依序播放。黑熊外觀沿用原創角色，不使用參考影片素材。

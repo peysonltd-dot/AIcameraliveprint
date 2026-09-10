@@ -6,13 +6,13 @@
 (function (root) {
     'use strict';
     const copy = {
-        zh: { title:'黑熊陪你，等一張驚喜', label:'流程進度', note:'依實際完成步驟更新，非剩餘時間估算', uploading:'正在傳送照片…', queued:'照片已收到，排隊等候中…', pending:'照片已收到，準備生成…', generating:'AI 正在打造專屬於您的角色…', loading:'角色已生成，正在載入圖片…', ready:'100% 完成！準備選擇喜歡的款式', reconnecting:'連線暫時不穩，正在查詢原任務，請勿重複送出。', imageRetry:'圖片尚未載入成功，正在重試…', failed:'生成未完成，請通知工作人員。', slow:'等待較久，仍在查詢原任務，請勿重複送出。', steps:['照片送達','AI 完成','款式 A','款式 B'] },
-        en: { title:'Your bear buddy is here while you wait!', label:'Estimated progress', note:'', uploading:'Sending your photo…', queued:'Photo received. Waiting for your turn…', pending:'Getting ready to create your character…', generating:'AI is creating your character…', loading:'Your pictures are loading…', ready:'Your pictures are ready! Choose your favorite.', reconnecting:'Connection lost. Trying to reconnect… Please keep this page open.', imageRetry:'Trying to load your pictures again…', failed:'Sorry, we could not create your pictures. Please ask our staff for help.', slow:'This is taking a little longer. Thanks for waiting!', steps:['Photo sent','AI done','Style A','Style B'] },
-        jp: { title:'クマと一緒に、ちょっとひと休み', label:'進み具合の目安', note:'', uploading:'写真を送っています…', queued:'写真を受け取りました。順番にお作りしています…', pending:'キャラクターを作る準備をしています…', generating:'AIがあなたのキャラクターを作っています…', loading:'キャラクターを読み込んでいます…', ready:'キャラクターができました！お好きなほうを選んでください。', reconnecting:'接続が切れました。再接続していますので、この画面のままお待ちください。', imageRetry:'画像をもう一度読み込んでいます…', failed:'キャラクターを作成できませんでした。スタッフにお声がけください。', slow:'少し時間がかかっています。そのままお待ちください。', steps:['写真送信','AI作成','画像 A','画像 B'] }
+        zh: { title:'喔熊陪你，等一張驚喜', label:'流程進度', note:'', uploading:'正在傳送照片…', queued:'照片已收到，排隊等候中…', pending:'照片已收到，準備生成…', generating:'AI 正在打造專屬於您的角色…', loading:'角色已生成，正在載入圖片…', ready:'100% 完成！準備選擇喜歡的款式', reconnecting:'連線暫時不穩，正在查詢原任務，請勿重複送出。', imageRetry:'圖片尚未載入成功，正在重試…', failed:'生成未完成，請通知工作人員。', slow:'等待較久，仍在查詢原任務，請勿重複送出。', steps:['照片送達','AI 完成','款式 A','款式 B'] },
+        en: { title:'OhBear is here while you wait!', label:'Estimated progress', note:'', uploading:'Sending your photo…', queued:'Photo received. Waiting for your turn…', pending:'Getting ready to create your character…', generating:'AI is creating your character…', loading:'Your pictures are loading…', ready:'Your pictures are ready! Choose your favorite.', reconnecting:'Connection lost. Trying to reconnect… Please keep this page open.', imageRetry:'Trying to load your pictures again…', failed:'Sorry, we could not create your pictures. Please ask our staff for help.', slow:'This is taking a little longer. Thanks for waiting!', steps:['Photo sent','AI done','Style A','Style B'] },
+        jp: { title:'OhBearと一緒に、楽しく待とう！', label:'進み具合の目安', note:'', uploading:'写真を送っています…', queued:'写真を受け取りました。順番にお作りしています…', pending:'キャラクターを作る準備をしています…', generating:'AIがあなたのキャラクターを作っています…', loading:'キャラクターを読み込んでいます…', ready:'キャラクターができました！お好きなほうを選んでください。', reconnecting:'接続が切れました。再接続していますので、この画面のままお待ちください。', imageRetry:'画像をもう一度読み込んでいます…', failed:'キャラクターを作成できませんでした。スタッフにお声がけください。', slow:'少し時間がかかっています。そのままお待ちください。', steps:['写真送信','AI作成','画像 A','画像 B'] }
     };
-    Object.assign(copy.zh, {label:'預估進度', note:'', generating:'AI 正在打造專屬於您的角色…', ready:'圖片準備好了！接著選擇喜歡的款式', actions:['黑熊喝珍奶','黑熊揮揮手','黑熊吃泡麵','黑熊吃雞排','黑熊逛街拿茄芷袋']});
-    Object.assign(copy.en, {label:'Estimated progress', note:'', generating:'AI is creating your character…', ready:'Your pictures are ready! Choose your favorite.', actions:['Time for bubble tea!','Hello from your bear buddy!','Time for noodles!','Time for fried chicken!','Shopping with a Taiwan bag!']});
-    Object.assign(copy.jp, {label:'進み具合の目安', note:'', generating:'AIがあなたのキャラクターを作っています…', ready:'キャラクターができました！お好きなほうを選んでください。', actions:['タピオカミルクティーでひと休み','クマが手を振ってごあいさつ','カップ麺をいただきます！','台湾フライドチキンをぱくり！','台湾のしましまバッグでお買い物']});
+    Object.assign(copy.zh, {label:'預估進度', generating:'AI 正在打造專屬於您的角色…', ready:'圖片準備好了！接著選擇喜歡的款式'});
+    Object.assign(copy.en, {label:'Estimated progress', generating:'AI is creating your character…', ready:'Your pictures are ready! Choose your favorite.'});
+    Object.assign(copy.jp, {label:'進み具合の目安', generating:'AIがあなたのキャラクターを作っています…', ready:'キャラクターができました！お好きなほうを選んでください。'});
 
     function createDisplayProgress(clock = () => Date.now()) {
         let value, phase, actual, last, readyStart, readyFrom;
@@ -47,47 +47,23 @@
 
     function mount(element, lang = 'zh', display = createDisplayProgress()) {
         const t = copy[lang] || copy.zh;
-        element.innerHTML = '<div class="tourism-wait"><div class="tourism-progress-heading"><span class="tourism-progress-label"></span><strong class="tourism-percent">0%</strong></div><div class="tourism-track" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div class="tourism-fill"></div></div><ol class="tourism-milestones"></ol><p class="tourism-status" role="status" aria-live="polite"></p><p class="tourism-progress-note"></p><div class="tourism-character-stage" aria-hidden="true"><img class="tourism-character" src="assets/taiwan-bear-boba.png" alt="" width="360" height="360"></div><p class="tourism-wait-title"></p></div>';
+        element.innerHTML = '<div class="tourism-wait"><div class="tourism-progress-heading"><span class="tourism-progress-label"></span><strong class="tourism-percent">0%</strong></div><div class="tourism-track" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div class="tourism-fill"></div></div><ol class="tourism-milestones"></ol><p class="tourism-status" role="status" aria-live="polite"></p><div class="tourism-character-stage" aria-hidden="true"><img class="tourism-character tourism-character--ohbear is-motion-0" src="assets/ohbear-official.jpg" alt="" width="215" height="300"></div><p class="tourism-wait-title"></p></div>';
         element.querySelector('.tourism-progress-label').textContent = t.label;
-        element.querySelector('.tourism-progress-note').remove();
         element.querySelector('.tourism-wait-title').textContent = t.title;
         element.querySelector('.tourism-track').setAttribute('aria-label', t.label);
         for (const step of t.steps) { const li = document.createElement('li'); li.textContent = step; element.querySelector('ol').appendChild(li); }
-        const stage = element.querySelector('.tourism-character-stage');
-        const fallback = element.querySelector('.tourism-character');
-        fallback.classList.add('tourism-character-fallback');
-        const sheets = ['boba','wave','noodles','chicken','bag'];
-        let alive = true, action = -1;
-        const sprites = [];
-        sheets.forEach((name, i) => {
-            const sprite = document.createElement('div');
-            sprite.className = 'tourism-sprite'; sprite.dataset.action = name;
-            const asset = new Image();
-            asset.onload = () => { if (alive) { sprite.dataset.loaded = 'true'; sprite.style.aspectRatio = asset.naturalWidth + ' / ' + asset.naturalHeight; if (action === -1) selectAction(i); } };
-            stage.appendChild(sprite);
-            sprites.push(sprite);
-            asset.onerror = () => {
-                if (!alive || asset.datasetFallback) return;
-                asset.datasetFallback = true;
-                asset.src = embeddedBearSheets[name];
-                sprite.style.backgroundImage = 'url("' + asset.src + '")';
-            };
-            asset.src = 'assets/bear-' + name + '-sheet.png?v=animated4';
-            sprite.style.backgroundImage = 'url("' + asset.src + '")';
-        });
+        const character = element.querySelector('.tourism-character--ohbear');
+        let alive = true, action = 0;
         function selectAction(index) {
-            if (!alive || !sprites[index] || sprites[index].dataset.loaded !== 'true') return;
+            if (!alive) return;
+            character.classList.remove('is-motion-0','is-motion-1','is-motion-2','is-motion-3','is-motion-4');
+            character.classList.add('is-motion-' + index);
             action = index;
-            sprites.forEach((sprite, i) => sprite.classList.toggle('is-active', i === index));
-            fallback.hidden = true;
         }
-        // Sprite timing is decorative; it has no influence on actual completion.
+        // OhBear changes motion every four seconds; this decoration never changes progress.
         const actionTimer = setInterval(() => {
             if (['ready','failed'].includes(element.querySelector('.tourism-wait').dataset.phase)) return;
-            for (let offset = 1; offset <= sheets.length; offset++) {
-                const next = (action + offset) % sheets.length;
-                if (sprites[next].dataset.loaded === 'true') { selectAction(next); break; }
-            }
+            selectAction((action + 1) % 5);
         }, 4000);
         const percentText = element.querySelector('.tourism-percent');
         const fill = element.querySelector('.tourism-fill');
