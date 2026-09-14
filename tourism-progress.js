@@ -17,9 +17,9 @@ function mount(host,lang,shared){
  <div class="tourism-kv-stage" style="--kv-bg:url(${A.bg})">
   <img class="tourism-kv-bear" src="${A.bear}" alt="OhBear 喔熊">
   <img class="tourism-kv-accent tourism-kv-accent--morning is-visible" src="${A.morning}" alt="">
-  <img class="tourism-kv-accent tourism-kv-accent--wifi" src="${A.wifi}" alt="">
-  <img class="tourism-kv-accent tourism-kv-accent--ai" src="${A.ai}" alt="">
   <img class="tourism-kv-accent tourism-kv-accent--night" src="${A.night}" alt="">
+  <img class="tourism-kv-accent tourism-kv-accent--ai" src="${A.ai}" alt="">
+  <img class="tourism-kv-accent tourism-kv-accent--wifi" src="${A.wifi}" alt="">
  </div>
  <p class="tourism-wait-title">${c.title}</p>
  <div class="tourism-wait-event"><span>2026 觀光產業數位博覽會</span><small>TAIWAN TOUR TECH WONDERLAND</small></div>
@@ -51,4 +51,5 @@ function monitor(o){
 }
 window.TourismProgress={createDisplayProgress,mount,monitor};
 })();
+
 
