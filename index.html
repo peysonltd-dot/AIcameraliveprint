@@ -177,6 +177,39 @@
     </style>
     <link rel="stylesheet" href="tourism-theme.css?v=20260910-ohbear13">
     <link rel="stylesheet" href="kiosk-display.css?v=20260916-v19">
+        <style id="home-polish-v21">
+        .tourism-home > .btn-cyan {
+            width:min(88vw,480px); max-width:100%; box-sizing:border-box;
+            min-height:100px; padding:24px 32px !important;
+            font-size:clamp(1.8rem,4.8vw,3rem); line-height:1.25;
+        }
+        .tourism-home .tourism-home-logo {
+            box-shadow:none !important; filter:none !important; transform:none !important;
+            border:0; border-radius:12px; margin-top:64px;
+        }
+        .tourism-photo-notice { color:#875d43 !important; opacity:.65; }
+        .tourism-privacy-details { width:min(100%,760px); margin:8px auto 0; }
+        .tourism-privacy-details > summary {
+            cursor:pointer; width:fit-content; margin:auto; padding:8px 12px;
+            color:#875d43; font-size:inherit; line-height:1.5;
+            text-decoration:underline; text-underline-offset:3px;
+        }
+        .tourism-privacy-details > summary:focus-visible { outline:2px solid #875d43; outline-offset:3px; }
+        .tourism-privacy-content {
+            padding:16px 20px; margin:8px 0 12px; text-align:left;
+            color:#65452f; background:rgba(255,248,239,.94); border-radius:12px;
+            font-size:14px; line-height:1.8; letter-spacing:normal;
+        }
+        .tourism-privacy-content p + p { margin-top:12px; }
+        .tourism-privacy-content a { color:inherit; text-decoration:underline; }
+        @media(min-width:900px) {
+            .tourism-home > .btn-cyan {
+                width:min(80vw,600px); min-height:140px;
+                padding:32px 64px !important; font-size:3.75rem;
+            }
+            .tourism-home .tourism-home-logo { margin-top:104px; }
+        }
+    </style>
     <script src="tourism-progress.js?v=20260914-ohbear18"></script>
 </head>
 <body class="cyber-bg text-white min-h-[100dvh] w-screen flex flex-col">
@@ -689,10 +722,20 @@
                     {/* Footer */}
                     <div className="w-full flex flex-col items-center justify-center gap-2 pt-2 z-10">
                         {step === 'home' && (
-                            <div className="w-full text-center text-xs sm:text-sm text-ai-cyan leading-relaxed px-2" style={{opacity:0.65}}>
+                            <div className="tourism-photo-notice w-full text-center text-xs sm:text-sm leading-relaxed px-2">
                                 <p>點擊「開始體驗」，即同意照片與生成影像用於本次活動的 AI 生成、重新生成及客製製作。</p>
                                 <p>照片原檔將於活動結束後 7 天內刪除；沛森不將影像用於 AI 訓練。</p>
                             </div>
+                        )}
+                        {step === 'home' && (
+                            <details className="tourism-privacy-details text-xs sm:text-sm">
+                                <summary>個資與肖像使用說明</summary>
+                                <div className="tourism-privacy-content">
+                                    <p>沛森保管的照片原檔與 AI 生成影像，將於本次活動全部結束後 7 天內刪除，並可能提前刪除；刪除後將無法再次提供下載。</p>
+                                    <p>經您另行同意，沛森得將 AI 圖像印製於禮品上的成品照片，用於官方網站的活動案例展示，不設定固定展示期限。此類展示照片不適用前述 7 天刪除期限；您可聯絡沛森申請停止使用及撤下，不影響活動體驗資格。</p>
+                                    <p>如需查詢、閱覽、申請停止蒐集、處理、利用及刪除，請聯絡沛森顧問有限公司：<a href="tel:0266039971">02-6603-9971</a>。</p>
+                                </div>
+                            </details>
                         )}
                         <div
                             onClick={handleCancelAndGoHome}
