@@ -133,7 +133,10 @@
                         <p class="text-cyan-300 font-bold mt-5">請依現場工作人員指示領取</p>
                     </div>
                 </div>
-                <div class="mt-6 text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i><span id="return-count">15</span>秒後自動返回首頁</div>
+                <div class="mt-6 flex flex-wrap gap-6 items-center justify-center text-slate-400">
+                    <div><span id="return-count">20</span>秒後自動返回首頁</div>
+                    <button id="completed-home-btn" class="primary rounded-2xl px-8 py-4 font-bold">返回首頁</button>
+                </div>
             </section>
 
             <section id="error-step" class="step hidden text-center glass rounded-[2rem] p-9 w-full max-w-xl">
@@ -149,7 +152,7 @@
 
     <script>
         const API_BASE_URL = "https://aicameraliveprint-back.onrender.com";
-        const state = { sessionId:null, taskId:null, selectedChoice:null, resultA:null, resultB:null, pollTimer:null, expireTimer:null, expiresAt:0, isSubmitting:false };
+        const state = { sessionId:null, taskId:null, selectedChoice:null, resultA:null, resultB:null, pollTimer:null, expireTimer:null, returnTimer:null, expiresAt:0, isSubmitting:false };
         const progressUI = TourismProgress.mount(document.getElementById('tourism-progress'));
         let generationMonitor = null;
         let generationEpoch = 0;
@@ -162,6 +165,8 @@
             if (generationMonitor) { generationMonitor.stop(); generationMonitor = null; }
             if (state.pollTimer) clearInterval(state.pollTimer);
             if (state.expireTimer) clearInterval(state.expireTimer);
+            if (state.returnTimer) clearInterval(state.returnTimer);
+            state.returnTimer = null;
             state.pollTimer = null; state.expireTimer = null;
         }
         function resetState() {
@@ -278,11 +283,11 @@
                 document.getElementById("final-image").src = state.selectedChoice === "A" ? state.resultA : state.resultB;
                 document.getElementById("final-task-number").textContent = `#${state.taskId}`;
                 showStep("completed");
-                let count = 15;
+                let count = 20;
                 document.getElementById("return-count").textContent = count;
-                const timer = setInterval(() => {
+                state.returnTimer = setInterval(() => {
                     count -= 1; document.getElementById("return-count").textContent = count;
-                    if (count <= 0) { clearInterval(timer); resetState(); }
+                    if (count <= 0) resetState();
                 }, 1000);
             } catch (error) {
                 state.isSubmitting = false; btn.disabled = false; btn.textContent = "確定送出";
@@ -298,6 +303,7 @@
         document.getElementById("generation-home-btn").addEventListener("click", resetState);
         document.getElementById("discard-btn").addEventListener("click", resetState);
         document.getElementById("error-home-btn").addEventListener("click", resetState);
+        document.getElementById("completed-home-btn").addEventListener("click", resetState);
         document.getElementById("submit-choice-btn").addEventListener("click", submitChoice);
         document.querySelectorAll(".choice").forEach(button => button.addEventListener("click", () => {
             state.selectedChoice = button.dataset.choice;

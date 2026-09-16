@@ -1,0 +1,65 @@
+/* v19: layout sizing, not transform/zoom; admin and print pages are untouched. */
+.kiosk-return-actions {
+  display:flex; flex-wrap:wrap; justify-content:center; align-items:center;
+  gap:24px; margin:24px auto 40px;
+}
+.kiosk-return-actions button { min-height:52px; }
+.kiosk-result-panel > div { min-width:0; }
+.kiosk-final-image { width:min(68vw,360px) !important; max-width:100%; height:auto !important; aspect-ratio:1; }
+.kiosk-download-card { width:min(100%,380px) !important; max-width:380px !important; }
+.kiosk-download-card > div { max-width:100%; box-sizing:border-box; }
+.kiosk-download-qr { width:min(60vw,288px) !important; max-width:100%; height:auto !important; aspect-ratio:1; }
+.kiosk-completed { max-width:1020px !important; }
+
+@media(min-width:900px) {
+  /* Same lockup on home, camera, loading, choice and confirmation. */
+  .tourism-event-lockup { gap:15px; max-width:100%; margin-top:36px; }
+  .tourism-event-title {
+    font-size:2.32rem; padding:1.04rem 2.64rem;
+    border-width:4.8px; border-radius:13px 13px 38px 13px;
+    box-shadow:13px 13px 0 #130f44; margin-top:2rem;
+  }
+  .tourism-event-name-en { font-size:1.44rem; }
+  .tourism-color-ribbon { width:230px; height:19px; margin:26px auto 24px; }
+  .content-container { padding-top:20px; }
+  .tourism-home { margin-top:24px !important; }
+  .tourism-home > p:first-child { font-size:clamp(2.7rem,6vw,4.5rem); margin-bottom:42px; line-height:1.25; }
+  .tourism-home-examples { max-width:1100px !important; gap:64px !important; margin-bottom:64px !important; }
+  .tourism-example-image { width:300px !important; height:300px !important; margin-bottom:26px; }
+  .tourism-home-examples > div:first-child > span,
+  .tourism-home-examples > div:last-child > span { font-size:30px; padding:.45rem 1.05rem; }
+  .tourism-home-examples > div:nth-child(2) { flex-shrink:0; }
+  .tourism-home-examples > div:nth-child(2) > span { font-size:90px; }
+  .tourism-home > .btn-cyan { font-size:3rem; padding:27px 84px !important; }
+  /* Only spacing changes for the agency logo. Its image width stays 520px. */
+  .tourism-home-logo { margin-top:64px; }
+  .kiosk-loading { max-width:874px !important; }
+  .kiosk-loading .tourism-wait { width:min(100%,845px); padding:26px 39px; border-radius:36px; }
+  .kiosk-loading .tourism-kv-stage { width:min(100%,728px) !important; margin-bottom:21px; }
+  .kiosk-loading .tourism-kv-bear { width:clamp(169px,34%,286px); }
+  .kiosk-loading .tourism-wait-title { font-size:1.885rem !important; margin-bottom:18px !important; }
+  .kiosk-loading .tourism-percent { font-size:5.2rem; }
+  .kiosk-loading .tourism-track { height:29px; margin:16px 0 21px; }
+  .kiosk-loading > div.text-center { margin-top:52px; margin-bottom:42px; }
+  .kiosk-loading > div.text-center > p { font-size:78px; }
+  .kiosk-loading > button { font-size:21px; padding:18px 42px; }
+  .kiosk-result-panel { padding:40px !important; gap:40px !important; margin-top:20px; }
+  .kiosk-completed > h2 { margin-bottom:32px; }
+}
+
+@media(min-width:768px) {
+  .kiosk-result-panel > div { flex:1; }
+}
+
+@media(min-width:768px) and (max-width:899px) {
+  .kiosk-final-image { width:270px !important; }
+  .kiosk-download-card { width:300px !important; }
+  .kiosk-download-qr { width:230px !important; }
+  .kiosk-result-panel { gap:24px !important; }
+}
+
+@media(max-width:767px) {
+  .kiosk-completed { padding-left:0; padding-right:0; }
+  .kiosk-result-panel { padding:20px !important; }
+  .kiosk-return-actions { gap:16px; }
+}
