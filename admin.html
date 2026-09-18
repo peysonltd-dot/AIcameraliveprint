@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;700;900&display=swap" rel="stylesheet">
-    <script src="print-composer.js?v=download24"></script>
+    <script src="print-composer.js?v=rollback23-20260918"></script>
     
     <style>
         :root { --ai-cyan: #00f2ff; --ai-pink: #ff00d0; }
@@ -116,8 +116,6 @@
     <script>
         const API_BASE_URL = "https://aicameraliveprint-back.onrender.com";
         let localTasksCache = {};
-        // Warm only the shared frame; do not process customer images in the background.
-        PrintComposer.preloadFrame().catch(error => console.warn('邊框預載未完成，下載時會重試', error));
         let currentUploadTaskId = null;
         let globalAudioCtx = null;
         let soundEnabled = false;
@@ -747,4 +745,3 @@
     </script>
 </body>
 </html>
-

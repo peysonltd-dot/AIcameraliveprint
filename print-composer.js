@@ -27,46 +27,11 @@
         });
     }
 
-    async function fetchImage(url, cache = 'no-store') {
-        const response = await fetch(url, { cache });
+    async function fetchImage(url) {
+        const response = await fetch(url, { cache: 'no-store' });
         if (!response.ok) throw new Error(`圖片下載失敗（${response.status}）`);
         return loadImageFromBlob(await response.blob());
     }
-
-    // The versioned frame is identical for all orders in this page session.
-    let framePromise = null;
-    function preloadFrame() {
-        if (!framePromise) {
-            framePromise = fetchImage(SPEC.frameUrl, 'default').catch(error => {
-                framePromise = null;
-                throw error;
-            });
-        }
-        return framePromise;
-    }
-
-    // Cache only immutable data URLs: a replaced image produces a different key.
-    // Remote URLs are fetched again because their contents may change in place.
-    const completed = new Map();
-    const pending = new Map();
-    const MAX_BYTES = 24 * 1024 * 1024;
-    const MAX_ITEMS = 3;
-    const TTL = 5 * 60 * 1000;
-    function pruneCache() {
-        for (const [key, entry] of completed) {
-            if (Date.now() - entry.time >= TTL) completed.delete(key);
-        }
-        let bytes = [...completed.values()].reduce((sum, entry) => sum + entry.bytes, 0);
-        while (completed.size > MAX_ITEMS || bytes > MAX_BYTES) {
-            const key = completed.keys().next().value;
-            bytes -= completed.get(key).bytes;
-            completed.delete(key);
-        }
-    }
-    setInterval(pruneCache, TTL);
-    if (root.addEventListener) root.addEventListener('pagehide', () => {
-        completed.clear();
-    });
 
     function removeConnectedWhiteBackground(image) {
         const canvas = document.createElement('canvas');
@@ -219,10 +184,10 @@
         ));
     }
 
-    async function composeFresh(imageUrl) {
+    async function compose(imageUrl) {
         const [characterImage, frameImage] = await Promise.all([
             fetchImage(imageUrl),
-            preloadFrame()
+            fetchImage(SPEC.frameUrl)
         ]);
         const character = removeConnectedWhiteBackground(characterImage);
         const composite = document.createElement('canvas');
@@ -239,28 +204,6 @@
         return addPngResolution(await canvasToBlob(composite));
     }
 
-    function compose(imageUrl) {
-        pruneCache();
-        const cached = completed.get(imageUrl);
-        if (cached) {
-            completed.delete(imageUrl);
-            completed.set(imageUrl, cached);
-            return Promise.resolve(cached.blob);
-        }
-        if (pending.has(imageUrl)) return pending.get(imageUrl);
-        const job = composeFresh(imageUrl).then(blob => {
-            if (imageUrl.startsWith('data:image/')) {
-                completed.set(imageUrl, {
-                    blob, time: Date.now(), bytes: blob.size + imageUrl.length * 2
-                });
-                pruneCache();
-            }
-            return blob;
-        }).finally(() => pending.delete(imageUrl));
-        pending.set(imageUrl, job);
-        return job;
-    }
-
-    root.PrintComposer = { SPEC, compose, preloadFrame, removeConnectedWhiteBackground, addPngResolution };
+    root.PrintComposer = { SPEC, compose, removeConnectedWhiteBackground, addPngResolution };
 })(typeof window !== 'undefined' ? window : globalThis);
 
