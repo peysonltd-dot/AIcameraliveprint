@@ -11,26 +11,41 @@
         frameUrl: 'assets/tourism-print-frame.png?v=print8'
     });
 
-    function loadImageFromBlob(blob) {
+    function loadImageFromBlob(blob, label = '圖片') {
         return new Promise((resolve, reject) => {
             const url = URL.createObjectURL(blob);
             const image = new Image();
-            image.onload = () => {
+            let settled = false;
+            const finish = error => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                image.onload = image.onerror = null;
                 URL.revokeObjectURL(url);
-                resolve(image);
+                if (error) { image.src = ''; reject(error); }
+                else resolve(image);
             };
-            image.onerror = () => {
-                URL.revokeObjectURL(url);
-                reject(new Error('圖片載入失敗'));
-            };
+            const timer = setTimeout(() => finish(new Error(`${label}讀取超過 15 秒，請重試`)), 15000);
+            image.onload = () => finish();
+            image.onerror = () => finish(new Error(`${label}載入失敗，請檢查連線後重試`));
             image.src = url;
         });
     }
 
-    async function fetchImage(url) {
-        const response = await fetch(url, { cache: 'no-store' });
-        if (!response.ok) throw new Error(`圖片下載失敗（${response.status}）`);
-        return loadImageFromBlob(await response.blob());
+    async function fetchImage(url, label = '圖片') {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 30000);
+        let blob;
+        try {
+            const response = await fetch(url, { cache: 'no-store', signal: controller.signal });
+            if (!response.ok) throw new Error(`${label}下載失敗（${response.status}）`);
+            blob = await response.blob();
+            if (!blob.size) throw new Error(`${label}內容為空，請重試`);
+        } catch (error) {
+            if (error.name === 'AbortError') throw new Error(`${label}下載超過 30 秒，請檢查連線後重試`);
+            throw error;
+        } finally { clearTimeout(timer); }
+        return loadImageFromBlob(blob, label);
     }
 
     function removeConnectedWhiteBackground(image) {
@@ -178,17 +193,27 @@
     }
 
     function canvasToBlob(canvas) {
-        return new Promise((resolve, reject) => canvas.toBlob(
-            blob => blob ? resolve(blob) : reject(new Error('PNG 建立失敗')),
-            'image/png'
-        ));
+        return new Promise((resolve, reject) => {
+            const timer = setTimeout(() => reject(new Error('PNG 輸出超過 45 秒，請稍後重試')), 45000);
+            try {
+                canvas.toBlob(blob => {
+                    clearTimeout(timer);
+                    if (blob) resolve(blob);
+                    else reject(new Error('PNG 建立失敗'));
+                }, 'image/png');
+            } catch (error) { clearTimeout(timer); reject(error); }
+        });
     }
 
-    async function compose(imageUrl) {
+    async function compose(imageUrl, options = {}) {
+        const notify = typeof options.onProgress === 'function' ? options.onProgress : () => {};
+        notify('取得原圖與邊框…');
         const [characterImage, frameImage] = await Promise.all([
-            fetchImage(imageUrl),
-            fetchImage(SPEC.frameUrl)
+            fetchImage(imageUrl, '角色原圖'),
+            fetchImage(SPEC.frameUrl, '合成邊框')
         ]);
+        notify('去背與合成中…');
+        await new Promise(resolve => setTimeout(resolve, 0));
         const character = removeConnectedWhiteBackground(characterImage);
         const composite = document.createElement('canvas');
         composite.width = SPEC.width;
@@ -201,9 +226,17 @@
         compositeCtx.drawImage(character, characterX, characterY, SPEC.characterSize, SPEC.characterSize);
         compositeCtx.drawImage(frameImage, 0, 0, SPEC.width, SPEC.height);
 
-        return addPngResolution(await canvasToBlob(composite));
+        notify('輸出高清 PNG…');
+        await new Promise(resolve => setTimeout(resolve, 0));
+        try { return await addPngResolution(await canvasToBlob(composite)); }
+        finally {
+            // Release temporary pixel buffers; stored originals/results are untouched.
+            character.width = character.height = 0;
+            composite.width = composite.height = 0;
+        }
     }
 
     root.PrintComposer = { SPEC, compose, removeConnectedWhiteBackground, addPngResolution };
 })(typeof window !== 'undefined' ? window : globalThis);
+
 

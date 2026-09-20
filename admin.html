@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;700;900&display=swap" rel="stylesheet">
-    <script src="print-composer.js?v=rollback23-20260918"></script>
+    <script src="print-composer.js?v=download-recovery25"></script>
     
     <style>
         :root { --ai-cyan: #00f2ff; --ai-pink: #ff00d0; }
@@ -408,62 +408,124 @@
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
-        async function downloadOriginal(imageUrl, taskId, event) {
-            if (!imageUrl) return alert("圖片還沒準備好喔！");
-            const btn = event.currentTarget;
-            const originalContent = btn.innerHTML;
-            btn.innerHTML = '⏳ 下載中...'; btn.disabled = true;
-
+        // Download state lives outside the periodically replaced task cards.
+        const downloadJobs = new Map();
+        const readyFiles = [];
+        let panel = null;
+        function getDownloadPanel() {
+            if (panel) return panel;
+            panel = document.createElement('section');
+            panel.setAttribute('aria-label', '下載檔案');
+            panel.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:9999;width:360px;max-width:calc(100vw - 32px);max-height:55vh;overflow:auto;background:#0f172a;color:white;border:2px solid #22d3ee;border-radius:12px;padding:16px;box-shadow:0 8px 24px #0008;font-size:14px;';
+            document.body.appendChild(panel);
+            return panel;
+        }
+        function paintDownloadPanel(message) {
+            const box = getDownloadPanel();
+            box.replaceChildren();
+            const title = document.createElement('strong');
+            title.textContent = message || '檔案已準備好；若未自動下載，請點「儲存檔案」。';
+            box.appendChild(title);
+            readyFiles.forEach(file => {
+                const row = document.createElement('div');
+                row.style.cssText = 'margin-top:12px;border-top:1px solid #475569;padding-top:10px;';
+                const label = document.createElement('div');
+                label.textContent = file.name;
+                label.style.wordBreak = 'break-all';
+                const link = document.createElement('a');
+                link.href = file.url;
+                link.download = file.name;
+                link.textContent = '儲存檔案';
+                link.style.cssText = 'display:inline-block;padding:8px 14px;background:#ea580c;color:white;border-radius:6px;margin-top:6px;font-weight:bold;';
+                const close = document.createElement('button');
+                close.textContent = '已存好，移除連結';
+                close.style.cssText = 'margin-left:12px;color:#cbd5e1;';
+                close.onclick = () => {
+                    const index = readyFiles.indexOf(file);
+                    if (index !== -1) readyFiles.splice(index, 1);
+                    setTimeout(() => URL.revokeObjectURL(file.url), 60000);
+                    paintDownloadPanel(readyFiles.length ? undefined : '下載連結已收起。');
+                    if (!readyFiles.length && !downloadJobs.size) box.style.display = 'none';
+                };
+                row.append(label, link, close);
+                box.appendChild(row);
+            });
+            const tip = document.createElement('p');
+            tip.textContent = '可按 Ctrl＋J 確認下載紀錄。此處只保留最近 5 個下載連結；既有訂單及圖片不受影響。';
+            tip.style.cssText = 'font-size:12px;color:#cbd5e1;margin-top:10px;';
+            box.appendChild(tip);
+            box.style.display = 'block';
+        }
+        function updateDownloadButtons() {
+            document.querySelectorAll('[data-download-key]').forEach(button => {
+                const label = downloadJobs.get(button.dataset.downloadKey);
+                button.disabled = !!label;
+                button.textContent = label || button.dataset.downloadLabel;
+            });
+        }
+        async function readDownloadBlob(url) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 30000);
             try {
-                const response = await fetch(imageUrl);
+                const response = await fetch(url, { signal: controller.signal });
+                if (!response.ok) throw new Error(`圖片下載失敗（${response.status}）`);
                 const blob = await response.blob();
-                const blobUrl = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none'; a.href = blobUrl;
-                const extension = blob.type === 'image/png' ? 'png' : 'jpg';
-                a.download = `客人_${taskId}_AI原圖.${extension}`;
-                document.body.appendChild(a); a.click();
-                window.URL.revokeObjectURL(blobUrl); document.body.removeChild(a);
+                if (!blob.size || (blob.type && !blob.type.startsWith('image/'))) throw new Error('收到的內容不是圖片，請重新整理後重試');
+                return blob;
             } catch (error) {
-                console.error('強制下載被瀏覽器阻擋，改用新分頁開啟:', error);
-                window.open(imageUrl, '_blank');
+                if (error.name === 'AbortError') throw new Error('取得原圖超過 30 秒，請檢查網路後重試');
+                throw error;
+            } finally { clearTimeout(timer); }
+        }
+        async function runDownload(taskId, kind, makeBlob) {
+            const key = `${kind}:${taskId}`;
+            if (downloadJobs.has(key)) return;
+            if (downloadJobs.size >= 2) { paintDownloadPanel('正在準備其他檔案，請稍候再下載。'); return; }
+            downloadJobs.set(key, kind === 'composite' ? '合成中…' : '取得原圖…');
+            updateDownloadButtons();
+            paintDownloadPanel(`#${taskId} ${kind === 'composite' ? '正在準備合成圖…' : '正在取得原圖…'}`);
+            try {
+                const blob = await makeBlob(stage => {
+                    downloadJobs.set(key, stage);
+                    updateDownloadButtons();
+                    paintDownloadPanel(`#${taskId} ${stage}`);
+                });
+                const extension = blob.type === 'image/png' ? 'png' : 'jpg';
+                const name = kind === 'composite' ? `客人_${taskId}_20x24.8cm_300dpi_合成圖.png` : `客人_${taskId}_AI原圖.${extension}`;
+                const url = URL.createObjectURL(blob);
+                readyFiles.push({ name, url, size: blob.size });
+                while (readyFiles.length > 5 || (readyFiles.length > 1 && readyFiles.reduce((n, f) => n + f.size, 0) > 64 * 1024 * 1024)) {
+                    const previous = readyFiles.shift();
+                    setTimeout(() => URL.revokeObjectURL(previous.url), 60000);
+                }
+                paintDownloadPanel();
+                // The visible link survives polling, and is available for a direct click
+                // even when the browser silently declines this automatic attempt.
+                const link = document.createElement('a');
+                link.href = url; link.download = name; link.style.display = 'none';
+                document.body.appendChild(link);
+                try { link.click(); } finally { link.remove(); }
+            } catch (error) {
+                console.error('下載準備失敗:', error);
+                paintDownloadPanel(`#${taskId} ${error.message || '下載準備失敗，請重試'}`);
             } finally {
-                btn.innerHTML = originalContent; btn.disabled = false;
+                downloadJobs.delete(key);
+                updateDownloadButtons();
+                pumpImageQueue();
             }
         }
-
-        async function downloadCompositeImage(taskId, event) {
+        function downloadOriginal(imageUrl, taskId, event) {
+            if (!imageUrl) return alert('圖片還沒準備好！');
+            return runDownload(taskId, 'original', () => readDownloadBlob(imageUrl));
+        }
+        function downloadCompositeImage(taskId, event) {
             const task = localTasksCache[taskId];
             const imageUrl = task && (task.chosenDesign === 'A' ? task.resultImageA : task.chosenDesign === 'B' ? task.resultImageB : null);
-            if (!imageUrl) return alert("客人選擇的圖片還沒準備好！");
-            const btn = event.currentTarget;
-            if (btn.disabled) return;
-            const originalContent = btn.innerHTML;
-            let blobUrl = null;
-            let link = null;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> 合成中…';
-            try {
-                const compositeBlob = await PrintComposer.compose(imageUrl);
-                blobUrl = URL.createObjectURL(compositeBlob);
-                link = document.createElement('a');
-                link.style.display = 'none';
-                link.href = blobUrl;
-                link.download = `客人_${taskId}_20x24.8cm_300dpi_合成圖.png`;
-                document.body.appendChild(link);
-                link.click();
-            } catch (error) {
-                console.error('合成圖下載失敗:', error);
-                alert(`合成圖下載失敗：${error.message || '請稍後再試'}`);
-            } finally {
-                if (link && link.parentNode) link.parentNode.removeChild(link);
-                if (blobUrl) {
-                    const completedUrl = blobUrl;
-                    setTimeout(() => URL.revokeObjectURL(completedUrl), 60000);
-                }
-                btn.disabled = false;
-                btn.innerHTML = originalContent;
-            }
+            if (!imageUrl) return alert('客人選擇的圖片還沒準備好！');
+            return runDownload(taskId, 'composite', onProgress => {
+                if (!window.PrintComposer) throw new Error('合成程式尚未載入，請按 Ctrl＋F5 後重試');
+                return PrintComposer.compose(imageUrl, { onProgress });
+            });
         }
 
         function triggerDualUpload(taskId, targetType) {
@@ -518,36 +580,71 @@
             }
         }
 
-        async function fetchSourceImageIncrementally(taskId) {
-            try {
-                const res = await fetch(`${API_BASE_URL}/api/admin/task-source-image/${taskId}`);
-                const data = await res.json();
-                if (data.success && data.sourceImage) {
-                    localTasksCache[taskId].sourceImage = data.sourceImage;
-                    renderTasks(Object.values(localTasksCache).sort((a, b) => b.id.localeCompare(a.id)));
-                }
-            } catch (e) { console.error(`增量讀取號碼牌 #${taskId} 原始照片失敗:`, e); }
+        // Bound background work as orders accumulate; never delete any task data.
+        const imageQueue = [];
+        const queuedImages = new Set();
+        const imageRetryAfter = new Map();
+        let activeImageRequests = 0;
+        let renderTimer = null;
+        let taskPollPending = false;
+        function requestTaskRender() {
+            if (renderTimer !== null) return;
+            renderTimer = setTimeout(() => {
+                renderTimer = null;
+                renderTasks(Object.values(localTasksCache).sort((a, b) => b.id.localeCompare(a.id)));
+            }, 400);
         }
-
-        async function fetchResultImageIncrementally(taskId) {
+        async function readAdminJson(url) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 20000);
             try {
-                const res = await fetch(`${API_BASE_URL}/api/admin/task-result-images/${taskId}`);
-                const data = await res.json();
-                if (data.success) {
-                    if (data.resultImageA) localTasksCache[taskId].resultImageA = data.resultImageA;
-                    if (data.resultImageB) localTasksCache[taskId].resultImageB = data.resultImageB;
-                    renderTasks(Object.values(localTasksCache).sort((a, b) => b.id.localeCompare(a.id)));
-                }
-            } catch (e) { console.error(`增量讀取號碼牌 #${taskId} 風格圖失敗:`, e); }
+                const res = await fetch(url, { signal: controller.signal });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return await res.json();
+            } finally { clearTimeout(timer); }
+        }
+        function enqueueTaskImage(taskId, kind) {
+            const key = `${kind}:${taskId}`;
+            if (queuedImages.has(key) || Date.now() < (imageRetryAfter.get(key) || 0)) return;
+            queuedImages.add(key);
+            imageQueue.push({ key, taskId, kind });
+            pumpImageQueue();
+        }
+        function fetchSourceImageIncrementally(taskId) { enqueueTaskImage(taskId, 'source'); }
+        function fetchResultImageIncrementally(taskId) { enqueueTaskImage(taskId, 'result'); }
+        function pumpImageQueue() {
+            if (downloadJobs.size) return;
+            imageQueue.sort((a, b) => b.taskId.localeCompare(a.taskId) || (a.kind === 'result' ? -1 : 1));
+            while (activeImageRequests < 3 && imageQueue.length) {
+                const item = imageQueue.shift();
+                activeImageRequests++;
+                const path = item.kind === 'source' ? 'task-source-image' : 'task-result-images';
+                readAdminJson(`${API_BASE_URL}/api/admin/${path}/${item.taskId}`).then(data => {
+                    const task = localTasksCache[item.taskId];
+                    if (!data.success || !task) return;
+                    if (item.kind === 'source' && data.sourceImage) task.sourceImage = data.sourceImage;
+                    if (item.kind === 'result') {
+                        if (data.resultImageA) task.resultImageA = data.resultImageA;
+                        if (data.resultImageB) task.resultImageB = data.resultImageB;
+                    }
+                    requestTaskRender();
+                }).catch(error => console.warn(`#${item.taskId} 圖片稍後重試`, error)).finally(() => {
+                    activeImageRequests--;
+                    queuedImages.delete(item.key);
+                    imageRetryAfter.set(item.key, Date.now() + 15000);
+                    pumpImageQueue();
+                });
+            }
         }
 
         async function fetchAllTasks() {
+            if (taskPollPending) return;
+            taskPollPending = true;
             try {
-                const res = await fetch(`${API_BASE_URL}/api/admin/all-tasks?lightweight=true`);
-                const data = await res.json();
+                const data = await readAdminJson(`${API_BASE_URL}/api/admin/all-tasks?lightweight=true`);
                 if (data.success) {
                     let hasNewOrder = false;
-                    data.tasks.forEach(t => { 
+                    data.tasks.sort((a, b) => b.id.localeCompare(a.id)).forEach(t => { 
                         const isNewTask = !localTasksCache[t.id];
                         if (isNewTask) {
                             if (Object.keys(localTasksCache).length > 0) hasNewOrder = true;
@@ -564,7 +661,7 @@
                         localTasksCache[t.id] = t; 
 
                         if (t.hasSourceImage && !localTasksCache[t.id].sourceImage) fetchSourceImageIncrementally(t.id);
-                        if ((t.hasResultImageA || t.hasResultImageB) && (!localTasksCache[t.id].resultImageA || !localTasksCache[t.id].resultImageB)) {
+                        if ((t.hasResultImageA && !localTasksCache[t.id].resultImageA) || (t.hasResultImageB && !localTasksCache[t.id].resultImageB)) {
                             fetchResultImageIncrementally(t.id);
                         }
                     });
@@ -572,7 +669,8 @@
                     renderTasks(Object.values(localTasksCache).sort((a, b) => b.id.localeCompare(a.id)));
                     if (hasNewOrder) triggerNewOrderAlert();
                 }
-            } catch (e) {}
+            } catch (e) { console.warn('訂單同步暫時失敗，稍後重試', e); }
+            finally { taskPollPending = false; }
         }
 
         function renderTasks(tasks) {
@@ -599,10 +697,10 @@
                         <span class="text-[10px] font-bold text-emerald-400 mb-1 text-center w-full block font-sans"><i class="fa-solid fa-trophy mr-1 text-emerald-400"></i> 客人已選: ${task.chosenDesign} 款</span>
                         <img src="${chosenImgSrc}" class="w-24 h-24 object-cover rounded-xl border-2 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.25)] mx-auto" />
                         <div class="grid grid-cols-2 gap-2 mt-2">
-                            <button onclick="downloadOriginal('${chosenImgSrc}', '${task.id}', event)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 px-2 rounded-lg text-[11px] transition-all flex items-center justify-center gap-1 border border-slate-600">
+                            <button data-download-key="original:${task.id}" data-download-label="原圖" onclick="downloadOriginal('${chosenImgSrc}', '${task.id}', event)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 px-2 rounded-lg text-[11px] transition-all flex items-center justify-center gap-1 border border-slate-600">
                                 <i class="fa-solid fa-download"></i> 原圖
                             </button>
-                            <button onclick="downloadCompositeImage('${task.id}', event)" class="bg-orange-600 hover:bg-orange-500 text-white font-bold py-2 px-2 rounded-lg text-[11px] transition-all flex items-center justify-center gap-1 border border-orange-400/70">
+                            <button data-download-key="composite:${task.id}" data-download-label="下載合成圖" onclick="downloadCompositeImage('${task.id}', event)" class="bg-orange-600 hover:bg-orange-500 text-white font-bold py-2 px-2 rounded-lg text-[11px] transition-all flex items-center justify-center gap-1 border border-orange-400/70">
                                 <i class="fa-solid fa-download"></i> 下載合成圖
                             </button>
                         </div>
@@ -716,6 +814,7 @@
                 </div>
                 `;
             }).join('');
+            updateDownloadButtons();
         }
 
         function handleClipboardPaste(event, taskId, type) {
@@ -745,3 +844,4 @@
     </script>
 </body>
 </html>
+
