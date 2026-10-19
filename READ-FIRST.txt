@@ -1,46 +1,40 @@
-V28｜白色活動版：缺圖修正＋珍奶黑熊動畫
+V30｜黑熊動作與等待文案輪播（適用目前正常運作的 V28 白色版）
 
-上傳位置
-https://github.com/peysonltd-dot/AIcameraliveprint
+上傳方式
+1. 解壓縮後，只將 tourism-progress.js 上傳至下列專案根目錄，覆蓋同名檔案：
+   https://github.com/peysonltd-dot/AIcameraliveprint
+2. 不需上傳 README，不需更新 admin.html、print-composer.js 或新增 assets。
+3. GitHub Pages 發布完成後，在活動機台前台按 Ctrl+F5。
+4. 用一筆測試體驗確認動畫與文字輪播，正常生成後仍會進入選圖畫面。
 
-解壓縮後，只需將以下 7 個檔案全部上傳至上述專案根目錄並覆蓋同名檔案：
-index.html
-qr-kiosk.html
-download.html
-admin.html
-tourism-progress.js
-medical-theme.css
-print-composer.js
+輪播內容
+每 5 秒換一組動作與文案，20 秒循環：
+1. 喝珍奶：黑熊陪你，等一張專屬驚喜
+2. 拿相機拍照：捕捉你的笑容，收藏這一刻
+3. 轉圈：轉個圈，遇見不一樣的自己
+4. 揮手：揮揮手，和可愛的自己打聲招呼
 
-不用新增 assets 資料夾，也不用移動或刪除現有資料夾。
-不要上傳 ZIP 本身或把整包放進新的子資料夾。READ-FIRST.txt 不需上傳。
-GitHub Pages 發布完成後，首頁及後台各按 Ctrl+F5 強制重新整理。
-請用一筆測試訂單確認三個 Logo、黑熊動畫、合成圖下載。
+保留英文、日文對應文案。圖片完成時依原本流程進入選圖畫面，
+不必等動畫播完，也不會因輪播提高或延後生成進度。
+相機動作包含局部小閃光，轉圈使用正面、側面、背面、另一側、正面的序列。
+這是圖片姿勢搭配程式動態播放，不是現場生成影片。
 
-本次修正
-1. 三個首頁 Logo 原先指定的 assets 檔案在 GitHub 找不到（404）。
-   改為內嵌原始 SVG，順序為：成大醫院、台南市醫師公會、台南市診所商會。
-2. 後台合成下載失敗為 A4 邊框檔案找不到（404）。
-   改為直接內嵌原始 PNG 位元組，不改畫質、不改尺寸、不重新壓縮。
-3. 等待畫面改為原創台灣黑熊，依序捧珍奶、喝珍奶、搖擺、揮手。
-   每 2 秒切換姿勢，搭配輕微起伏。文字：喝口珍奶，等一個可愛的你。
-   動畫素材隨程式載入一次，循環時不重複下載、不呼叫 AI。
-   隱藏分頁停止切換；偏好減少動態的裝置保留靜態角色。
+穩定與畫質
+所有動畫素材與補充樣式內嵌在單一 tourism-progress.js 中，
+隨前台程式載入一次，循環時不再下載、不呼叫 AI。
+每張動作表 1254×1254 px，每個姿勢約 627×627 px。
+素材以無損 WebP 儲存，尺寸、透明度及可見像素與生成 PNG 完全相同。
+分頁隱藏、生成失敗、裝置偏好減少動態時停止動作輪播。
+離開等待頁時會清除動畫計時器。
 
-合成輸出維持 V27 的 A4 21×29.7 cm、2480×3508 px、300 DPI、白底不透明 PNG。
-Logo 區域已做像素比對，與 V27 底圖完全相同；人物正常方向、不鏡像。
-保留原本拍照、AI 生成、QR 下載、進度、訂單與後台下載流程。
-此更新不刪除或修改現有客人原圖、AI 成品、訂單或伺服器資料。
-黑熊僅用在等待動畫，不會加進客人的合成圖。
-
-已驗證：HTML/JS 語法、Logo 原始檔內容與排列、四個姿勢切換與結束清理、
-進度判定、內嵌邊框解碼、A4 尺寸、300 DPI、白底透明度、Logo 像素完整。
-尚未代為發布網站；實際瀏覽器、相機及印表機仍需現場測試一筆。
-若客人下載頁部署於另一個獨立網站，請另更新該站的 download.html 與 medical-theme.css。
+本包只有等待畫面修改，不改後台、合成圖、下載、訂單、照片、出票或生成 API。
+不需要先安裝 V29，直接套用目前 V28 即可。
+已通過語法、三語系輪播、四組動作、轉圈方向、暫停、重設、
+離開清理及原本進度/狀態輪詢程式一致性檢查；尚未代為發布網站。
 
 素材製作記錄
-黑熊由內建圖像生成工具製作，程式播放四個姿勢，並非即時 AI 影片。
-圖片與 Logo、合成邊框均內嵌在上述檔案，不依賴臨時圖片連結。
+使用內建圖像生成工具，以原有黑熊為角色參考製作拍照、正面、側面及背面。
+圖片以原始解析度無損轉檔後內嵌於 tourism-progress.js。
 
-黑熊生成提示詞（供未來重製參考）
-Use case: illustration-story. Asset type: a production 4-frame sprite sheet for a website loading animation, not a mockup. Create ONE square PNG, transparent background, a precise 2 by 2 equal grid of four animation frames with NO grid lines. Same adorable original Taiwanese black bear in each frame, clearly recognizable white V-shaped chest patch, rounded charcoal black body, small rounded ears, warm caramel muzzle, rosy cheeks, little oval eyes; excellent polished contemporary mascot illustration with crisp clean outlines and subtly soft highlights, charming enough for an event kiosk. Each frame: one full body bear holding one transparent cup of milky beige bubble tea with clearly visible dark tapioca pearls and one muted green straw. No clothes, no letters, no logos. Bear must be large and centered within each quarter, identical character design, camera, scale and foot baseline in all frames, plenty of transparent space between quadrants so each can be used separately. Top-left frame: relaxed happy bear holding cup in its LEFT paw (viewer right), other paw resting down. Top-right frame: bear raises cup and actually sips through straw, content closed eyes, tiny blush. Bottom-left frame: delighted eyes, holding cup in same left paw at chest level, leaning a little playfully left as if swaying to music, same basic foot position. Bottom-right frame: cup in same left paw, right paw raised in friendly wave, smiling. All four distinct poses must appear exactly once. Entire illustration stays within its own quarter with 10% padding each side. Transparent outside each bear, no scenery, no shadows extending to neighboring frames, no text anywhere. High definition, fine smooth edges. Square canvas ideally 2048 by 2048.
+生成提示詞
+Use case: identity-preserve. Asset type: NEW companion sprite sheet for the existing event-kiosk mascot animation. Input image 1 is the character and rendering-style reference: preserve this exact cute Taiwanese black bear's proportions, round ears, charcoal fur, white V chest marking, caramel muzzle, pink cheeks and polished soft 3D illustration style. Produce a NEW square transparent PNG sprite sheet, precisely 2 by 2 equal square cells with NO borders or labels. The original reference shows four boba poses. This new sheet must instead show these FOUR specific new poses: TOP LEFT: full-body front-facing bear holding a small black camera with both paws at eye level and taking a photo toward the viewer, no cup. TOP RIGHT: full-body front-facing bear smiling with empty paws extended slightly outward ready to twirl, no props. BOTTOM LEFT: the same bear in an exact LEFT-facing side profile with empty paws slightly extended, mid-turn, no props. BOTTOM RIGHT: the same bear from the BACK, with back of head/ears/body/tiny tail visible and empty paws slightly extended; no face and no white V chest visible from the back. These side/back/front poses will be played in sequence to make a turn-around animation, so all must have the same scale, centered body axis and level foot baseline, feet on ground, no perspective or background. The entire full body and camera must fit INSIDE its own quadrant with at least 8 percent transparent padding. No bubble tea, straw or cups in any of these four NEW poses. ONE character per quadrant. Camera does not need flash drawn in; flash will be done by code. No letters, no numbers, no watermarks. Crisp smooth edges, high definition, ideally 2048 by 2048 pixels. True transparent background throughout.
