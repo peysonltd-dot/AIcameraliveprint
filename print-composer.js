@@ -2,13 +2,14 @@
     'use strict';
 
     const SPEC = Object.freeze({
-        width: 2362,
-        height: 2929,
-        characterSize: 1772,
+        width: 2480,
+        height: 3508,
+        characterSize: 2463,
+        characterTop: 108,
         dpi: 300,
-        widthMm: 200,
-        heightMm: 248,
-        frameUrl: 'assets/tourism-print-frame.png?v=print8'
+        widthMm: 210,
+        heightMm: 297,
+        frameUrl: 'assets/medical-print-frame-v27.png'
     });
 
     function loadImageFromBlob(blob, label = '圖片') {
@@ -212,9 +213,14 @@
             fetchImage(imageUrl, '角色原圖'),
             fetchImage(SPEC.frameUrl, '合成邊框')
         ]);
-        notify('去背與合成中…');
+        notify('排版與合成中…');
         await new Promise(resolve => setTimeout(resolve, 0));
-        const character = removeConnectedWhiteBackground(characterImage);
+        // This edition has a white background. Preserve light clothing and all
+        // original image details instead of applying white-background removal.
+        const character = document.createElement('canvas');
+        character.width = characterImage.naturalWidth || characterImage.width;
+        character.height = characterImage.naturalHeight || characterImage.height;
+        character.getContext('2d').drawImage(characterImage, 0, 0);
         const composite = document.createElement('canvas');
         composite.width = SPEC.width;
         composite.height = SPEC.height;
@@ -222,9 +228,24 @@
         compositeCtx.imageSmoothingEnabled = true;
         compositeCtx.imageSmoothingQuality = 'high';
         const characterX = Math.round((SPEC.width - SPEC.characterSize) / 2);
-        const characterY = Math.round((SPEC.height - SPEC.characterSize) / 2);
-        compositeCtx.drawImage(character, characterX, characterY, SPEC.characterSize, SPEC.characterSize);
-        compositeCtx.drawImage(frameImage, 0, 0, SPEC.width, SPEC.height);
+        const characterY = SPEC.characterTop;
+        compositeCtx.fillStyle = '#ffffff';
+        compositeCtx.fillRect(0, 0, SPEC.width, SPEC.height);
+        if ((frameImage.naturalWidth || frameImage.width) !== SPEC.width ||
+            (frameImage.naturalHeight || frameImage.height) !== SPEC.height) {
+            throw new Error('底圖尺寸不符，請確認已上傳本場 A4 底圖');
+        }
+        compositeCtx.imageSmoothingEnabled = false;
+        compositeCtx.drawImage(frameImage, 0, 0);
+        compositeCtx.imageSmoothingEnabled = true;
+        // Preserve the source aspect ratio inside the original AI artwork's portrait area.
+        const scale = Math.min(SPEC.characterSize / character.width, SPEC.characterSize / character.height);
+        const drawWidth = Math.round(character.width * scale);
+        const drawHeight = Math.round(character.height * scale);
+        compositeCtx.drawImage(character,
+            characterX + Math.round((SPEC.characterSize - drawWidth) / 2),
+            characterY + Math.round((SPEC.characterSize - drawHeight) / 2),
+            drawWidth, drawHeight);
 
         notify('輸出高清 PNG…');
         await new Promise(resolve => setTimeout(resolve, 0));
@@ -238,5 +259,6 @@
 
     root.PrintComposer = { SPEC, compose, removeConnectedWhiteBackground, addPngResolution };
 })(typeof window !== 'undefined' ? window : globalThis);
+
 
 

@@ -1,11 +1,9 @@
 (function(){
 'use strict';
-const A={bear:'assets/ohbear.png',morning:'assets/morning.svg',night:'assets/night.svg',ai:'assets/ai-taiwan.svg',wifi:'assets/wifi.svg'};
-const style=document.createElement('style');style.id='tourism-kv-animation-v18';style.textContent="\n.tourism-kv-stage{position:relative;width:min(100%,560px);aspect-ratio:860/622;margin:0 auto 16px;overflow:hidden;background:#ec3a0d;border:3px solid #130f44;border-radius:10px 30px 10px 30px;box-shadow:8px 8px 0 #f8e442,12px 12px 0 #087fbd;isolation:isolate}\n.tourism-kv-bear{position:absolute;z-index:2;left:50%;bottom:0;width:clamp(130px,34%,220px);height:auto;transform:translateX(-50%);filter:drop-shadow(0 7px 0 rgba(19,15,68,.18));animation:kvBear 1.8s ease-in-out infinite}\n.tourism-kv-accent{position:absolute;z-index:3;height:auto;opacity:0;transform:scale(.72) rotate(-4deg);transition:opacity .18s ease,transform .28s cubic-bezier(.2,.8,.2,1);filter:drop-shadow(2px 3px 0 rgba(19,15,68,.2));pointer-events:none}\n.tourism-kv-accent.is-visible{opacity:1;transform:scale(1) rotate(0)}\n.tourism-kv-accent--morning{left:7%;top:6%;width:17%}.tourism-kv-accent--night{right:9%;top:18%;width:17%}.tourism-kv-accent--ai{left:3%;top:36%;width:30%;transform:scale(.72) rotate(-18deg)}.tourism-kv-accent--ai.is-visible{transform:scale(1) rotate(-18deg)}.tourism-kv-accent--wifi{right:7%;top:41%;width:19%}\n.tourism-wait-event{display:flex;flex-direction:column;align-items:center;gap:2px;width:fit-content;max-width:100%;margin:0 auto 16px;padding:7px 16px;color:#fff;background:#211d80;border:2px solid #130f44;border-radius:6px 16px 6px 16px;font-weight:900;letter-spacing:.06em;line-height:1.25}\n.tourism-wait-event small{color:#fff128;font-size:.66rem;letter-spacing:.12em}.tourism-wait-title{margin:0 0 14px!important;font-size:clamp(1.1rem,2.7vw,1.45rem)!important;font-weight:900}.tourism-character-stage,.tourism-character--ohbear{display:none!important}.tourism-wait-event,.tourism-progress-label,.tourism-milestones,.tourism-status,.tourism-progress-note{display:none!important}.tourism-progress-heading{justify-content:flex-end!important;margin-bottom:4px}\n@keyframes kvBear{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-7px)}}\n@media(max-width:600px){.tourism-kv-stage{width:min(100%,430px);margin-bottom:13px;box-shadow:6px 6px 0 #f8e442,9px 9px 0 #087fbd}.tourism-wait-event{padding:6px 12px;font-size:.82rem}.tourism-wait-event small{font-size:.56rem;letter-spacing:.08em}}\n@media(prefers-reduced-motion:reduce){.tourism-kv-bear{animation:none!important}.tourism-kv-accent{transition:none!important}}\n";document.head.appendChild(style);
 const C={
-zh:{title:'喔熊陪你，等一張驚喜',label:'AI 專屬角色製作進度',note:'圖片完成後將自動進入選擇畫面',steps:['上傳','排隊','生成','完成'],uploading:'正在上傳照片…',queued:'照片已收到，正在準備生成…',generating:'AI 正在製作您的專屬角色…',ready:'完成！準備看看您的專屬角色',failed:'生成未完成，請通知工作人員'},
-jp:{title:'OhBearと一緒に、もう少しお待ちください',label:'AIキャラクター作成進捗',note:'完成後、自動的に選択画面へ移動します',steps:['送信','準備','生成','完成'],uploading:'写真を送信しています…',queued:'写真を受信しました。準備しています…',generating:'AIキャラクターを作成しています…',ready:'完成しました！',failed:'生成できませんでした。スタッフにお声がけください'},
-en:{title:'OhBear is here while your surprise is made',label:'AI character progress',note:'The choices will appear automatically when ready.',steps:['Upload','Queue','Create','Ready'],uploading:'Uploading your photo…',queued:'Photo received. Getting ready…',generating:'Creating your AI character…',ready:'Ready! Meet your AI character',failed:'Generation could not be completed. Please ask our staff.'}
+zh:{title:'正在描繪，專屬於您的精彩',label:'AI 專屬角色製作進度',note:'圖片完成後將自動進入選擇畫面',steps:['上傳','排隊','生成','完成'],uploading:'正在上傳照片…',queued:'照片已收到，正在準備生成…',generating:'AI 正在製作您的專屬角色…',ready:'完成！準備看看您的專屬角色',failed:'生成未完成，請通知工作人員'},
+jp:{title:'あなただけの一枚を描いています',label:'AIキャラクター作成進捗',note:'完成後、自動的に選択画面へ移動します',steps:['送信','準備','生成','完成'],uploading:'写真を送信しています…',queued:'写真を受信しました。準備しています…',generating:'AIキャラクターを作成しています…',ready:'完成しました！',failed:'生成できませんでした。スタッフにお声がけください'},
+en:{title:'Creating something uniquely you',label:'AI character progress',note:'The choices will appear automatically when ready.',steps:['Upload','Queue','Create','Ready'],uploading:'Uploading your photo…',queued:'Photo received. Getting ready…',generating:'Creating your AI character…',ready:'Ready! Meet your AI character',failed:'Generation could not be completed. Please ask our staff.'}
 };
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,Number(n)||0));
 function createDisplayProgress(){return{current:0,target:0,phase:'uploading'}}
@@ -14,15 +12,21 @@ function mount(host,lang,shared){
  if(!host)throw new Error('Missing progress host');
  const c=C[C[lang]?lang:'zh'],d=shared||createDisplayProgress();
  host.innerHTML=`<section class="tourism-wait" data-phase="uploading" aria-live="polite">
- <div class="tourism-kv-stage">
-  <img loading="eager" decoding="async" class="tourism-kv-bear" src="${A.bear}" alt="OhBear 喔熊">
-  <img loading="eager" decoding="async" class="tourism-kv-accent tourism-kv-accent--morning is-visible" src="${A.morning}" alt="">
-  <img loading="eager" decoding="async" class="tourism-kv-accent tourism-kv-accent--night" src="${A.night}" alt="">
-  <img loading="eager" decoding="async" class="tourism-kv-accent tourism-kv-accent--ai" src="${A.ai}" alt="">
-  <img loading="eager" decoding="async" class="tourism-kv-accent tourism-kv-accent--wifi" src="${A.wifi}" alt="">
- </div>
+<div class="tourism-kv-stage medical-animation" aria-hidden="true">
+<svg class="portrait-art" viewBox="0 0 400 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="200" cy="170" r="145" fill="#edf6f2"/>
+<g class="portrait-card"><rect x="100" y="42" width="200" height="252" rx="28" fill="white" stroke="#b9d4c8" stroke-width="3"/>
+<circle cx="200" cy="132" r="44" fill="#dceee5"/>
+<path d="M160 127c0-59 80-59 80 0M145 247v-15c0-63 110-63 110 0v15" stroke="#26705b" stroke-width="8" stroke-linecap="round"/>
+<path d="M184 144q16 16 32 0" stroke="#26705b" stroke-width="5" stroke-linecap="round"/>
+<circle cx="185" cy="126" r="3" fill="#26705b"/><circle cx="215" cy="126" r="3" fill="#26705b"/>
+<path d="M148 271h104" stroke="#dceee5" stroke-width="7" stroke-linecap="round"/></g>
+<g class="tourism-kv-accent is-visible"><path d="m77 70 5 17 17 5-17 5-5 17-5-17-17-5 17-5z" fill="#438873"/></g>
+<g class="tourism-kv-accent"><path d="m319 119 6 20 20 6-20 6-6 20-6-20-20-6 20-6z" fill="#97b8aa"/></g>
+<g class="tourism-kv-accent"><circle cx="77" cy="250" r="17" fill="white" stroke="#97b8aa" stroke-width="3"/><path d="m69 250 6 6 11-13" stroke="#438873" stroke-width="3" stroke-linecap="round"/></g>
+<g class="tourism-kv-accent"><path d="m319 267 4 12 12 4-12 4-4 12-4-12-12-4 12-4z" fill="#438873"/></g>
+</svg></div>
  <p class="tourism-wait-title">${c.title}</p>
- <div class="tourism-wait-event"><span>2026 觀光產業數位博覽會</span><small>TAIWAN TOUR TECH WONDERLAND</small></div>
  <div class="tourism-progress-heading"><span class="tourism-progress-label">${c.label}</span><strong class="tourism-percent">0%</strong></div>
  <div class="tourism-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="tourism-fill"></div></div>
  <ol class="tourism-milestones">${c.steps.map(x=>`<li>${x}</li>`).join('')}</ol>
@@ -51,4 +55,5 @@ function monitor(o){
 }
 window.TourismProgress={createDisplayProgress,mount,monitor};
 })();
+
 

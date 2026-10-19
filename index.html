@@ -7,11 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;700;900&display=swap" rel="stylesheet">
-    <link rel="preload" href="assets/ohbear.png" as="image" type="image/png">
-    <link rel="preload" href="assets/morning.svg" as="image" type="image/svg+xml">
-    <link rel="preload" href="assets/night.svg" as="image" type="image/svg+xml">
-    <link rel="preload" href="assets/ai-taiwan.svg" as="image" type="image/svg+xml">
-    <link rel="preload" href="assets/wifi.svg" as="image" type="image/svg+xml">
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -210,7 +205,8 @@
             .tourism-home .tourism-home-logo { margin-top:104px; }
         }
     </style>
-    <script src="tourism-progress.js?v=20260914-ohbear18"></script>
+    <script src="tourism-progress.js?v=medical26"></script>
+    <link rel="stylesheet" href="medical-theme.css?v=medical26">
 </head>
 <body class="cyber-bg text-white min-h-[100dvh] w-screen flex flex-col">
     <div id="root" class="h-full w-full relative z-10 flex-grow flex flex-col"></div>
@@ -535,9 +531,9 @@
 
                     {/* Header - 臺灣觀光品牌識別與多國語言切換 */}
                     <div className="text-center z-20 flex flex-col items-center flex-shrink-0 w-full pt-1 relative">
-                        <div className="tourism-event-lockup" aria-label="2026 觀光產業數位博覽會 — Taiwan Tour Tech Wonderland">
-                            <div className="tourism-event-title">2026 觀光產業數位博覽會</div>
-                            <div className="tourism-event-name-en">TAIWAN TOUR TECH WONDERLAND</div>
+                        <div className="tourism-event-lockup" aria-label="AI 人像體驗 — AI Portrait Experience">
+                            <div className="tourism-event-title">AI 人像體驗</div>
+                            <div className="tourism-event-name-en">AI PORTRAIT EXPERIENCE</div>
                         </div>
                         <div className="tourism-color-ribbon" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
 
@@ -589,9 +585,7 @@
                                 <button onClick={startCamera} className="btn-cyan text-xl sm:text-3xl md:text-4xl font-black px-12 py-6 sm:py-8 rounded-full animate-pulse shadow-[0_0_35px_rgba(255,107,33,0.4)] flex flex-col items-center gap-1">
                                     <span>{t.startBtn}</span>
                                 </button>
-                                <div className="tourism-brand tourism-home-logo">
-                                    <img src="assets/tourism-administration-logo.jpg" alt="交通部觀光署 — Taiwan Tourism Administration" />
-                                </div>
+                                <div className="medical-partners" aria-label="活動單位"><img src="assets/ncku-hospital.svg" alt="成大醫院" /><img src="assets/tainan-medical.svg" alt="台南市醫師公會" /><img src="assets/tainan-clinics.svg" alt="台南市診所商會" /></div>
                             </div>
                         )}
 
@@ -755,6 +749,7 @@
     </script>
 </body>
 </html>
+
 
 
 
