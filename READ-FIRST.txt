@@ -1,29 +1,46 @@
-醫療活動白色視覺＋A4 合成底圖更新包 v27
+V28｜白色活動版：缺圖修正＋珍奶黑熊動畫
 
-1. 解壓縮後，將 index.html、qr-kiosk.html、download.html、admin.html、
-   tourism-progress.js、medical-theme.css、print-composer.js 上傳至
-   AIcameraliveprint 專案根目錄，覆蓋同名檔案。
-2. 將 assets 內三個 SVG 和 medical-print-frame-v27.png 上傳至既有 assets 資料夾。
-3. 不要刪除原本其他檔案或素材，也不要上傳 ZIP 本身。
-4. GitHub Pages 發布完成後按 Ctrl+F5，先完整測試一筆體驗。
+上傳位置
+https://github.com/peysonltd-dot/AIcameraliveprint
 
-首頁三個 Logo 從左至右：成大醫院、台南市醫師公會、台南市診所商會。
-頁首名稱確定使用「AI 人像體驗 / AI PORTRAIT EXPERIENCE」。
-等待區改為向量人像卡片、輕微浮動與每秒輪替閃光，文字：
-「正在描繪，專屬於您的精彩」。保留原本進度判定與中英日語系。
+解壓縮後，只需將以下 7 個檔案全部上傳至上述專案根目錄並覆蓋同名檔案：
+index.html
+qr-kiosk.html
+download.html
+admin.html
+tourism-progress.js
+medical-theme.css
+print-composer.js
 
-本包包含上一版白色前台，不需分兩次上傳。
-後台「下載合成圖」使用本次 AI 原檔輸出的新底圖：
-A4 21×29.7 cm、2480×3508 px、300 dpi、白底不透明 PNG、正常方向不鏡像。
-Logo 位置與大小依提供的 AI 底稿，已排除原檔示意人物。
-客人 AI 圖片在底稿的人物區域等比置中，不裁切、不拉伸；此版不去白底以保留淺色衣服。
-角色區最大約 20.85×20.85 cm，與本次 A4 原稿相符；不再使用上一場 15 cm 區域。
-來源 AI 圖片本身的細節由生成原圖決定，放大輸出不會憑空增加細節。
-保留 v25 下載狀態、逾時、手動儲存連結與背景載入限制。
-不修改 AI 生成 API、資料庫、訂單或出票設定，不刪除既有照片。
-舊訂單之後按「下載合成圖」也會套用新底圖；電腦已下載的舊檔不會被改動。
-獨立下載站若部署在另一個 GitHub 專案，需另外更新其 download.html、
-medical-theme.css 與三個 assets Logo；本包不更改 QR 目的網址。
+不用新增 assets 資料夾，也不用移動或刪除現有資料夾。
+不要上傳 ZIP 本身或把整包放進新的子資料夾。READ-FIRST.txt 不需上傳。
+GitHub Pages 發布完成後，首頁及後台各按 Ctrl+F5 強制重新整理。
+請用一筆測試訂單確認三個 Logo、黑熊動畫、合成圖下載。
 
-已驗證程式語法、A4 尺寸、300 dpi、全白底不透明、合成後 Logo 區像素與底圖一致。
-上傳後請先用一筆測試訂單確認下載結果，並以實際尺寸試印；尚未代為更新正式網站。
+本次修正
+1. 三個首頁 Logo 原先指定的 assets 檔案在 GitHub 找不到（404）。
+   改為內嵌原始 SVG，順序為：成大醫院、台南市醫師公會、台南市診所商會。
+2. 後台合成下載失敗為 A4 邊框檔案找不到（404）。
+   改為直接內嵌原始 PNG 位元組，不改畫質、不改尺寸、不重新壓縮。
+3. 等待畫面改為原創台灣黑熊，依序捧珍奶、喝珍奶、搖擺、揮手。
+   每 2 秒切換姿勢，搭配輕微起伏。文字：喝口珍奶，等一個可愛的你。
+   動畫素材隨程式載入一次，循環時不重複下載、不呼叫 AI。
+   隱藏分頁停止切換；偏好減少動態的裝置保留靜態角色。
+
+合成輸出維持 V27 的 A4 21×29.7 cm、2480×3508 px、300 DPI、白底不透明 PNG。
+Logo 區域已做像素比對，與 V27 底圖完全相同；人物正常方向、不鏡像。
+保留原本拍照、AI 生成、QR 下載、進度、訂單與後台下載流程。
+此更新不刪除或修改現有客人原圖、AI 成品、訂單或伺服器資料。
+黑熊僅用在等待動畫，不會加進客人的合成圖。
+
+已驗證：HTML/JS 語法、Logo 原始檔內容與排列、四個姿勢切換與結束清理、
+進度判定、內嵌邊框解碼、A4 尺寸、300 DPI、白底透明度、Logo 像素完整。
+尚未代為發布網站；實際瀏覽器、相機及印表機仍需現場測試一筆。
+若客人下載頁部署於另一個獨立網站，請另更新該站的 download.html 與 medical-theme.css。
+
+素材製作記錄
+黑熊由內建圖像生成工具製作，程式播放四個姿勢，並非即時 AI 影片。
+圖片與 Logo、合成邊框均內嵌在上述檔案，不依賴臨時圖片連結。
+
+黑熊生成提示詞（供未來重製參考）
+Use case: illustration-story. Asset type: a production 4-frame sprite sheet for a website loading animation, not a mockup. Create ONE square PNG, transparent background, a precise 2 by 2 equal grid of four animation frames with NO grid lines. Same adorable original Taiwanese black bear in each frame, clearly recognizable white V-shaped chest patch, rounded charcoal black body, small rounded ears, warm caramel muzzle, rosy cheeks, little oval eyes; excellent polished contemporary mascot illustration with crisp clean outlines and subtly soft highlights, charming enough for an event kiosk. Each frame: one full body bear holding one transparent cup of milky beige bubble tea with clearly visible dark tapioca pearls and one muted green straw. No clothes, no letters, no logos. Bear must be large and centered within each quarter, identical character design, camera, scale and foot baseline in all frames, plenty of transparent space between quadrants so each can be used separately. Top-left frame: relaxed happy bear holding cup in its LEFT paw (viewer right), other paw resting down. Top-right frame: bear raises cup and actually sips through straw, content closed eyes, tiny blush. Bottom-left frame: delighted eyes, holding cup in same left paw at chest level, leaning a little playfully left as if swaying to music, same basic foot position. Bottom-right frame: cup in same left paw, right paw raised in friendly wave, smiling. All four distinct poses must appear exactly once. Entire illustration stays within its own quarter with 10% padding each side. Transparent outside each bear, no scenery, no shadows extending to neighboring frames, no text anywhere. High definition, fine smooth edges. Square canvas ideally 2048 by 2048.
