@@ -1,40 +1,18 @@
-V30｜黑熊動作與等待文案輪播（適用目前正常運作的 V28 白色版）
+V32｜等待畫面文字更新
+
+更新後第四句：
+圖像就快好囉，黑熊陪你一起等！
+
+英文、日文對應句同步更新。其他輪播文字、黑熊動畫與進度邏輯維持原本設定。
 
 上傳方式
-1. 解壓縮後，只將 tourism-progress.js 上傳至下列專案根目錄，覆蓋同名檔案：
-   https://github.com/peysonltd-dot/AIcameraliveprint
-2. 不需上傳 README，不需更新 admin.html、print-composer.js 或新增 assets。
-3. GitHub Pages 發布完成後，在活動機台前台按 Ctrl+F5。
-4. 用一筆測試體驗確認動畫與文字輪播，正常生成後仍會進入選圖畫面。
+1. 解壓縮本 ZIP。
+2. 開啟前台 GitHub 專案：https://github.com/peysonltd-dot/AIcameraliveprint
+3. 將 tourism-progress.js 上傳到專案根目錄，覆蓋原有同名檔案。
+4. 不需要上傳 READ-FIRST.txt。
+5. 等 GitHub Pages 發布完成，在活動機台按 Ctrl+F5 重新載入。
+6. 從 https://photo1022.peysonliveprint.com/ 進入測試，等待畫面輪播到第四組時會顯示新文字。
 
-輪播內容
-每 5 秒換一組動作與文案，20 秒循環：
-1. 喝珍奶：黑熊陪你，等一張專屬驚喜
-2. 拿相機拍照：捕捉你的笑容，收藏這一刻
-3. 轉圈：轉個圈，遇見不一樣的自己
-4. 揮手：揮揮手，和可愛的自己打聲招呼
-
-保留英文、日文對應文案。圖片完成時依原本流程進入選圖畫面，
-不必等動畫播完，也不會因輪播提高或延後生成進度。
-相機動作包含局部小閃光，轉圈使用正面、側面、背面、另一側、正面的序列。
-這是圖片姿勢搭配程式動態播放，不是現場生成影片。
-
-穩定與畫質
-所有動畫素材與補充樣式內嵌在單一 tourism-progress.js 中，
-隨前台程式載入一次，循環時不再下載、不呼叫 AI。
-每張動作表 1254×1254 px，每個姿勢約 627×627 px。
-素材以無損 WebP 儲存，尺寸、透明度及可見像素與生成 PNG 完全相同。
-分頁隱藏、生成失敗、裝置偏好減少動態時停止動作輪播。
-離開等待頁時會清除動畫計時器。
-
-本包只有等待畫面修改，不改後台、合成圖、下載、訂單、照片、出票或生成 API。
-不需要先安裝 V29，直接套用目前 V28 即可。
-已通過語法、三語系輪播、四組動作、轉圈方向、暫停、重設、
-離開清理及原本進度/狀態輪詢程式一致性檢查；尚未代為發布網站。
-
-素材製作記錄
-使用內建圖像生成工具，以原有黑熊為角色參考製作拍照、正面、側面及背面。
-圖片以原始解析度無損轉檔後內嵌於 tourism-progress.js。
-
-生成提示詞
-Use case: identity-preserve. Asset type: NEW companion sprite sheet for the existing event-kiosk mascot animation. Input image 1 is the character and rendering-style reference: preserve this exact cute Taiwanese black bear's proportions, round ears, charcoal fur, white V chest marking, caramel muzzle, pink cheeks and polished soft 3D illustration style. Produce a NEW square transparent PNG sprite sheet, precisely 2 by 2 equal square cells with NO borders or labels. The original reference shows four boba poses. This new sheet must instead show these FOUR specific new poses: TOP LEFT: full-body front-facing bear holding a small black camera with both paws at eye level and taking a photo toward the viewer, no cup. TOP RIGHT: full-body front-facing bear smiling with empty paws extended slightly outward ready to twirl, no props. BOTTOM LEFT: the same bear in an exact LEFT-facing side profile with empty paws slightly extended, mid-turn, no props. BOTTOM RIGHT: the same bear from the BACK, with back of head/ears/body/tiny tail visible and empty paws slightly extended; no face and no white V chest visible from the back. These side/back/front poses will be played in sequence to make a turn-around animation, so all must have the same scale, centered body axis and level foot baseline, feet on ground, no perspective or background. The entire full body and camera must fit INSIDE its own quadrant with at least 8 percent transparent padding. No bubble tea, straw or cups in any of these four NEW poses. ONE character per quadrant. Camera does not need flash drawn in; flash will be done by code. No letters, no numbers, no watermarks. Crisp smooth edges, high definition, ideally 2048 by 2048 pixels. True transparent background throughout.
+已以目前線上 tourism-progress.js 為基礎，只更換三個語系的這一句文字。
+已通過 JavaScript 語法檢查與差異檢查，其他程式及內嵌圖片位元組皆保持相同。
+此包尚未發布到正式網站；上傳後才會生效。
