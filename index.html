@@ -218,6 +218,13 @@
         const { useState, useEffect, useRef } = React;
         const API_BASE_URL = "https://aicameraliveprint-back.onrender.com";
 
+        function PortraitPreview({original, taskId, design, ...props}) {
+            const [failed, setFailed] = useState(false);
+            useEffect(() => setFailed(false), [original, taskId, design]);
+            const preview = `${API_BASE_URL}/api/preview/${encodeURIComponent(taskId)}/${design}`;
+            return <img {...props} src={failed ? original : preview} onError={() => setFailed(true)} />;
+        }
+
         function WaitingPortrait({lang, progress}) {
             const host = useRef(null);
             const ui = useRef(null);
@@ -632,11 +639,11 @@
                                 </div>
                                 <div className="grid grid-cols-2 gap-6 w-full mb-8">
                                     <div onClick={() => setSelectedChoice('A')} className={`choice-card p-3 rounded-3xl text-center ${selectedChoice === 'A' ? 'selected' : ''}`}>
-                                        <img src={imgA} className="w-full aspect-square object-cover rounded-2xl mb-3 border border-slate-800" alt="Style A" />
+                                        <PortraitPreview original={imgA} taskId={taskId} design="A" className="w-full aspect-square object-cover rounded-2xl mb-3 border border-slate-800" alt="Style A" />
                                         <span className="text-sm sm:text-2xl font-black tracking-wider block">{t.styleA}</span>
                                     </div>
                                     <div onClick={() => setSelectedChoice('B')} className={`choice-card p-3 rounded-3xl text-center ${selectedChoice === 'B' ? 'selected' : ''}`}>
-                                        <img src={imgB} className="w-full aspect-square object-cover rounded-2xl mb-3 border border-slate-800" alt="Style B" />
+                                        <PortraitPreview original={imgB} taskId={taskId} design="B" className="w-full aspect-square object-cover rounded-2xl mb-3 border border-slate-800" alt="Style B" />
                                         <span className="text-sm sm:text-2xl font-black tracking-wider block">{t.styleB}</span>
                                     </div>
                                 </div>
@@ -666,7 +673,7 @@
                                 <div className="kiosk-result-panel bg-[#0f172a]/85 border-2 border-ai-cyan p-6 sm:p-8 rounded-[2.5rem] w-full mb-6 shadow-[0_0_45px_rgba(255,107,33,0.3)] flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12">
 
                                     <div className="flex flex-col items-center">
-                                        <img src={selectedChoice === 'A' ? imgA : imgB} className="kiosk-final-image w-48 h-48 sm:w-64 sm:h-64 object-cover rounded-3xl mb-4 border-2 border-slate-700 shadow-lg" alt="Selected Style" />
+                                        <PortraitPreview original={selectedChoice === 'A' ? imgA : imgB} taskId={taskId} design={selectedChoice} className="kiosk-final-image w-48 h-48 sm:w-64 sm:h-64 object-cover rounded-3xl mb-4 border-2 border-slate-700 shadow-lg" alt="Selected Style" />
                                         <p className="text-xs sm:text-sm text-slate-400 tracking-[0.2em] font-bold">{t.queueLabel}</p>
                                         <p className="text-5xl sm:text-7xl font-black text-white font-mono drop-shadow-[0_0_20px_#ff6b21]">#{taskId}</p>
                                     </div>
@@ -749,6 +756,7 @@
     </script>
 </body>
 </html>
+
 
 
 

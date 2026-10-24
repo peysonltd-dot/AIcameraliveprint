@@ -33,19 +33,14 @@
         });
     }
 
-    async function fetchImage(url, label = '圖片') {
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 30000);
+    async function fetchImage(url, label = '圖片', signal) {
         let blob;
-        try {
-            const response = await fetch(url, { cache: 'no-store', signal: controller.signal });
+        {
+            const response = await fetch(url, { cache: 'no-store', signal });
             if (!response.ok) throw new Error(`${label}下載失敗（${response.status}）`);
             blob = await response.blob();
             if (!blob.size) throw new Error(`${label}內容為空，請重試`);
-        } catch (error) {
-            if (error.name === 'AbortError') throw new Error(`${label}下載超過 30 秒，請檢查連線後重試`);
-            throw error;
-        } finally { clearTimeout(timer); }
+        }
         return loadImageFromBlob(blob, label);
     }
 
@@ -210,8 +205,8 @@
         const notify = typeof options.onProgress === 'function' ? options.onProgress : () => {};
         notify('取得原圖與邊框…');
         const [characterImage, frameImage] = await Promise.all([
-            fetchImage(imageUrl, '角色原圖'),
-            fetchImage(SPEC.frameUrl, '合成邊框')
+            fetchImage(imageUrl, '角色原圖', options.signal),
+            fetchImage(SPEC.frameUrl, '合成邊框', options.signal)
         ]);
         notify('排版與合成中…');
         await new Promise(resolve => setTimeout(resolve, 0));
@@ -259,6 +254,7 @@
 
     root.PrintComposer = { SPEC, compose, removeConnectedWhiteBackground, addPngResolution };
 })(typeof window !== 'undefined' ? window : globalThis);
+
 
 
 

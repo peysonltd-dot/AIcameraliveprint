@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;500;700;900&display=swap" rel="stylesheet">
-    <script src="print-composer.js?v=medical28"></script>
+    <script src="print-composer.js?v=preview-unlimited-20261024"></script>
     
     <style>
         :root { --ai-cyan: #00f2ff; --ai-pink: #ff00d0; }
@@ -414,6 +414,7 @@
 
         // Download state lives outside the periodically replaced task cards.
         const downloadJobs = new Map();
+        const downloadControllers = new Map();
         const readyFiles = [];
         let panel = null;
         function getDownloadPanel() {
@@ -430,6 +431,14 @@
             const title = document.createElement('strong');
             title.textContent = message || '檔案已準備好；若未自動下載，請點「儲存檔案」。';
             box.appendChild(title);
+            downloadControllers.forEach((controller, key) => {
+                const cancel = document.createElement('button');
+                cancel.textContent = `取消等待 ${key.split(':')[1]}`;
+                cancel.dataset.downloadCancel = key;
+                cancel.style.cssText = 'display:block;margin-top:8px;padding:8px;color:#fda4af;';
+                cancel.onclick = () => controller.abort();
+                box.appendChild(cancel);
+            });
             readyFiles.forEach(file => {
                 const row = document.createElement('div');
                 row.style.cssText = 'margin-top:12px;border-top:1px solid #475569;padding-top:10px;';
@@ -467,24 +476,21 @@
                 button.textContent = label || button.dataset.downloadLabel;
             });
         }
-        async function readDownloadBlob(url) {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), 30000);
-            try {
-                const response = await fetch(url, { signal: controller.signal });
+        async function readDownloadBlob(url, signal) {
+            {
+                const response = await fetch(url, { signal });
                 if (!response.ok) throw new Error(`圖片下載失敗（${response.status}）`);
                 const blob = await response.blob();
                 if (!blob.size || (blob.type && !blob.type.startsWith('image/'))) throw new Error('收到的內容不是圖片，請重新整理後重試');
                 return blob;
-            } catch (error) {
-                if (error.name === 'AbortError') throw new Error('取得原圖超過 30 秒，請檢查網路後重試');
-                throw error;
-            } finally { clearTimeout(timer); }
+            }
         }
         async function runDownload(taskId, kind, makeBlob) {
             const key = `${kind}:${taskId}`;
             if (downloadJobs.has(key)) return;
             if (downloadJobs.size >= 2) { paintDownloadPanel('正在準備其他檔案，請稍候再下載。'); return; }
+            const controller = new AbortController();
+            downloadControllers.set(key, controller);
             downloadJobs.set(key, kind === 'composite' ? '合成中…' : '取得原圖…');
             updateDownloadButtons();
             paintDownloadPanel(`#${taskId} ${kind === 'composite' ? '正在準備合成圖…' : '正在取得原圖…'}`);
@@ -493,7 +499,8 @@
                     downloadJobs.set(key, stage);
                     updateDownloadButtons();
                     paintDownloadPanel(`#${taskId} ${stage}`);
-                });
+                }, controller.signal);
+                if (controller.signal.aborted) throw new DOMException('已取消下載', 'AbortError');
                 const extension = blob.type === 'image/png' ? 'png' : 'jpg';
                 const name = kind === 'composite' ? `客人_${taskId}_A4_21x29.7cm_300dpi_合成圖.png` : `客人_${taskId}_AI原圖.${extension}`;
                 const url = URL.createObjectURL(blob);
@@ -511,24 +518,28 @@
                 try { link.click(); } finally { link.remove(); }
             } catch (error) {
                 console.error('下載準備失敗:', error);
-                paintDownloadPanel(`#${taskId} ${error.message || '下載準備失敗，請重試'}`);
+                paintDownloadPanel(`#${taskId} ${error.name === 'AbortError' ? '已取消等待，可重新下載。' : error.message || '下載準備失敗，請重試'}`);
             } finally {
                 downloadJobs.delete(key);
+                downloadControllers.delete(key);
+                document.querySelectorAll('[data-download-cancel]').forEach(button => {
+                    if (button.dataset.downloadCancel === key) button.remove();
+                });
                 updateDownloadButtons();
                 pumpImageQueue();
             }
         }
         function downloadOriginal(imageUrl, taskId, event) {
             if (!imageUrl) return alert('圖片還沒準備好！');
-            return runDownload(taskId, 'original', () => readDownloadBlob(imageUrl));
+            return runDownload(taskId, 'original', (_, signal) => readDownloadBlob(imageUrl, signal));
         }
         function downloadCompositeImage(taskId, event) {
             const task = localTasksCache[taskId];
             const imageUrl = task && (task.chosenDesign === 'A' ? task.resultImageA : task.chosenDesign === 'B' ? task.resultImageB : null);
             if (!imageUrl) return alert('客人選擇的圖片還沒準備好！');
-            return runDownload(taskId, 'composite', onProgress => {
+            return runDownload(taskId, 'composite', (onProgress, signal) => {
                 if (!window.PrintComposer) throw new Error('合成程式尚未載入，請按 Ctrl＋F5 後重試');
-                return PrintComposer.compose(imageUrl, { onProgress });
+                return PrintComposer.compose(imageUrl, { onProgress, signal });
             });
         }
 
@@ -874,6 +885,7 @@
     </script>
 </body>
 </html>
+
 
 
 
