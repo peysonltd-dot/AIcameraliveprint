@@ -111,6 +111,10 @@
 
     <main class="max-w-7xl mx-auto">
         <div id="tasks-container" class="grid grid-cols-1 gap-6 transition-all duration-500"></div>
+        <div class="text-center py-6">
+            <p id="task-page-status" class="text-sm text-slate-400 mb-3" aria-live="polite"></p>
+            <button id="load-more-tasks" type="button" onclick="loadMoreTasks()" class="hidden bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-600 font-bold px-6 py-3 rounded-xl">載入更多（50 筆）</button>
+        </div>
     </main>
 
     <script>
@@ -581,6 +585,25 @@
         }
 
         // Bound background work as orders accumulate; never delete any task data.
+        const TASK_PAGE_SIZE = 50;
+        let visibleTaskLimit = TASK_PAGE_SIZE;
+        function sortedTasks() {
+            return Object.values(localTasksCache).sort((a, b) => Number(b.id) - Number(a.id));
+        }
+        function visibleTasks() { return sortedTasks().slice(0, visibleTaskLimit); }
+        function loadVisibleTaskImages() {
+            visibleTasks().forEach(t => {
+                if (t.hasSourceImage && !t.sourceImage) fetchSourceImageIncrementally(t.id);
+                if ((t.hasResultImageA && !t.resultImageA) || (t.hasResultImageB && !t.resultImageB)) {
+                    fetchResultImageIncrementally(t.id);
+                }
+            });
+        }
+        function loadMoreTasks() {
+            visibleTaskLimit += TASK_PAGE_SIZE;
+            renderTasks(sortedTasks());
+            loadVisibleTaskImages();
+        }
         const imageQueue = [];
         const queuedImages = new Set();
         const imageRetryAfter = new Map();
@@ -617,6 +640,10 @@
             imageQueue.sort((a, b) => b.taskId.localeCompare(a.taskId) || (a.kind === 'result' ? -1 : 1));
             while (activeImageRequests < 3 && imageQueue.length) {
                 const item = imageQueue.shift();
+                if (!visibleTasks().some(task => task.id === item.taskId)) {
+                    queuedImages.delete(item.key);
+                    continue;
+                }
                 activeImageRequests++;
                 const path = item.kind === 'source' ? 'task-source-image' : 'task-result-images';
                 readAdminJson(`${API_BASE_URL}/api/admin/${path}/${item.taskId}`).then(data => {
@@ -660,13 +687,11 @@
                         
                         localTasksCache[t.id] = t; 
 
-                        if (t.hasSourceImage && !localTasksCache[t.id].sourceImage) fetchSourceImageIncrementally(t.id);
-                        if ((t.hasResultImageA && !localTasksCache[t.id].resultImageA) || (t.hasResultImageB && !localTasksCache[t.id].resultImageB)) {
-                            fetchResultImageIncrementally(t.id);
-                        }
+
                     });
 
-                    renderTasks(Object.values(localTasksCache).sort((a, b) => b.id.localeCompare(a.id)));
+                    loadVisibleTaskImages();
+                    renderTasks(sortedTasks());
                     if (hasNewOrder) triggerNewOrderAlert();
                 }
             } catch (e) { console.warn('訂單同步暫時失敗，稍後重試', e); }
@@ -678,6 +703,11 @@
             if (activeEl && (activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT')) return;
 
             const container = document.getElementById('tasks-container');
+            const totalTasks = tasks.length;
+            tasks = [...tasks].sort((a, b) => Number(b.id) - Number(a.id)).slice(0, visibleTaskLimit);
+            document.getElementById('task-page-status').textContent = totalTasks
+                ? `已顯示最新 ${tasks.length} 筆／共 ${totalTasks} 筆訂單` : '';
+            document.getElementById('load-more-tasks').classList.toggle('hidden', tasks.length >= totalTasks);
             if (tasks.length === 0) { 
                 container.innerHTML = `<div class="text-center py-12 text-slate-500 border border-dashed border-slate-800 rounded-2xl w-full">尚無排隊訂單</div>`; 
                 return; 
@@ -844,6 +874,7 @@
     </script>
 </body>
 </html>
+
 
 
 
