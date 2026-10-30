@@ -20,3 +20,17 @@ body::before,.cyber-bg::after,.tourism-color-ribbon{display:none!important}
 .tourism-photo-notice{color:#b8c9c5!important}.tourism-privacy-content{background:#fff!important;color:#133139!important}
 .kiosk-loading>div.text-center>p{color:#fff!important}
 @media(max-width:600px){.innoserve-event{margin-top:68px;margin-bottom:24px;padding:12px;border-radius:12px}.medical-partners{padding:16px 10px;gap:10px;margin-top:48px}}
+
+/* v3: framed event heading and legible text on the dark event background. */
+.innoserve-event{border:3px solid #f5da69;border-radius:18px 18px 38px 18px;box-shadow:8px 9px 0 #f5da69;padding:20px 24px;margin-bottom:42px}
+.tourism-home>p:first-child,
+.tourism-home-examples>div:first-child>span,
+.tourism-home-examples>div:last-child>span,
+.content-container>.flex>div.text-center>p.text-ai-cyan,
+.kiosk-completed>h2.text-ai-cyan,
+.kiosk-return-actions>div.text-ai-cyan,
+.kiosk-loading>div.text-center>p{color:rgba(255,255,255,.8)!important;opacity:1!important;text-shadow:none!important;filter:none!important;animation:none!important}
+/* White result and choice cards keep dark text for contrast. */
+.kiosk-result-panel .text-white,.kiosk-result-panel .text-ai-cyan,
+.kiosk-result-panel [class*="text-slate-"],.choice-card>span{color:#133139!important;text-shadow:none!important;filter:none!important}
+@media(max-width:600px){.innoserve-event{padding:12px 14px;border-width:2px;border-radius:12px 12px 26px 12px;box-shadow:5px 6px 0 #f5da69}}
