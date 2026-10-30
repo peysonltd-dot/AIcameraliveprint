@@ -1,0 +1,22 @@
+/* InnoServe 2026. Source AI fill RGB .075/.192/.224 → #133139. */
+:root{--tourism-orange:#f5da69;--tourism-cream:#fff;--ai-cyan:#f5da69;--ai-pink:#f5da69;--ai-dark:#133139}
+html,body,.cyber-bg{background:#133139!important;color:#fff!important}
+body::before,.cyber-bg::after,.tourism-color-ribbon{display:none!important}
+.innoserve-event{width:min(90vw,980px);margin:90px auto 30px;padding:20px;background:#fff;border-radius:18px;box-sizing:border-box}
+.innoserve-event img{display:block;width:100%;height:auto}
+.tourism-language{background:#fff!important;border:2px solid #f5da69!important;box-shadow:none!important}
+.lang-btn{color:#133139!important}.lang-btn.active{background:#133139!important;color:#fff!important;border-color:#133139!important}
+.tourism-home>p:first-child,.tourism-home-examples>div>span{color:#fff!important;text-shadow:none!important;background:transparent!important;border:0!important;box-shadow:none!important}
+.tourism-home-examples>div:nth-child(2)>span{color:#f5da69!important;filter:none!important}
+.tourism-example-image,.tourism-home-examples>div:last-child .tourism-example-image{background:#fff!important;border:3px solid #f5da69!important;box-shadow:6px 6px 0 #f5da69!important}
+.btn-cyan,.primary,.glow-button,[class*="bg-cyan-"]{background:#f5da69!important;color:#133139!important;border:2px solid #fff!important;box-shadow:none!important}
+.btn-cyan:active:not(:disabled){background:#ffe998!important}.btn-cyan span,.glow-button span{color:#133139!important}
+.btn-red,.secondary{background:#fff!important;color:#133139!important;border:2px solid #f5da69!important}
+.medical-partners{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(12px,2vw,28px);width:min(100%,900px);padding:24px 20px;margin:76px auto 24px;background:#fff;border-radius:16px;box-sizing:border-box}
+.medical-partners img{display:block;width:100%;height:clamp(54px,9vw,110px);object-fit:contain}
+.tourism-wait{background:#fff!important;border:3px solid #f5da69!important;box-shadow:none!important;color:#133139!important}
+.tourism-percent,.tourism-wait-title{color:#133139!important}.tourism-track{background:#ecf1ee!important}.tourism-fill{background:#e0b63c!important}
+.choice-card.selected{border-color:#e0b63c!important;box-shadow:0 0 0 3px #f5da69!important}
+.tourism-photo-notice{color:#b8c9c5!important}.tourism-privacy-content{background:#fff!important;color:#133139!important}
+.kiosk-loading>div.text-center>p{color:#fff!important}
+@media(max-width:600px){.innoserve-event{margin-top:68px;margin-bottom:24px;padding:12px;border-radius:12px}.medical-partners{padding:16px 10px;gap:10px;margin-top:48px}}
