@@ -38,7 +38,8 @@ body::before,.cyber-bg::after,.tourism-color-ribbon{display:none!important}
 /* Updated event artwork, kept at the supplied aspect ratios. */
 .event-brand{display:flex;flex-direction:column;align-items:center;gap:18px;width:100%;background:#fff}
 .event-brand img.event-brand-logo{display:block;width:min(58%,340px);height:auto;margin:0;object-fit:contain}
-.event-brand .event-brand-title{width:100%;padding:12px 14px;background:#133139;box-sizing:border-box;border-radius:4px}
+.event-brand .event-brand-title{width:100%;padding:12px 14px;background:#fff;box-sizing:border-box;border-radius:4px}
 .event-brand .event-brand-title img{display:block;width:100%;height:auto;margin:0;object-fit:contain}
 .screenshot-note{color:#f5da69!important;white-space:nowrap}
 @media(max-width:600px){.event-brand{gap:12px}.event-brand .event-brand-title{padding:8px}.event-brand img.event-brand-logo{width:60%}}
+
