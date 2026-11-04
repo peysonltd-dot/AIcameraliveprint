@@ -52,12 +52,12 @@
     @media(max-width:350px) { .page { padding:24px 14px; }.medical-partners { gap:12px; } }
   
 /* Updated event artwork, kept at the supplied aspect ratios. */
-.event-brand{display:flex;flex-direction:column;align-items:center;gap:18px;width:100%;background:#fff}
-.event-brand img.event-brand-logo{display:block;width:min(58%,340px);height:auto;margin:0;object-fit:contain}
-.event-brand .event-brand-title{width:100%;padding:12px 14px;background:#fff;box-sizing:border-box;border-radius:4px}
+.event-brand{display:flex;flex-direction:row;align-items:center;gap:clamp(8px,2vw,20px);width:100%;background:#fff}
+.event-brand img.event-brand-logo{display:block;flex:0 0 20%;width:20%;max-width:180px;height:auto;margin:0;object-fit:contain}
+.event-brand .event-brand-title{flex:1 1 0;min-width:0;width:auto;padding:0;background:#fff;box-sizing:border-box;border-radius:4px}
 .event-brand .event-brand-title img{display:block;width:100%;height:auto;margin:0;object-fit:contain}
 .screenshot-note{color:#f5da69!important;white-space:nowrap}
-@media(max-width:600px){.event-brand{gap:12px}.event-brand .event-brand-title{padding:8px}.event-brand img.event-brand-logo{width:60%}}
+@media(max-width:600px){.event-brand{gap:8px}.event-brand .event-brand-title{padding:0}.event-brand img.event-brand-logo{width:20%}}
 
 .page-header>.event-brand{padding:18px;border:2px solid #f5da69;border-radius:18px;margin-bottom:24px;box-sizing:border-box}
 </style>
