@@ -207,7 +207,7 @@
     </style>
     <script src="tourism-progress.js?v=innoserve-slides-20261102"></script>
     <link rel="stylesheet" href="medical-theme.css?v=medical28">
-<link rel="stylesheet" href="innoserve-theme.css?v=3">
+<link rel="stylesheet" href="innoserve-theme.css?v=20261104-brand">
 </head>
 <body class="cyber-bg text-white min-h-[100dvh] w-screen flex flex-col">
     <div id="root" class="h-full w-full relative z-10 flex-grow flex flex-col"></div>
@@ -539,7 +539,7 @@
 
                     {/* Header - 臺灣觀光品牌識別與多國語言切換 */}
                     <div className="text-center z-20 flex flex-col items-center flex-shrink-0 w-full pt-1 relative">
-                        <div className="innoserve-event"><img src="assets/innoserve/event.jpg" alt="2026第31屆大專校院資訊應用服務創新競賽 — International ICT Innovative Services Awards" /></div>
+                        <div className="innoserve-event"><div className="event-brand"><img className="event-brand-logo" src="assets/innoserve/brand-logo.svg" alt="InnoServe Awards" /><div className="event-brand-title"><img src="assets/innoserve/brand-title.webp" alt="大專校院資訊應用服務創新競賽 — International ICT Innovative Services Awards" /></div></div></div>
 
                         {/* 🌐 多國語言切換 (切換繁中 / 日本語 / English) */}
                         <div className="tourism-language absolute right-0 top-0 flex items-center gap-1.5 bg-stone-950/80 p-1 rounded-full border border-orange-400/30 shadow-lg backdrop-blur-md">
@@ -576,7 +576,7 @@
                                     <div className="flex flex-col items-center">
                                         <div className="tourism-example-image w-36 h-36 sm:w-56 sm:h-56 rounded-[2rem] overflow-hidden border-2 border-white shadow-[0_0_25px_rgba(255,255,255,0.2)] mb-4 bg-[#0f172a]/50 p-2">
                                             <img
-                                                src="https://img.shoplineapp.com/media/image_clips/6a1ef3c33ce472c30e346dac/original.png?1780413379=&owner_id=66221c5c384dbb002ec45c18"
+                                                src="assets/innoserve/tote-new.webp"
                                                 className="w-full h-full object-contain"
                                                 alt="Live Bag Printing"
                                             />
@@ -664,7 +664,7 @@
 
                         {step === 'completed' && (
                             <div className="kiosk-completed flex flex-col items-center w-full max-w-[850px] px-4 text-center">
-                                <h2 className="text-3xl sm:text-5xl font-black text-ai-cyan tracking-widest mb-6 animate-pulse">{t.submittedTitle}</h2>
+                                <h2 className="text-3xl sm:text-5xl font-black text-ai-cyan tracking-widest mb-6 animate-pulse">{t.submittedTitle}<span className="screenshot-note">{lang === 'zh' ? '請截圖' : lang === 'jp' ? ' スクリーンショットを保存' : ' — Please take a screenshot'}</span></h2>
 
                                 <div className="kiosk-result-panel bg-[#0f172a]/85 border-2 border-ai-cyan p-6 sm:p-8 rounded-[2.5rem] w-full mb-6 shadow-[0_0_45px_rgba(255,107,33,0.3)] flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12">
 
