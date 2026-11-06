@@ -118,6 +118,14 @@
         <p id="auto-composite-status" role="status" aria-live="polite" class="text-sm text-cyan-300 mt-2">自動下載未啟用；所有手動下載按鈕均可使用。</p>
     </section>
 
+    <section class="max-w-7xl mx-auto mb-6 cyber-card rounded-2xl p-4 md:p-5">
+        <label for="order-search" class="block font-bold text-white mb-2">搜尋訂單</label>
+        <div class="flex flex-wrap gap-3">
+            <input id="order-search" type="search" autocomplete="off" placeholder="訂單編號或活動代碼，例如 #71、202" class="flex-1 min-w-0 bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white" oninput="applyOrderSearch()">
+            <button type="button" onclick="clearOrderSearch()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 font-bold">清除搜尋</button>
+        </div>
+        <p class="text-xs text-slate-400 mt-2">搜尋全部訂單。#71 可找到 #071；不加 # 時，同時比對訂單編號與活動代碼（若有）。</p>
+    </section>
     <main class="max-w-7xl mx-auto">
         <div id="tasks-container" class="grid grid-cols-1 gap-6 transition-all duration-500"></div>
         <div class="text-center py-6">
@@ -751,12 +759,22 @@
         }
 
         // Bound background work as orders accumulate; never delete any task data.
+// Order search matches the entire number/code; # explicitly selects order ID.
+function matchesOrderSearch(task,query){
+ const q=String(query||'').normalize('NFKC').trim().toLowerCase();if(!q)return true;
+ const canonical=value=>{const s=String(value??'').normalize('NFKC').trim().toLowerCase();return /^\d+$/.test(s)?s.replace(/^0+(?=\d)/,''):s;};
+ if(q.startsWith('#')){const id=q.slice(1).trim();return !!id&&canonical(task.id)===canonical(id);}
+ return canonical(task.id)===canonical(q)||(task.guestCode!=null&&canonical(task.guestCode)===canonical(q));
+}
+        let orderSearch='';
+        function applyOrderSearch(){orderSearch=document.getElementById('order-search').value;visibleTaskLimit=TASK_PAGE_SIZE;renderTasks(sortedTasks());loadVisibleTaskImages();}
+        function clearOrderSearch(){const input=document.getElementById('order-search');input.value='';applyOrderSearch();input.focus();}
         const TASK_PAGE_SIZE = 50;
         let visibleTaskLimit = TASK_PAGE_SIZE;
         function sortedTasks() {
             return Object.values(localTasksCache).sort((a, b) => Number(b.id) - Number(a.id));
         }
-        function visibleTasks() { return sortedTasks().slice(0, visibleTaskLimit); }
+        function visibleTasks() { return sortedTasks().filter(t=>matchesOrderSearch(t,orderSearch)).slice(0, visibleTaskLimit); }
         function loadVisibleTaskImages() {
             visibleTasks().forEach(t => {
                 if (t.hasSourceImage && !t.sourceImage) fetchSourceImageIncrementally(t.id);
@@ -874,13 +892,16 @@
             if (activeEl && (activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT')) return;
 
             const container = document.getElementById('tasks-container');
+            const allCount=tasks.length;
+            tasks=tasks.filter(t=>matchesOrderSearch(t,orderSearch));
             const totalTasks = tasks.length;
             tasks = [...tasks].sort((a, b) => Number(b.id) - Number(a.id)).slice(0, visibleTaskLimit);
-            document.getElementById('task-page-status').textContent = totalTasks
-                ? `已顯示最新 ${tasks.length} 筆／共 ${totalTasks} 筆訂單` : '';
+            document.getElementById('task-page-status').textContent = orderSearch.trim()
+                ? `搜尋結果：顯示 ${tasks.length}／${totalTasks} 筆（全部 ${allCount} 筆）`
+                : totalTasks ? `已顯示最新 ${tasks.length} 筆／共 ${totalTasks} 筆訂單` : '';
             document.getElementById('load-more-tasks').classList.toggle('hidden', tasks.length >= totalTasks);
             if (tasks.length === 0) { 
-                container.innerHTML = `<div class="text-center py-12 text-slate-500 border border-dashed border-slate-800 rounded-2xl w-full">尚無排隊訂單</div>`; 
+                container.innerHTML = `<div class="text-center py-12 text-slate-500 border border-dashed border-slate-800 rounded-2xl w-full">${orderSearch.trim()?'找不到符合的訂單，請確認編號或代碼，或清除搜尋。':'尚無排隊訂單'}</div>`; 
                 return; 
             }
 
@@ -1046,6 +1067,7 @@
     </script>
 </body>
 </html>
+
 
 
 
