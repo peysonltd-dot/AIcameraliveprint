@@ -109,6 +109,15 @@
         <div id="front-mode-status" class="mt-3 text-xs text-slate-500">正在讀取目前設定…</div>
     </section>
 
+    <section class="max-w-7xl mx-auto mb-6 cyber-card rounded-2xl p-4 md:p-5">
+        <label class="flex items-center gap-3 font-bold text-white cursor-pointer">
+            <input id="auto-composite-toggle" type="checkbox" onchange="toggleAutoComposite(this.checked)" class="w-5 h-5 accent-cyan-400" disabled>
+            自動下載合成 PNG
+        </label>
+        <p class="text-xs text-slate-400 mt-2 leading-relaxed">僅此電腦瀏覽器生效。啟用後，新確認 A／B 款的訂單依序合成下載；舊訂單不會一次補下載。請保持後台開啟、電腦不休眠，並允許此網站自動下載多個檔案、關閉每次詢問儲存位置。</p>
+        <p id="auto-composite-status" role="status" aria-live="polite" class="text-sm text-cyan-300 mt-2">自動下載未啟用；所有手動下載按鈕均可使用。</p>
+    </section>
+
     <main class="max-w-7xl mx-auto">
         <div id="tasks-container" class="grid grid-cols-1 gap-6 transition-all duration-500"></div>
         <div class="text-center py-6">
@@ -355,7 +364,9 @@
                 const res = await fetch(`${API_BASE_URL}/api/admin/reset-all`, { method: 'POST' });
                 const data = await res.json();
                 if (data.success) {
-                    closeResetModal(); localTasksCache = {}; renderTasks([]); showResetSuccessBanner();
+                    closeResetModal(); localTasksCache = {}; autoSnapshot = [];
+                    if (autoActiveController) autoActiveController.abort();
+                    renderTasks([]); showResetSuccessBanner();
                 } else { alert("重製失敗：" + (data.error || "未知錯誤")); }
             } catch (err) {
                 console.error("重製請求失敗:", err); alert("無法連線至後端伺服器，請確認網路！");
@@ -403,6 +414,144 @@
                 } catch (e) { console.error("狀態同步失敗", e); }
             }
         }
+
+        // AUTO_COMPOSITE_START: per-browser ledger; Web Lock prevents duplicate tabs.
+        const AUTO_STORE = 'peyson-tote-auto-composite-v1';
+        const AUTO_LOCK = 'peyson-tote-auto-composite-v1';
+        let autoBusy = false;
+        let autoActiveController = null;
+        let autoSnapshot = [];
+        function autoIdentity(task) {
+            return JSON.stringify([String(task.id), task.createdAtIso || task.createdAt || 'legacy']);
+        }
+        function readAutoState() {
+            const raw = localStorage.getItem(AUTO_STORE);
+            const state = raw ? JSON.parse(raw) : { enabled: false, baseline: true, records: {} };
+            if (!state || typeof state.enabled !== 'boolean' || !state.records || typeof state.records !== 'object') throw new Error('下載紀錄無法讀取');
+            return state;
+        }
+        function writeAutoState(state) { localStorage.setItem(AUTO_STORE, JSON.stringify(state)); }
+        function showAutoStatus(message) {
+            document.getElementById('auto-composite-status').textContent = message;
+        }
+        function refreshAutoStatus() {
+            try {
+                const state = readAutoState();
+                document.getElementById('auto-composite-toggle').checked = state.enabled;
+                const records = Object.values(state.records);
+                const pending = records.filter(r => r.status === 'pending').length;
+                const failed = records.filter(r => r.status === 'failed');
+                const sent = records.filter(r => r.status === 'triggered').length;
+                showAutoStatus((state.enabled ? `已啟用｜待處理 ${pending} 筆｜已觸發下載 ${sent} 筆` : '自動下載已關閉；可手動下載。') +
+                    (failed.length ? `｜需手動補下載：${failed.map(r => '#' + r.id).join('、')}` : '') +
+                    (sent ? '。實際儲存結果請至瀏覽器下載紀錄確認。' : ''));
+            } catch (error) { showAutoStatus('無法讀寫本機下載紀錄；自動下載已暫停，請使用手動下載。'); }
+        }
+        async function toggleAutoComposite(enabled) {
+            const checkbox = document.getElementById('auto-composite-toggle');
+            checkbox.disabled = true;
+            try {
+                const state = readAutoState();
+                state.enabled = enabled;
+                // A new enable starts from a fresh server snapshot; no historical flood.
+                if (enabled) state.baseline = true;
+                writeAutoState(state);
+                if (!enabled && autoActiveController) autoActiveController.abort();
+                refreshAutoStatus();
+                await fetchAllTasks();
+            } catch (error) { showAutoStatus('無法儲存自動下載設定，請使用手動下載。'); }
+            finally { checkbox.disabled = !navigator.locks; refreshAutoStatus(); }
+        }
+        function observeAutoTasks(state, tasks) {
+            const live = new Set(tasks.map(autoIdentity));
+            for (const key of Object.keys(state.records)) if (!live.has(key)) delete state.records[key];
+            for (const task of tasks) {
+                const key = autoIdentity(task);
+                const chosen = task.chosenDesign === 'A' || task.chosenDesign === 'B';
+                let record = state.records[key];
+                if (state.baseline) {
+                    if (!record || record.status === 'waiting' || record.status === 'pending') {
+                        record = state.records[key] = { id: task.id, status: chosen ? 'skipped' : 'waiting' };
+                    }
+                } else if (!record) {
+                    record = state.records[key] = { id: task.id, status: 'waiting' };
+                }
+                if (!state.baseline && record.status === 'waiting' && chosen) record.status = 'pending';
+                if (task.processStatus === '已取消' && record.status === 'pending') record.status = 'skipped';
+            }
+            state.baseline = false;
+        }
+        function recordCompositeTrigger(task) {
+            // Persist immediately before click; never claim that disk saving succeeded.
+            const state = readAutoState();
+            state.records[autoIdentity(task)] = { id: task.id, status: 'triggered' };
+            writeAutoState(state);
+            refreshAutoStatus();
+        }
+        async function pumpAutoComposite(tasks) {
+            autoSnapshot = tasks;
+            if (!navigator.locks || autoBusy) return;
+            autoBusy = true;
+            try {
+                await navigator.locks.request(AUTO_LOCK, { ifAvailable: true }, async lock => {
+                    if (!lock) return;
+                    let state = readAutoState();
+                    if (!state.enabled) return;
+                    observeAutoTasks(state, autoSnapshot);
+                    writeAutoState(state);
+                    refreshAutoStatus();
+                    if (downloadJobs.size) return;
+                    const task = [...autoSnapshot].sort((a,b) => Number(a.id) - Number(b.id)).find(t =>
+                        state.records[autoIdentity(t)]?.status === 'pending' &&
+                        (t.chosenDesign === 'A' || t.chosenDesign === 'B') &&
+                        (t['hasResultImage' + t.chosenDesign] || t['resultImage' + t.chosenDesign]));
+                    if (!task) return;
+                    const identity = autoIdentity(task);
+                    const choice = task.chosenDesign;
+                    showAutoStatus(`正在自動合成 #${task.id}（${choice} 款）…`);
+                    const result = await runDownload(task.id, 'composite', async (onProgress, signal) => {
+                        autoActiveController = downloadControllers.get(`composite:${task.id}`);
+                        let image = task['resultImage' + choice];
+                        if (!image) {
+                            const response = await fetch(`${API_BASE_URL}/api/admin/task-result-images/${encodeURIComponent(task.id)}`, { signal, cache: 'no-store' });
+                            if (!response.ok) throw new Error('取得圖片失敗，請手動補下載');
+                            const data = await response.json();
+                            image = data.success && data['resultImage' + choice];
+                        }
+                        if (!image) throw new Error('圖片尚未備妥，請手動補下載');
+                        if (!window.PrintComposer) throw new Error('合成程式尚未載入，請重新整理');
+                        return PrintComposer.compose(image, { onProgress, signal });
+                    }, { beforeTrigger() {
+                        const latest = autoSnapshot.find(t => autoIdentity(t) === identity);
+                        const current = readAutoState();
+                        if (!current.enabled || current.records[identity]?.status !== 'pending' || !latest || latest.chosenDesign !== choice || latest.processStatus === '已取消') throw new Error('設定或訂單已變更，已停止自動下載；可手動補下載。');
+                        recordCompositeTrigger(task);
+                    } });
+                    autoActiveController = null;
+                    if (result?.status === 'failed') {
+                        state = readAutoState();
+                        if (state.records[identity]?.status === 'pending') {
+                            state.records[identity] = { id: task.id, status: 'failed' };
+                            writeAutoState(state);
+                        }
+                    }
+                    refreshAutoStatus();
+                });
+            } catch (error) { showAutoStatus('自動下載已暫停：' + error.message + '。請使用手動下載。'); }
+            finally { autoBusy = false; autoActiveController = null; }
+        }
+        window.addEventListener('storage', event => {
+            if (event.key !== AUTO_STORE) return;
+            try { if (!readAutoState().enabled && autoActiveController) autoActiveController.abort(); } catch (_) {}
+            refreshAutoStatus();
+        });
+        function initAutoComposite() {
+            const checkbox = document.getElementById('auto-composite-toggle');
+            checkbox.disabled = !navigator.locks;
+            if (!navigator.locks) { showAutoStatus('此瀏覽器不支援安全的自動下載排程，請使用電腦版 Chrome；手動下載仍可使用。'); return; }
+            refreshAutoStatus();
+        }
+        // AUTO_COMPOSITE_END
 
         function downloadSourceImage(taskId) {
             const task = localTasksCache[taskId];
@@ -485,7 +634,7 @@
                 return blob;
             }
         }
-        async function runDownload(taskId, kind, makeBlob) {
+        async function runDownload(taskId, kind, makeBlob, options = {}) {
             const key = `${kind}:${taskId}`;
             if (downloadJobs.has(key)) return;
             if (downloadJobs.size >= 2) { paintDownloadPanel('正在準備其他檔案，請稍候再下載。'); return; }
@@ -501,6 +650,10 @@
                     paintDownloadPanel(`#${taskId} ${stage}`);
                 }, controller.signal);
                 if (controller.signal.aborted) throw new DOMException('已取消下載', 'AbortError');
+                if (options.beforeTrigger) options.beforeTrigger();
+                else if (kind === 'composite' && localTasksCache[taskId]) {
+                    try { recordCompositeTrigger(localTasksCache[taskId]); } catch (_) { /* Manual saving stays available. */ }
+                }
                 const extension = blob.type === 'image/png' ? 'png' : 'jpg';
                 const name = kind === 'composite' ? `客人_${taskId}_帆布袋_27cm_300dpi_合成圖.png` : `客人_${taskId}_AI原圖.${extension}`;
                 const url = URL.createObjectURL(blob);
@@ -516,9 +669,11 @@
                 link.href = url; link.download = name; link.style.display = 'none';
                 document.body.appendChild(link);
                 try { link.click(); } finally { link.remove(); }
+                return { status: 'triggered' };
             } catch (error) {
                 console.error('下載準備失敗:', error);
                 paintDownloadPanel(`#${taskId} ${error.name === 'AbortError' ? '已取消等待，可重新下載。' : error.message || '下載準備失敗，請重試'}`);
+                return { status: 'failed' };
             } finally {
                 downloadJobs.delete(key);
                 downloadControllers.delete(key);
@@ -681,9 +836,10 @@
             try {
                 const data = await readAdminJson(`${API_BASE_URL}/api/admin/all-tasks?lightweight=true`);
                 if (data.success) {
+                    const autoTasks = data.tasks.map(task => ({ ...task }));
                     let hasNewOrder = false;
                     data.tasks.sort((a, b) => b.id.localeCompare(a.id)).forEach(t => { 
-                        const isNewTask = !localTasksCache[t.id];
+                        const isNewTask = !localTasksCache[t.id] || autoIdentity(localTasksCache[t.id]) !== autoIdentity(t);
                         if (isNewTask) {
                             if (Object.keys(localTasksCache).length > 0) hasNewOrder = true;
                             t.processStatus = t.processStatus || '製作中';
@@ -701,6 +857,10 @@
 
                     });
 
+                    // Replace absent/reset orders and avoid reusing images after serial reset.
+                    const present = new Set(data.tasks.map(t => String(t.id)));
+                    for (const id of Object.keys(localTasksCache)) if (!present.has(String(id))) delete localTasksCache[id];
+                    void pumpAutoComposite(autoTasks);
                     loadVisibleTaskImages();
                     renderTasks(sortedTasks());
                     if (hasNewOrder) triggerNewOrderAlert();
@@ -879,12 +1039,14 @@
 
         const kioskBasePath = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
         document.getElementById('kiosk-link').href = `${kioskBasePath}kiosk.html`;
+        initAutoComposite();
         loadFrontMode();
         fetchAllTasks();
         setInterval(fetchAllTasks, 3200);
     </script>
 </body>
 </html>
+
 
 
 
