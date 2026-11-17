@@ -839,8 +839,7 @@ function matchesOrderSearch(task,query){
                         </div>
                         <div class="text-center relative w-full mt-1">
                             ${task.hasSourceImage ? `
-                                <img loading="lazy" decoding="async" onerror="retryPreview(this)" src="${API_BASE_URL}/api/preview/${task.id}/source" class="w-20 h-20 mx-auto object-cover rounded-xl border border-slate-700 bg-black shadow-inner" />
-                                <button onclick="downloadSourceImage('${task.id}')" class="w-full mt-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold py-1.5 px-2 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1">
+                                <button data-source-preview="${task.id}" onclick="downloadSourceImage('${task.id}')" class="w-full mt-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold py-1.5 px-2 rounded-lg text-[10px] transition-all flex items-center justify-center gap-1">
                                     <i class="fa-solid fa-download"></i> 下載原照
                                 </button>
                             ` : `
@@ -929,6 +928,7 @@ function matchesOrderSearch(task,query){
                 const anchorId = anchor?.dataset.orderId;
                 const top = anchor?.getBoundingClientRect().top;
                 const preservePosition = window.scrollY > container.offsetTop;
+                window.sourcePhotoPreview?.hide();
                 container.innerHTML = nextMarkup;
                 lastTasksMarkup = nextMarkup;
                 if (preservePosition && anchorId) {
@@ -964,6 +964,13 @@ function matchesOrderSearch(task,query){
         fetchAllTasks();
         setInterval(fetchAllTasks, 5000);
         document.addEventListener('visibilitychange', () => { if (!document.hidden) fetchAllTasks(); });
+    </script>
+    <script src="source-hover.js?v=20261117-hover1"></script>
+    <script>
+        window.sourcePhotoPreview = createSourcePhotoPreview({
+            apiBase: API_BASE_URL,
+            identity: id => localTasksCache[id] ? autoIdentity(localTasksCache[id]) : String(id)
+        });
     </script>
 </body>
 </html>
