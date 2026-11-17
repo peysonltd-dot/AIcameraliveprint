@@ -61,9 +61,9 @@ function preload(url){return new Promise(resolve=>{if(!url)return resolve();cons
 function monitor(o){
  const base=String(o.apiBase||'').replace(/\/$/,''),id=encodeURIComponent(o.taskId),start=Date.now();let stopped=false,timer=null,errors=0,done=false;
  const emit=p=>{if(!stopped&&typeof o.onProgress==='function')o.onProgress(p)};
- async function poll(){if(stopped||done)return;try{const r=await fetch(`${base}/api/status/${id}`,{cache:'no-store'}),x=await r.json();if(!r.ok||x.success===false)throw new Error(x.error||'status error');errors=0;const elapsed=Date.now()-start;
+ async function poll(){if(stopped||done)return;try{const r=await fetch(`${base}/api/status/${id}`,{cache:'no-store',signal:AbortSignal.timeout(15000)}),x=await r.json();if(!r.ok||x.success===false)throw new Error(x.error||'status error');errors=0;const elapsed=Date.now()-start;
   if(x.status==='failed'){emit({phase:'failed',percent:Math.min(96,55+elapsed/5000)});stopped=true;if(typeof o.onFailure==='function')o.onFailure(x);return}
-  if(x.status==='completed'&&x.resultImageA&&x.resultImageB){done=true;emit({phase:'generating',percent:98});await Promise.all([preload(x.resultImageA),preload(x.resultImageB)]);if(stopped)return;emit({phase:'ready',percent:100});if(typeof o.onReady==='function')o.onReady(x);return}
+  if(x.status==='completed'&&x.resultImageA&&x.resultImageB){done=true;emit({phase:'generating',percent:98});await Promise.all([preload(`${base}/api/preview/${id}/A`),preload(`${base}/api/preview/${id}/B`)]);if(stopped)return;emit({phase:'ready',percent:100});if(typeof o.onReady==='function')o.onReady(x);return}
   emit(x.status==='generating'?{phase:'generating',percent:Math.min(96,46+elapsed/3600)}:{phase:x.status||'queued',percent:Math.min(44,24+elapsed/7000)});
  }catch(e){errors++;emit({phase:'queued',percent:Math.min(44,22+(Date.now()-start)/8000)});if(errors>=20){stopped=true;if(typeof o.onFailure==='function')o.onFailure({error:e});return}}
  if(!stopped&&!done)timer=setTimeout(poll,1500)}

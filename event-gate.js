@@ -36,7 +36,7 @@ function ensure(force=false){
   save('');await promptCode();
  })().finally(()=>{pending=null});return pending;
 }
-function protectedRequest(url,method){if(method!=='POST'||url.origin!==new URL(API).origin)return false;return /^\/api\/(upload|qr-session(?:\/[^/]+\/(?:photo|generate))?|admin\/retry\/[^/]+)\/?$/.test(url.pathname);}
+function protectedRequest(url,method){if(method!=='POST'||url.origin!==new URL(API).origin)return false;return /^\/api\/(upload|qr-session(?:\/[^/]+\/(?:photo|generate))?|admin\/retry\/[^/]+|admin\/printer-clear-queue)\/?$/.test(url.pathname);}
 window.fetch=async function(input,init){const url=new URL(typeof input==='string'?input:input.url,location.href);const method=String(init?.method||(input instanceof Request?input.method:'GET')).toUpperCase();if(!protectedRequest(url,method))return rawFetch(input,init);
  await ensure();const send=()=>{const headers=new Headers(init?.headers||(input instanceof Request?input.headers:undefined));headers.set('X-Event-Token',token);return rawFetch(input,{...init,headers})};
  let r=await send();if(r.status===401){const d=await r.clone().json().catch(()=>({}));if(d.code==='EVENT_AUTH_REQUIRED'){await ensure(true);r=await send();}}return r;

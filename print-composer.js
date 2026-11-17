@@ -27,7 +27,7 @@
     async function fetchImage(url, label = '圖片', signal) {
         let blob;
         {
-            const response = await fetch(url, { cache: 'no-store', signal });
+            const response = await fetch(url, { cache: url === SPEC.frameUrl ? 'default' : 'no-store', signal });
             if (!response.ok) throw new Error(`${label}下載失敗（${response.status}）`);
             blob = await response.blob();
             if (!blob.size) throw new Error(`${label}內容為空，請重試`);

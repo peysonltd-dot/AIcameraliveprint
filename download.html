@@ -167,7 +167,7 @@ body{background:#133139;color:#fff}.event-logo{width:100%;height:auto;border-rad
                     const finalImage = data.chosenDesign === 'A' ? data.resultImageA : data.resultImageB;
 
                     if (finalImage) {
-                        portraitImg.src = finalImage;
+                        portraitImg.src = `${API_BASE_URL}/api/image/${encodeURIComponent(taskId)}/${data.chosenDesign}`;
                         portraitImg.classList.remove('hidden');
                         spinner.classList.add('hidden');
 
@@ -176,13 +176,14 @@ body{background:#133139;color:#fff}.event-logo{width:100%;height:auto;border-rad
 
                         downloadBtn.addEventListener('click', async () => {
                             try {
-                                const response = await fetch(finalImage);
+                                const response = await fetch(`${API_BASE_URL}/api/image/${encodeURIComponent(taskId)}/${data.chosenDesign}`);
+                                if (!response.ok) throw new Error('圖片下載失敗');
                                 const blob = await response.blob();
                                 const blobUrl = window.URL.createObjectURL(blob);
                                 const a = document.createElement('a');
                                 a.style.display = 'none';
                                 a.href = blobUrl;
-                                a.download = `Portrait_${taskId}.jpg`;
+                                a.download = `Portrait_${taskId}.${blob.type === 'image/png' ? 'png' : blob.type === 'image/webp' ? 'webp' : 'jpg'}`;
                                 document.body.appendChild(a);
                                 a.click();
                                 window.URL.revokeObjectURL(blobUrl);

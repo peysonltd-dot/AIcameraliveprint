@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <script src="event-gate.js?v=20261117-1"></script>
+    <script src="event-gate.js?v=20261117-audit"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Your AI Character | 掃碼上傳體驗</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="assets/build/ui.css?v=20261117-audit">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="preload" href="assets/ohbear.png" as="image" type="image/png">
@@ -38,7 +38,7 @@
         .hidden { display:none !important; }
     </style>
     <link rel="stylesheet" href="tourism-theme.css?v=20260907-orange11">
-    <script src="tourism-progress.js?v=unlock-cube-20261117"></script>
+    <script src="tourism-progress.js?v=20261117-audit"></script>
     <link rel="stylesheet" href="medical-theme.css?v=medical28">
 <link rel="stylesheet" href="innoserve-theme.css?v=unlock-20261117">
 </head>
@@ -189,7 +189,7 @@
             showStep("error");
         }
         async function api(path, options = {}) {
-            const response = await fetch(`${API_BASE_URL}${path}`, { cache:"no-store", ...options });
+            const response = await fetch(`${API_BASE_URL}${path}`, { cache:"no-store", signal:AbortSignal.timeout(20000), ...options });
             let data = {};
             try { data = await response.json(); } catch (_) {}
             if (!response.ok || data.success === false) throw new Error(data.error || `連線失敗（${response.status}）`);
@@ -228,10 +228,14 @@
                 checkSession();
             } catch (error) { showError(`建立QR Code失敗：${error.message}`); }
         }
+        let sessionPollPending = false;
         async function checkSession() {
-            if (!state.sessionId) return;
+            if (!state.sessionId || sessionPollPending) return;
+            sessionPollPending = true;
+            const sessionId = state.sessionId;
             try {
                 const data = await api(`/api/qr-session/${encodeURIComponent(state.sessionId)}?includeImage=1`);
+                if (state.sessionId !== sessionId) return;
                 if (data.status === "photo_ready" && data.sourceImage) {
                     clearTimers();
                     document.getElementById("source-preview").src = data.sourceImage;
@@ -241,7 +245,7 @@
                 }
             } catch (error) {
                 document.getElementById("scan-status").textContent = "網路暫時不穩，正在重新連線…";
-            }
+            } finally { sessionPollPending = false; }
         }
         async function startGeneration() {
             if (document.getElementById('generate-btn').disabled) return;
@@ -265,8 +269,8 @@
                     onReady:result => {
                         if (epoch !== generationEpoch) return;
                         state.resultA = result.resultImageA; state.resultB = result.resultImageB;
-                        document.getElementById('result-a').src = state.resultA;
-                        document.getElementById('result-b').src = state.resultB;
+                        document.getElementById('result-a').src = `${API_BASE_URL}/api/preview/${state.taskId}/A`;
+                        document.getElementById('result-b').src = `${API_BASE_URL}/api/preview/${state.taskId}/B`;
                         showStep('choice');
                     }
                 });
@@ -282,8 +286,9 @@
             const btn = document.getElementById("submit-choice-btn");
             btn.disabled = true; btn.textContent = "正在送出…";
             try {
-                await api(`/api/choice/${encodeURIComponent(state.taskId)}`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ choice:state.selectedChoice }) });
-                document.getElementById("final-image").src = state.selectedChoice === "A" ? state.resultA : state.resultB;
+                const confirmed = await api(`/api/choice/${encodeURIComponent(state.taskId)}`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ choice:state.selectedChoice }) });
+                state.selectedChoice = confirmed.chosenDesign || state.selectedChoice;
+                document.getElementById("final-image").src = `${API_BASE_URL}/api/preview/${state.taskId}/${state.selectedChoice}`;
                 document.getElementById("final-task-number").textContent = `#${state.taskId}`;
                 showStep("completed");
                 let count = 20;
