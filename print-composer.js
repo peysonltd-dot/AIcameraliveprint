@@ -1,7 +1,7 @@
 (function (root) {
     'use strict';
 
-    const SPEC = Object.freeze({width:3189,height:1866,widthMm:270,heightMm:158,dpi:300,frameUrl:'assets/innoserve/tote-frame-27cm.webp'});
+    const SPEC = Object.freeze({width:2278,height:3189,widthMm:192.86,heightMm:270,dpi:300,frameUrl:'assets/unlock-ai/frame.png'});
 
     function loadImageFromBlob(blob, label = '圖片') {
         return new Promise((resolve, reject) => {
@@ -214,8 +214,8 @@
         composite.width=SPEC.width;composite.height=SPEC.height;
         const ctx=composite.getContext('2d');ctx.imageSmoothingQuality='high';
         // Match the visible portrait box in the supplied placement reference.
-        const k=Math.min(SPEC.width*.312/cw,SPEC.height*.694/ch),dw=cw*k,dh=ch*k;
-        ctx.drawImage(character,left,top,cw,ch,SPEC.width*.327-dw/2,SPEC.height*.944-dh,dw,dh);
+        const k=Math.min(SPEC.width*.58/cw,SPEC.height*.62/ch),dw=cw*k,dh=ch*k;
+        ctx.drawImage(character,left,top,cw,ch,SPEC.width*.47-dw/2,SPEC.height*.855-dh,dw,dh);
         ctx.drawImage(frameImage,0,0,SPEC.width,SPEC.height);
 
         notify('輸出高清 PNG…');

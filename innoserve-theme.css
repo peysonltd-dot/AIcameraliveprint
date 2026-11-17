@@ -43,3 +43,6 @@ body::before,.cyber-bg::after,.tourism-color-ribbon{display:none!important}
 .screenshot-note{color:#f5da69!important;white-space:nowrap}
 @media(max-width:600px){.event-brand{gap:8px}.event-brand .event-brand-title{padding:0}.event-brand img.event-brand-logo{width:20%}}
 
+
+.event-brand.unlock-brand{display:flex;flex-direction:column;gap:0;width:100%;background:#fff}
+.event-brand.unlock-brand img{display:block;width:100%;max-width:none;height:auto;flex:none;object-fit:contain}
