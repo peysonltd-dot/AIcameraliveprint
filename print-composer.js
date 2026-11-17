@@ -122,6 +122,70 @@
         return canvas;
     }
 
+    // Measure visible artwork, not the source canvas or isolated JPEG specks.
+    // A small analysis canvas keeps this work bounded even for high-resolution downloads.
+    function getPortraitBounds(character) {
+        const analysis = document.createElement('canvas');
+        const ratio = Math.min(1, 640 / Math.max(character.width, character.height));
+        analysis.width = Math.max(1, Math.round(character.width * ratio));
+        analysis.height = Math.max(1, Math.round(character.height * ratio));
+        const w = analysis.width, h = analysis.height;
+        const ctx = analysis.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(character, 0, 0, w, h);
+        const pixels = ctx.getImageData(0, 0, w, h).data;
+        const seen = new Uint8Array(w * h);
+        const queue = new Int32Array(w * h);
+        const components = [];
+        let largest = 0;
+        for (let start = 0; start < w * h; start++) {
+            if (seen[start] || pixels[start * 4 + 3] <= 20) continue;
+            let head = 0, tail = 1, left = w, right = -1, top = h, bottom = -1;
+            queue[0] = start;
+            seen[start] = 1;
+            while (head < tail) {
+                const index = queue[head++], x = index % w, y = Math.floor(index / w);
+                left = Math.min(left, x); right = Math.max(right, x);
+                top = Math.min(top, y); bottom = Math.max(bottom, y);
+                for (let ny = Math.max(0, y - 1); ny <= Math.min(h - 1, y + 1); ny++) {
+                    for (let nx = Math.max(0, x - 1); nx <= Math.min(w - 1, x + 1); nx++) {
+                        const next = ny * w + nx;
+                        if (!seen[next] && pixels[next * 4 + 3] > 20) {
+                            seen[next] = 1;
+                            queue[tail++] = next;
+                        }
+                    }
+                }
+            }
+            components.push({ left, right, top, bottom, size: tail });
+            largest = Math.max(largest, tail);
+        }
+        analysis.width = analysis.height = 0;
+        if (!largest) throw new Error('未找到可合成的人物');
+        const threshold = Math.max(8, largest * 0.002);
+        let left = w, right = -1, top = h, bottom = -1;
+        for (const part of components) {
+            if (part.size < threshold && part.size !== largest) continue;
+            left = Math.min(left, part.left); right = Math.max(right, part.right);
+            top = Math.min(top, part.top); bottom = Math.max(bottom, part.bottom);
+        }
+        // One analysis pixel of padding retains the anti-aliased silhouette.
+        const x = Math.max(0, left - 1) * character.width / w;
+        const y = Math.max(0, top - 1) * character.height / h;
+        return {
+            x, y,
+            width: Math.min(w, right + 2) * character.width / w - x,
+            height: Math.min(h, bottom + 2) * character.height / h - y
+        };
+    }
+
+    function getPortraitPlacement(bounds) {
+        // Common height and baseline: midpoint between the two approved size examples.
+        // Only unusually wide poses need shrinking to stay inside the printable frame.
+        const scale = Math.min(SPEC.height * 0.53 / bounds.height, SPEC.width * 0.72 / bounds.width);
+        const width = bounds.width * scale, height = bounds.height * scale;
+        return { x: SPEC.width * 0.47 - width / 2, y: SPEC.height * 0.855 - height, width, height };
+    }
+
     function crc32(bytes) {
         let crc = 0xffffffff;
         for (const byte of bytes) {
@@ -202,20 +266,13 @@
         notify('排版與合成中…');
         await new Promise(resolve => setTimeout(resolve, 0));
         const character=removeConnectedWhiteBackground(characterImage);
-        const w=character.width,h=character.height;
-        const rgba=character.getContext('2d').getImageData(0,0,w,h).data;
-        let left=w,top=h,right=-1,bottom=-1;
-        for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(rgba[(y*w+x)*4+3]>20){
-            left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);
-        }
-        if(right<left)throw Error('未找到可合成的人物');
-        const cw=right-left+1,ch=bottom-top+1;
+        const bounds = getPortraitBounds(character);
+        const placement = getPortraitPlacement(bounds);
         const composite=document.createElement('canvas');
         composite.width=SPEC.width;composite.height=SPEC.height;
         const ctx=composite.getContext('2d');ctx.imageSmoothingQuality='high';
-        // Match the visible portrait box in the supplied placement reference.
-        const k=Math.min(SPEC.width*.58/cw,SPEC.height*.62/ch),dw=cw*k,dh=ch*k;
-        ctx.drawImage(character,left,top,cw,ch,SPEC.width*.47-dw/2,SPEC.height*.855-dh,dw,dh);
+        ctx.drawImage(character, bounds.x, bounds.y, bounds.width, bounds.height,
+            placement.x, placement.y, placement.width, placement.height);
         ctx.drawImage(frameImage,0,0,SPEC.width,SPEC.height);
 
         notify('輸出高清 PNG…');
@@ -228,7 +285,7 @@
         }
     }
 
-    root.PrintComposer = { SPEC, compose, removeConnectedWhiteBackground, addPngResolution };
+    root.PrintComposer = { SPEC, compose, removeConnectedWhiteBackground, getPortraitBounds, getPortraitPlacement, addPngResolution };
 })(typeof window !== 'undefined' ? window : globalThis);
 
 
