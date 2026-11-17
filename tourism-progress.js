@@ -13,29 +13,49 @@ function mount(host,lang,shared){
  const locale=C[lang]?lang:'zh',c=C[locale],d=shared||createDisplayProgress();
  host.innerHTML=`<section class="tourism-wait" data-phase="uploading" aria-live="polite">
 <style>
-.innoserve-loading-slides{width:min(100%,560px);aspect-ratio:1721/1244;margin:0 auto 24px;overflow:hidden;border-radius:20px;background:#1d343e}
-.innoserve-loading-slides img{display:block;width:100%;height:100%;object-fit:contain}
+.ai-cube-stage{position:relative;width:min(100%,480px);aspect-ratio:1.3;margin:0 auto 16px;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse at center,#eaf8f5 0%,#fff 65%);border-radius:20px}
+.ai-cube-orbits{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.ai-cube-orbits.rear{z-index:0}.ai-cube-orbits.front{z-index:2}
+.ai-cube-scene{position:absolute;left:50%;top:47%;width:150px;height:150px;transform:translate(-50%,-50%);perspective:850px;z-index:1}
+.ai-cube-spin,.ai-cube-layer,.ai-cubie{position:absolute;width:100%;height:100%;transform-style:preserve-3d}
+.ai-cube-spin{animation:ai-cube-turn 14s linear infinite;transform:rotateX(-22deg) rotateY(-32deg)}
+.ai-cube-layer.top{animation:ai-cube-twist 7s ease-in-out infinite}
+.ai-cubie{width:72px;height:72px;left:39px;top:39px}
+.ai-cube-face{position:absolute;inset:0;border:2px solid #90d5ac;box-sizing:border-box;backface-visibility:hidden;background:linear-gradient(125deg,#dcf42c 0%,#00aba9 44%,#143e75 73%,#241647 100%)}
+.ai-cube-face:nth-child(1){transform:translateZ(36px)}
+.ai-cube-face:nth-child(2){transform:rotateY(180deg) translateZ(36px)}
+.ai-cube-face:nth-child(3){transform:rotateY(90deg) translateZ(36px);background:linear-gradient(150deg,#17244f,#0c9ca5 62%,#d9ed24)}
+.ai-cube-face:nth-child(4){transform:rotateY(-90deg) translateZ(36px);background:linear-gradient(135deg,#1c3049,#363052)}
+.ai-cube-face:nth-child(5){transform:rotateX(90deg) translateZ(36px)}
+.ai-cube-face:nth-child(6){transform:rotateX(-90deg) translateZ(36px)}
+.ai-cubie.pattern .ai-cube-face:nth-child(1),.ai-cubie.pattern .ai-cube-face:nth-child(5){background:repeating-radial-gradient(circle at 8% 8%,transparent 0 8px,#aed65e 9px 11px,transparent 12px 19px),linear-gradient(135deg,#006c72,#102942)}
+.ai-cube-shadow{position:absolute;left:30%;right:30%;bottom:16%;height:5%;border-radius:50%;background:#148f9630;filter:blur(9px)}
+.ai-orbit-dot{offset-path:path('M 55 260 C -20 140 340 25 420 100 C 510 200 150 340 55 260');animation:ai-orbit-travel 9s linear infinite;fill:#b9e741}
+.ai-orbit-dot.second{animation-delay:-4.5s;fill:#58c4d4}
+@keyframes ai-cube-turn{from{transform:rotateX(-22deg) rotateY(-32deg)}to{transform:rotateX(-22deg) rotateY(328deg)}}
+@keyframes ai-cube-twist{0%,18%{transform:rotateY(0)}42%,68%{transform:rotateY(90deg)}92%,100%{transform:rotateY(180deg)}}
+@keyframes ai-orbit-travel{to{offset-distance:100%}}
+@media(max-width:380px){.ai-cube-scene{scale:.8}.ai-cube-stage{aspect-ratio:1.15}}
+@media(prefers-reduced-motion:reduce){.ai-cube-spin,.ai-cube-layer.top,.ai-orbit-dot{animation:none!important}}
 </style>
-<div class="innoserve-loading-slides" aria-hidden="true"></div>
+<div class="ai-cube-stage" aria-hidden="true">
+<svg class="ai-cube-orbits rear" viewBox="0 0 480 370" fill="none"><ellipse cx="240" cy="190" rx="218" ry="92" transform="rotate(-25 240 190)" stroke="#52b8b2" stroke-width="1.5"/><ellipse cx="240" cy="190" rx="208" ry="95" transform="rotate(33 240 190)" stroke="#d7e788" stroke-width="1.5"/><path d="M98 285 C385 360 432 -5 265 58" stroke="#bbb5c6" stroke-width="2"/><circle cx="265" cy="58" r="5" fill="#cee44b"/></svg>
+<div class="ai-cube-shadow"></div><div class="ai-cube-scene"><div class="ai-cube-spin"><div class="ai-cube-layer top"><div class="ai-cubie pattern" style="transform:translate3d(-38px,-38px,-38px)"><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span></div><div class="ai-cubie " style="transform:translate3d(-38px,-38px,38px)"><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span></div><div class="ai-cubie " style="transform:translate3d(38px,-38px,-38px)"><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span></div><div class="ai-cubie pattern" style="transform:translate3d(38px,-38px,38px)"><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span></div></div><div class="ai-cube-layer bottom"><div class="ai-cubie " style="transform:translate3d(-38px,38px,-38px)"><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span></div><div class="ai-cubie " style="transform:translate3d(-38px,38px,38px)"><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span></div><div class="ai-cubie pattern" style="transform:translate3d(38px,38px,-38px)"><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span></div><div class="ai-cubie " style="transform:translate3d(38px,38px,38px)"><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span><span class="ai-cube-face"></span></div></div></div></div>
+<svg class="ai-cube-orbits front" viewBox="0 0 480 370" fill="none"><path d="M24 218 C32 321 256 294 405 202" stroke="#a5d794" stroke-width="2"/><path d="M98 285 C181 307 274 244 328 168" stroke="#d0c9da" stroke-width="2"/><circle cx="98" cy="285" r="6" fill="#6ac6d3"/><circle class="ai-orbit-dot" r="5"/><circle class="ai-orbit-dot second" r="4"/></svg>
+</div>
 <p class="tourism-wait-title" aria-live="off">${c.title}</p>
  <div class="tourism-progress-heading"><span class="tourism-progress-label">${c.label}</span><strong class="tourism-percent">0%</strong></div>
  <div class="tourism-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="tourism-fill"></div></div>
  <ol class="tourism-milestones">${c.steps.map(x=>`<li>${x}</li>`).join('')}</ol>
  <p class="tourism-status">${c.uploading}</p><p class="tourism-progress-note">${c.note}</p></section>`;
- const root=host.querySelector('.tourism-wait'),pct=host.querySelector('.tourism-percent'),fill=host.querySelector('.tourism-fill'),track=host.querySelector('.tourism-track'),status=host.querySelector('.tourism-status'),marks=[...host.querySelectorAll('.tourism-milestones li')],stage=host.querySelector('.innoserve-loading-slides');
- let dead=false,slideIndex=0,animationTimer=null;
+ const root=host.querySelector('.tourism-wait'),pct=host.querySelector('.tourism-percent'),fill=host.querySelector('.tourism-fill'),track=host.querySelector('.tourism-track'),status=host.querySelector('.tourism-status'),marks=[...host.querySelectorAll('.tourism-milestones li')];
+ let dead=false;
  const copyStatus=p=>p==='ready'||p==='completed'?c.ready:p==='failed'?c.failed:p==='generating'?c.generating:p==='queued'||p==='pending'?c.queued:c.uploading;
  function paint(){const n=Math.round(clamp(d.current,0,100));pct.textContent=n+'%';fill.style.width=n+'%';track.setAttribute('aria-valuenow',String(n));status.textContent=copyStatus(d.phase);root.dataset.phase=d.phase;const reached=n>=100?4:n>=48?3:n>=20?2:1;marks.forEach((x,i)=>x.classList.toggle('is-done',i<reached))}
  const progressTimer=setInterval(()=>{if(dead)return;if(!['ready','completed','failed'].includes(d.phase))d.target=Math.min(96,Math.max(d.target,d.current+.08));const gap=d.target-d.current;d.current=Math.abs(gap)<.04?d.target:d.current+Math.max(.04,gap*.075);paint()},80);
- const pictures=[1,2,3].map(n=>{const img=new Image();img.src='assets/innoserve/loading-'+n+'.jpg';img.alt='';img.width=1721;img.height=1244;return img;});
- stage.append(pictures[0]);
- Promise.all(pictures.map(img=>img.decode())).then(()=>{
-  if(dead)return;
-  animationTimer=setInterval(()=>{if(dead)return;slideIndex=(slideIndex+1)%pictures.length;stage.replaceChildren(pictures[slideIndex]);},1000);
- }).catch(()=>{/* Keep first slide if another image cannot load. */});
  function update(p={}){d.phase=p.phase||p.status||d.phase;d.target=targetFor(d.phase,p.percent);paint()}
- function reset(){d.current=0;d.target=0;d.phase='uploading';slideIndex=0;stage.replaceChildren(pictures[0]);paint()}
- paint();return{update,reset,dispose(){dead=true;clearInterval(progressTimer);clearInterval(animationTimer);host.innerHTML=''}}
+ function reset(){d.current=0;d.target=0;d.phase='uploading';paint()}
+ paint();return{update,reset,dispose(){dead=true;clearInterval(progressTimer);host.innerHTML=''}}
 }
 function preload(url){return new Promise(resolve=>{if(!url)return resolve();const img=new Image(),done=()=>resolve();img.onload=done;img.onerror=done;img.src=url;setTimeout(done,10000)})}
 function monitor(o){
